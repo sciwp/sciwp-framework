@@ -8,7 +8,7 @@ namespace KNDCC;
  */
 function wormvc ()
 {
-    return \KNDCC\Wormvc\Wormvc::instance();
+    return \KNDCC\Wormvc\Wormvc::instance ();
 }
 
 /**
@@ -18,11 +18,11 @@ function wormvc ()
  */
 function plugins()
 {
-	return wormvc()->pluginManager();
+	return wormvc()->plugins();
 }
 
 /**
- * Returns a plugin by the plugin id
+ * Returns a plugin the plugin id
  * 
  * @param string $plugin_id The plugin id
  * @return Plugin|Plugin[]

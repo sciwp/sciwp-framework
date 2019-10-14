@@ -69,7 +69,7 @@ class PluginManager extends Manager
         // Add the providers to the provider manager
         $plugin_config = $this->plugins[$plugin_id]->config();
         if (isset($plugin_config['providers'])) {
-            $this->wormvc->providerManager()->add((Array) $plugin_config['providers']);
+            $this->wormvc->providers()->add((Array) $plugin_config['providers']);
         }
         return $this->plugins[$plugin_id];
     }

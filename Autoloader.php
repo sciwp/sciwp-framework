@@ -1,11 +1,10 @@
 <?php
 namespace KNDCC\Wormvc;
 
-defined('WPINC') OR exit('No direct script access allowed');
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 use \KNDCC\Wormvc\Plugin;
 use \KNDCC\Wormvc\Manager\PluginManager;
-use \Exception;
 
 /**
  * Autoloader Class
@@ -21,10 +20,10 @@ use \Exception;
 
 class Autoloader
 {
-	/** @var string $folder Stores de root framework folder */
+	/** @var string $folder Stores de root namespace */
 	private static $folder;	
 
-	/** @var string $namespace Stores the root framework namespace */
+	/** @var string $namespace Stores de framework namespace */
 	private static $namespace;
 	
 	/** @var string $plugins Stores a list of plugins requiring Wormvc */	
@@ -66,7 +65,7 @@ class Autoloader
 	public static function start()
 	{
 		self::$folder = substr(plugin_dir_path( __FILE__ ), 0, -1);
-		self::$namespace = trim(__NAMESPACE__,'\\');         
+		self::$namespace = trim(__NAMESPACE__,'\\');
 		spl_autoload_register( array(self::$namespace . '\Autoloader', 'autoload'));
         self::$cache_file = dirname(self::$folder) . '/cache/autoload.cache.php';
         self::$cache = self::loadCache();
@@ -107,7 +106,7 @@ class Autoloader
 	 * @static
 	 * @return	bool
 	 */
-	public static function searchClassInCache($class)
+	public static function checkCacheClass($class)
 	{
         if (isset(self::$cache[$class])) {
             if (file_exists (self::$cache[$class])) {
@@ -119,14 +118,14 @@ class Autoloader
 	}    
     
 	/**
-	 * Seaches for a class file in a reflexive way
+	 * Seaches for a class file
 	 *
 	 * @static
 	 * @return	bool
 	 */	
 	public static function searchReflexiveClassFile($folder, $class)
 	{
-		if(file_exists ($folder.'/'.$class)) {
+		if(file_exists ( $folder.'/'.$class)) {
 			return($folder.'/'.$class);
 		}
 		else {
@@ -139,6 +138,8 @@ class Autoloader
 			return false;
 		}
 	}    
+
+
 
 	/**
 	 *  Initialize the autloader
@@ -163,14 +164,15 @@ class Autoloader
 	/**
 	 *  Main autoload function
 	 *
+	 * @static
 	 * @param string $class The class name
 	 * @return	bool
 	 */
-	public static function autoload( $class )
+	public static  function autoload( $class )
 	{
 		$class_arr = explode('\\', trim($class,'\\'));
 
-		if (count ($class_arr) < 2) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
+		if (count ($class_arr) < 2 ) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
 
 		// Wormvc files
         if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
@@ -216,7 +218,7 @@ class Autoloader
 
             // Check the cache array
             if ($plugin['autoloader_cache_enabled']) {
-                $file = self::searchClassInCache($class);
+                $file = self::checkCacheClass($class);
                 if ($file) {
                     require_once $file;
 					return true;	

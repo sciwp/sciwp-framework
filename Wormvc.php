@@ -1,13 +1,12 @@
 <?php
 namespace KNDCC\Wormvc;
 
-defined('WPINC') OR exit('No direct script access allowed');
-
 use \KNDCC\Wormvc\Manager\PluginManager;
 use \KNDCC\Wormvc\Manager\ProviderManager;
 use \KNDCC\Wormvc\Manager\RouteManager;
 use \KNDCC\Wormvc\Traits\Singleton;
-use \Exception;
+
+defined('WPINC') OR exit('No direct script access allowed');
 
 /**
  * Main Wormvc class
@@ -44,19 +43,17 @@ class Wormvc
     /** @var array $alias Class alias. */
     protected $aliases = [];       
 
-	/**
-	 * Class constructor
-	 *
-	 * @return	void
-	 */
-    private function __construct(){}
+    /**
+     * @param PluginManager $plugin_manager
+     */
+    private function __construct (){}
 
 	/**
 	 *  Returns a unique instance or creates a new one
 	 *
 	 * @return	bool
 	 */
-    public static function instance()
+    public static function instance ()
     {
         if (!isset( self::$_instance)) {
             self::$_instance = new Wormvc;
@@ -67,30 +64,32 @@ class Wormvc
 	/**
 	 * Initialize the main components
 	 */    
-    public function init()
+    public function init ()
     {
         $this->plugin_manager = self::get(PluginManager::class);
         $this->provider_manager = self::get(ProviderManager::class);
         $this->route_manager = self::get(RouteManager::class);
-    }
+        return $this;
+    }   
+
     
     /**
      * Get a plugin
-     *
      * @param string $plugin The plugin id
      * @return Plugin
      */
     public function plugin($plugin_id)
     {
         return $this->plugin_manager->get($plugin_id);
-    }
+    }    
+    
     
     /**
      * Get the plugin manager
      *
      * @return PluginManager
      */
-    public function pluginManager()
+    public function plugins()
     {
         return $this->plugin_manager;
     }
@@ -100,7 +99,7 @@ class Wormvc
      *
      * @return PRoviderManager
      */       
-    public function providerManager()
+    public function providers()
     {
         return $this->provider_manager;
     }
@@ -110,37 +109,37 @@ class Wormvc
      *
      * @return RouteManager
      */    
-    public function routeManager()
+    public function routes()
     {
         return $this->route_manager;
-
     }    
 
     /**
      * Bind a class name or alias to a class or instance
      *
-     * @param string $name The class name or alias
-     * @param string|object $to The class name or instance
+     * @param string $bind The class name or alias
+     * @param string $to The class name or instance
      */    
-	public function bind($name, $to)
+	public function bind($bind, $to)
 	{
-        unset($this->aliases[$name], $this->bindings[$name]);
+        if (is_null($bind)) return;
+        unset($this->aliases[$bind], $this->bindings[$bind]);
         
         if (is_callable($to) ) {
             $closure = \Closure::fromCallable($to);
             $reflection = new \ReflectionFunction($to);
-            if (class_exists($name)) {
-                $this->bindings[$name] = call_user_func_array($closure, $reflection->getParameters());               
+            if (class_exists($bind)) {
+                $this->bindings[$bind] = call_user_func_array($closure, $reflection->getParameters());               
             } else {
-                $this->aliases[$name] = call_user_func_array($closure, $reflection->getParameters()); 
+                $this->aliases[$bind] = call_user_func_array($closure, $reflection->getParameters()); 
             }
         } else if (is_object($to) || class_exists($to)) {
-            if (class_exists($name)) {
-                $this->bindings[$name] = $to;
+            if (class_exists($bind)) {
+                $this->bindings[$bind] =  $to;
             } else {
-                $this->aliases[$name] = $to;
+                $this->aliases[$bind] =  $to;
             }
-        } else throw new \Exception('Invalid binding parameters.');
+        }
 	}
 
     /**
@@ -169,7 +168,7 @@ class Wormvc
     }    
 
     /**
-     * Allows to get an instance of any class, injecting the dependences when possible
+     * Allows to get an instace of any class, injecting the dependences when possible
      * 
      * @param \Object $class_name The classto instantiate
      * @param array $params The array with the arguments
@@ -198,7 +197,7 @@ class Wormvc
         else if (is_string($class_name) && isset($this->bindings[$class_name])) {
             $class_name = $this->bindings[$class_name];
         }
-
+        
         if(is_object($class_name)) {
             $class_name->wormvc = self::instance();
             return $class_name;
@@ -286,6 +285,7 @@ class Wormvc
                                 'instance' => $instance,
                             );
                             call_user_func_array($closure, $param_arr);
+                           
                         }
              
                     }
@@ -309,7 +309,7 @@ class Wormvc
     }
 
     /**
-     * Returns the list of traits a class uses
+     * Returns a the list of traits a class uses
      * 
      * @param string $class The class name
      * @param bool $autoload If the function will be able to use the autoloader
