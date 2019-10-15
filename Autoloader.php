@@ -31,9 +31,12 @@ class Autoloader
 
 	/** @var array $cache Stores de cached classes */
 	public static $cache = array();
-	
-	/** @var string $cache_file Stores de cache file path */
-	private static $cache_file;
+
+	/** @var string $file_cache Stores de cache folder path */
+	private static $dir_cache;
+    
+	/** @var string $file_cache Stores de cache file path */
+	private static $file_cache;
 
 	/**
 	 * Class constructor
@@ -43,7 +46,7 @@ class Autoloader
 	private function __construct(){}
 
 	/**
-	 *  Clone
+	 * Clone
 	 *
 	 * @return	void
 	 */		
@@ -67,7 +70,8 @@ class Autoloader
 		self::$folder = substr(plugin_dir_path( __FILE__ ), 0, -1);
 		self::$namespace = trim(__NAMESPACE__,'\\');
 		spl_autoload_register( array(self::$namespace . '\Autoloader', 'autoload'));
-        self::$cache_file = dirname(self::$folder) . '/cache/autoload.cache.php';
+        self::$dir_cache = dirname(self::$folder) . '/cache/';
+        self::$file_cache = self::$dir_cache . 'autoload.cache.php';
         self::$cache = self::loadCache();
 		return self::class;
 	}
@@ -80,12 +84,9 @@ class Autoloader
 	 */
 	public static function loadCache()
 	{
-		if (is_file(self::$cache_file)) {
-			$cache_array_res = (array)include self::$cache_file;		
-			self::$cache = array_merge(self::$cache , $cache_array_res);
-			return self::$cache;
-		}
-		return false;
+		$cache_array = is_file(self::$file_cache) ? (array)include self::$file_cache : [];		
+		self::$cache = array_merge(self::$cache , $cache_array);
+		return self::$cache;
 	}
 
 	/**
@@ -96,8 +97,9 @@ class Autoloader
 	 */
 	public static function saveCache()
 	{
-		if (file_put_contents(self::$cache_file, '<?php return ' . var_export(self::$cache, true) . ';')) return true;
-		return false;
+        if (!file_exists(self::$dir_cache)) mkdir(self::$dir_cache);
+		file_put_contents(self::$file_cache, '<?php return ' . var_export(self::$cache, true) . ';')
+        or die('Cannot write the file:  '.self::$file_cache);
 	}
 	
 	/**
@@ -137,9 +139,7 @@ class Autoloader
 			}
 			return false;
 		}
-	}    
-
-
+	}
 
 	/**
 	 *  Initialize the autloader

@@ -105,7 +105,7 @@ if ($rebuild) {
 
     if(!file_exists($dir_cache)) mkdir($dir_cache);
     file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config_cache , true) . ';')
-        or die('Cannot write the file:  '.$file_config_cache);
+    or die('Cannot write the file:  '.$file_config_cache);
 }
 
 // Require the Autoloader
