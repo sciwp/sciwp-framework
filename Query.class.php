@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
 /**
  * Class Query

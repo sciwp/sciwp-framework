@@ -10,15 +10,15 @@
  * @link		https://www.wormvc.com 
  * @since		Version 1.0.0 
  */
-namespace  KNDCC\Wormvc\Service;
+namespace  Wormvc\Wormvc\Service;
 
-use \KNDCC\Wormvc\Plugin;
+use \Wormvc\Wormvc\Plugin;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 class Options {
 
-	use \KNDCC\Wormvc\Traits\StaticClass;
+	use \Wormvc\Wormvc\Traits\StaticClass;
 
 	const SELF = __class__;
 	

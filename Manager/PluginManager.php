@@ -1,13 +1,13 @@
 <?php
-namespace KNDCC\Wormvc\Manager;
+namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \KNDCC\Wormvc\Plugin;
-use \KNDCC\Wormvc\Manager;
-use \KNDCC\Wormvc\Autoloader;
-use KNDCC\Wormvc\Services\Activation as ActivationService;
-use \KNDCC\Wormvc\Traits\Singleton;
+use \Wormvc\Wormvc\Plugin;
+use \Wormvc\Wormvc\Manager;
+use \Wormvc\Wormvc\Autoloader;
+use Wormvc\Wormvc\Services\Activation as ActivationService;
+use \Wormvc\Wormvc\Traits\Singleton;
 
 /**
  * Plugin Manager
@@ -46,7 +46,7 @@ class PluginManager extends Manager
     public function add($plugin_file, $plugin_id)
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
-        $this->plugins[$plugin_id] = $this->wormvc->get('\KNDCC\Wormvc\Plugin', [$plugin_file, $plugin_id]);        
+        $this->plugins[$plugin_id] = $this->wormvc->get('\Wormvc\Wormvc\Plugin', [$plugin_file, $plugin_id]);        
        
         // Add the plugin to the Autoloader
         $this->autoloader::addPlugin(

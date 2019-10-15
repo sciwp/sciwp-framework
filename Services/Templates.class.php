@@ -3,13 +3,13 @@
  * TemplateManager
  */
 
-namespace KNDCC\Wormvc\Service;
+namespace Wormvc\Wormvc\Service;
 
-use \KNDCC\Wormvc\Plugin;
+use \Wormvc\Wormvc\Plugin;
  
 class Templates {
 
-	use \KNDCC\Wormvc\Traits\StaticClass;
+	use \Wormvc\Wormvc\Traits\StaticClass;
 
 	const SELF = __class__;
 

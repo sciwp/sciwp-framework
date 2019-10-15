@@ -3,7 +3,7 @@
  * Class View
  */
 
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

@@ -3,16 +3,16 @@
  * Class Page
  */
 
-namespace  KNDCC\Wormvc\Service;
+namespace  Wormvc\Wormvc\Service;
 
-use \KNDCC\Wormvc\Plugin;
-use \KNDCC\Wormvc\Helper as Helper;
+use \Wormvc\Wormvc\Plugin;
+use \Wormvc\Wormvc\Helper as Helper;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 class Assets {
 
-	use \KNDCC\Wormvc\Traits\StaticClass;
+	use \Wormvc\Wormvc\Traits\StaticClass;
 
 	const SELF = __class__;
 	

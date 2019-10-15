@@ -1,7 +1,7 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
-use \KNDCC\Wormvc\Wormvc;
+use \Wormvc\Wormvc\Wormvc;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -64,7 +64,7 @@ class Route
      *
 	 * @var string $pattern
      * @var mixed $callback
-	 * @return \KNDCC\Wormvc\Route
+	 * @return \Wormvc\Wormvc\Route
 	 */
 	public function __construct($pattern, $callback, $name = false)
 	{

@@ -1,8 +1,8 @@
 <?php
-namespace KNDCC\Wormvc\Manager;
+namespace Wormvc\Wormvc\Manager;
 
-use \KNDCC\Wormvc\Collection;
-use \KNDCC\Wormvc\Manager;
+use \Wormvc\Wormvc\Collection;
+use \Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

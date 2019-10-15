@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc\Interfaces;
+namespace Wormvc\Wormvc\Interfaces;
 
 /**
  * Collection interface

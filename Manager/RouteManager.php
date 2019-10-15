@@ -1,11 +1,11 @@
 <?php
-namespace KNDCC\Wormvc\Manager;
+namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \KNDCC\Wormvc\Manager;
-use \KNDCC\Wormvc\Route;
-use \KNDCC\Wormvc\Helpers\Url;
+use \Wormvc\Wormvc\Manager;
+use \Wormvc\Wormvc\Route;
+use \Wormvc\Wormvc\Helpers\Url;
 /**
  * Route Manager
  *

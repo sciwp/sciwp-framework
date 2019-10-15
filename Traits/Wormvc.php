@@ -1,7 +1,7 @@
 <?php
-namespace KNDCC;
+namespace Wormvc;
 
-use \KNDCC\Wormvc\Wormvc as WormvcMain;
+use \Wormvc\Wormvc\Wormvc as WormvcMain;
 
 defined('WPINC') OR exit('No direct script access allowed'); 
 

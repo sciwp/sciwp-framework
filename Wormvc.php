@@ -1,10 +1,10 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
-use \KNDCC\Wormvc\Manager\PluginManager;
-use \KNDCC\Wormvc\Manager\ProviderManager;
-use \KNDCC\Wormvc\Manager\RouteManager;
-use \KNDCC\Wormvc\Traits\Singleton;
+use \Wormvc\Wormvc\Manager\PluginManager;
+use \Wormvc\Wormvc\Manager\ProviderManager;
+use \Wormvc\Wormvc\Manager\RouteManager;
+use \Wormvc\Wormvc\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

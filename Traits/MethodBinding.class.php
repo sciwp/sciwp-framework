@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc\Traits; 
+namespace Wormvc\Wormvc\Traits; 
 
 defined('WPINC') OR exit('No direct script access allowed');
 

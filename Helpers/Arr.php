@@ -1,8 +1,8 @@
 <?php
-namespace KNDCC\Wormvc\Helpers;
+namespace Wormvc\Wormvc\Helpers;
 
-use KNDCC\Wormvc\Helper;
-use KNDCC\Wormvc\Collection;
+use Wormvc\Wormvc\Helper;
+use Wormvc\Wormvc\Collection;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

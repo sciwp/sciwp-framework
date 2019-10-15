@@ -8,7 +8,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @license		http://opensource.org/licenses/MIT MIT License
  * @version     1.0.0
  * @link		https://www.wormvc.com 
  * @since		Version 1.0.0 
@@ -56,18 +56,22 @@ ${$plugin_base_folder.'ReplaceStringFunction'} = function($replaceStringFunction
 ${$plugin_base_folder.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
     $new_core_namespace = $new_namespace . '\Wormvc';
     $old_core_namespace = NULL;
-    $file_path = plugin_dir_path( __FILE__ ) . 'Autoloader.php';
-    $handle = fopen($file_path, "r") or die('The namesapce in the file Autoloader.php was not found');
+    $old_namespace = NULL;
+    $file_path = plugin_dir_path( __FILE__ ) . 'Traits/Wormvc.php';
+    $handle = fopen($file_path, "r") or die('The old namespace in the Wormvc Trait was not found');
     if (!$handle) return;
     while (($line = fgets($handle)) !== false) {
         if (strpos($line, 'namespace') === 0) {
             $parts = preg_split('/\s+/', $line);
-            $old_core_namespace = rtrim(trim($parts[1]), ';');
+            $old_namespace = rtrim(trim($parts[1]), ';');
+            $old_core_namespace = $old_namespace . '\Wormvc';
             break;
         }
     }
     fclose($handle);
     $replaceStringFunction($replaceStringFunction, dirname(__FILE__), $old_core_namespace, $new_core_namespace);
+    $file_content = file_get_contents(dirname(__FILE__).'/Traits/Wormvc.php');   
+    file_put_contents($file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
 };
 
 // Load config file
@@ -87,7 +91,6 @@ $rebuild = !isset($config['namespace']) || (isset($config['rebuild']) && $config
 if ($rebuild) {
     $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($plugin_base_folder) {
         // Try to get the namespace from the main.php file
-        $file_path = plugin_dir_path( dirname(__FILE__) ) . '/main.php';
         $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r")
                   or die('Cannot open the wormvc plugin main.php file');
         while (($line = fgets($handle)) !== false) {

@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 

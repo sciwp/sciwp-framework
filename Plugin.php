@@ -1,9 +1,9 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
-use KNDCC\Wormvc\Services\Activation as ActivationService;
-use KNDCC\Wormvc\Services\Deactivation as DeactivationService;
-use KNDCC\Wormvc\Collection;
+use Wormvc\Wormvc\Services\Activation as ActivationService;
+use Wormvc\Wormvc\Services\Deactivation as DeactivationService;
+use Wormvc\Wormvc\Collection;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -296,7 +296,7 @@ class Plugin
 		// Register activation and deactivation hooks
 
 		
-		$collectionManager = self::get('\KNDCC\Wormvc\Manager\CollectionManager');
+		$collectionManager = self::get('\Wormvc\Wormvc\Manager\CollectionManager');
 		
 		
 		if ( isset($this->plugin::config['collections']) && is_array($this->plugin::config['collections']) ) {
@@ -306,7 +306,7 @@ class Plugin
 					
 					
 					if (isset($collection['container'])) $container = $collection['container'];
-					else $container = '\KNDCC\Wormvc\Collection';
+					else $container = '\Wormvc\Wormvc\Collection';
 					if (isset($collection['shortcut'])) $shortcut = $collection['shortcut'];
 					else $shortcut = $key;
 					$this->collections[$shortcut] = $this->wormvc::get($container);
@@ -379,13 +379,13 @@ class Plugin
 		
 		
 
-		self::$collections = new \KNDCC\Wormvc\Collection();
+		self::$collections = new \Wormvc\Wormvc\Collection();
 		self::addStaticMethod('collections', function () {
 			return self::$collections;
 		});
 		
 
-		self::$services =  new \KNDCC\Wormvc\Collection();
+		self::$services =  new \Wormvc\Wormvc\Collection();
 		self::addStaticMethod('services', function () {
 			return self::$collections['services'];
 		});		

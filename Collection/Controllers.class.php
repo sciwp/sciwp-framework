@@ -1,9 +1,9 @@
 <?php
-namespace KNDCC\Wormvc\Collection;
+namespace Wormvc\Wormvc\Collection;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
-use KNDCC\Wormvc as Wormvc;
+use Wormvc\Wormvc as Wormvc;
 
 /**
  * Controller Collection class

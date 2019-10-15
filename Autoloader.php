@@ -1,10 +1,10 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-use \KNDCC\Wormvc\Plugin;
-use \KNDCC\Wormvc\Manager\PluginManager;
+use \Wormvc\Wormvc\Plugin;
+use \Wormvc\Wormvc\Manager\PluginManager;
 
 /**
  * Autoloader Class
@@ -176,6 +176,7 @@ class Autoloader
 
 		// Wormvc files
         if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
+
             // Autoload Get trait
             if (!isset($class_arr[2])) {
                 require_once self::$folder . '/Traits/Wormvc.php';

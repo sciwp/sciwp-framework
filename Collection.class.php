@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc;
+namespace Wormvc\Wormvc;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -16,7 +16,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  */
 class Collection implements Interfaces\CollectionInterface
 {
-    use \KNDCC\Wormvc;
+    use \Wormvc\Wormvc;
 
 	/** @var array $elements Stores a list of the registered elements */	
 	private $elements = array();

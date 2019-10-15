@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC\Wormvc\Services;
+namespace Wormvc\Wormvc\Services;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 class Deactivation
 {
-	use \KNDCC\Wormvc;
+	use \Wormvc\Wormvc;
 
 	/** @var string $actions Stores a list of the deactivation actions */	
 	private $actions = array();
