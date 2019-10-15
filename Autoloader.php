@@ -20,13 +20,13 @@ use \Wormvc\Wormvc\Manager\PluginManager;
 
 class Autoloader
 {
-	/** @var string $folder Stores de root namespace */
+	/** @var string $folder Stores de root folder */
 	private static $folder;	
 
 	/** @var string $namespace Stores de framework namespace */
 	private static $namespace;
 	
-	/** @var string $plugins Stores a list of plugins requiring Wormvc */	
+	/** @var string $plugins Stores the list of plugins using Wormvc */	
 	private static $plugins = array();
 
 	/** @var array $cache Stores de cached classes */
@@ -57,7 +57,7 @@ class Autoloader
 	private function __wakeup() {}	
 	
 	/**
-	 * Initialize the autloader
+	 * Initialize the autoloader
 	 *
 	 * @static
 	 * @return	object

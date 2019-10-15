@@ -17,9 +17,10 @@ defined('WPINC') OR exit('No direct script access allowed');
 include plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
 
 // Files and vars used in this script
-$config_file = plugin_dir_path(dirname(__FILE__)) . 'config.php';
-$config_cache_file = plugin_dir_path( dirname(__FILE__) ) . 'cache/config.cache.php';
-$plugin_base_folder  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 ))));
+$file_config = plugin_dir_path(dirname(__FILE__)) . 'config.php';
+$dir_cache = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
+$file_config_cache = $dir_cache . 'config.cache.php';
+$dirname_plugin  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 ))));
 
 /**
  * {Dynamic}ReplaceStringFunction
@@ -32,7 +33,7 @@ $plugin_base_folder  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1
  * @param $old_string The string to be replaced
  * @param $new_string The replacement string
  */
-${$plugin_base_folder.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $old_string, $new_string)
+${$dirname_plugin.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $old_string, $new_string)
 {
     foreach (glob($folder."/*.php") as $filename) {
         $file_content = file_get_contents($filename);
@@ -53,7 +54,7 @@ ${$plugin_base_folder.'ReplaceStringFunction'} = function($replaceStringFunction
  * @param $replaceStringFunction The function to process the string
  * @param $new_namespace The replacement namespace
  */
-${$plugin_base_folder.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
+${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
     $new_core_namespace = $new_namespace . '\Wormvc';
     $old_core_namespace = NULL;
     $old_namespace = NULL;
@@ -75,21 +76,15 @@ ${$plugin_base_folder.'ReplaceCoreNamespaceFunction'} = function($replaceStringF
 };
 
 // Load config file
-if (!file_exists($config_file)) die('Cannot open the config file:  ' . $config_file);
-$config = include $config_file;
+if (!file_exists($file_config)) die('Cannot open the config file:  ' . $file_config);
+$config = include $file_config;
 
-// Include config cache file and create it if it does not exists
-if (!file_exists($config_cache_file)) {
-    file_put_contents($config_cache_file, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return array();')
-        or die('Cannot create the file:  '.$config_cache_file);
-    fclose($handle);
-}
-$config_cache = include $config_cache_file;
+$config_cache = file_exists($file_config_cache) ? include $file_config_cache : ['namespace' => null];
 
 $rebuild = !isset($config['namespace']) || (isset($config['rebuild']) && $config['rebuild'] === true) || $config['namespace'] !== $config_cache['namespace'] ? true : false;
 
-if ($rebuild) {
-    $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($plugin_base_folder) {
+if ($rebuild) {  
+    $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($dirname_plugin) {
         // Try to get the namespace from the main.php file
         $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r")
                   or die('Cannot open the wormvc plugin main.php file');
@@ -102,18 +97,21 @@ if ($rebuild) {
         }
         fclose($handle);
         // Fallback to the plugin folder name
-        return isset($namespace) ? $namespace : ucfirst($plugin_base_folder);
+        return isset($namespace) ? $namespace : ucfirst($dirname_plugin);
     });
 
-    ${$plugin_base_folder.'ReplaceCoreNamespaceFunction'}(${$plugin_base_folder.'ReplaceStringFunction'}, $namespace);
+    ${$dirname_plugin.'ReplaceCoreNamespaceFunction'}(${$dirname_plugin.'ReplaceStringFunction'}, $namespace);
     $config_cache['namespace'] = $namespace;
-    file_put_contents ( plugin_dir_path( dirname(__FILE__) ) . '/cache/config.cache.php', "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config_cache , true) . ';');
+
+    if(!file_exists($dir_cache)) mkdir($dir_cache);
+    file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config_cache , true) . ';')
+        or die('Cannot write the file:  '.$file_config_cache);
 }
 
 // Require the Autoloader
 $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace']
              : isset($config_cache['namespace']) && $config_cache['namespace'] ? $config_cache['namespace']
-             : ucfirst($plugin_base_folder);
+             : ucfirst($dirname_plugin);
 
 // Start the autoloader and Wormvc
 require plugin_dir_path( __FILE__ ) . 'Autoloader.php';
