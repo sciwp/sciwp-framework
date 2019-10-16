@@ -163,6 +163,23 @@ class Autoloader
 	}
 
 	/**
+	 * File name has extension
+	 *
+	 * @static
+	 * @param string $string The file name
+     * @param string $extension The file extension
+	 * @return	bool
+	 */
+    public static function hasExtension($file, $extension)
+    {
+        $fileLenght  = strlen($file);
+        $extensionLength = strlen($extension);
+
+        if ($extensionLength > $fileLenght) return false;
+        return substr_compare($file, $extension, $fileLenght - $extensionLength, $extensionLength) === 0;
+    }
+
+	/**
 	 *  Main autoload function
 	 *
 	 * @static
@@ -212,28 +229,50 @@ class Autoloader
 			$plugin = false;
 			foreach(self::$plugins as $key => &$p) {
 
-                // REV
-                if (isset($p['autoload'][trim($class,'\\')])) {
-                    if (file_exists ($p['main_dir']. '/'. $p['autoload'][trim($class,'\\')])) {
-                        include $p['main_dir']. '/'. $p['autoload'][trim($class,'\\')];
-                    }
-                }
-
 				if ($p['namespace'] == $class_arr[0]) {
 					$plugin = $p;
 				}
+
+                // Check the cache array
+                if ($plugin && $plugin['cache_enabled']) {
+                    $file = self::checkCacheClass($class);
+                    if ($file) {
+                        require_once $file;
+                        return true;	
+                    }
+                }
+
+                // Configured autoload files
+                foreach ($p['autoload'] as $keyAutoload => $file) {
+                    if (trim($keyAutoload,'\\') == trim($class,'\\')) {
+                        $file = trim($file,'\\/');
+                        $filePath = $file;
+                        if (!self::hasExtension($filePath, '.php')) $filePath = $filePath.'.php';                        
+                        if (file_exists ($p['dir']. '/'. $filePath)) {
+                            if ($plugin['cache_enabled']) {
+                                self::$cache[$class] = $filePath;
+                                self::saveCache();						
+                            }
+                            require_once $p['dir']. '/'. $filePath;
+                            return true;  
+                        }
+                        $filePath = $file;
+                        if (!self::hasExtension($file, '.php') && !self::hasExtension($file, '.class.php')) {
+                            $filePath = $file.'.class.php'; 
+                            if (file_exists ($p['dir']. '/'. $filePath)) {
+                                if ($plugin['cache_enabled']) {
+                                    self::$cache[$class] = $filePath;
+                                    self::saveCache();						
+                                }
+                                require_once $p['dir']. '/'. $filePath;
+                                return true;  
+                            }
+                        }                                                   
+                    }
+                }
 			}
 
 			if(!$plugin) return false;
-
-            // Check the cache array
-            if ($plugin['cache_enabled']) {
-                $file = self::checkCacheClass($class);
-                if ($file) {
-                    require_once $file;
-					return true;	
-                }
-            }
 
             // Remove the base plugin namespace
             $relative_class = trim(substr(trim($class,'\\'), strlen($class_arr[0])), '\\'); // Remove base namespace from the class name

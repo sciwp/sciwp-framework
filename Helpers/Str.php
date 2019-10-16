@@ -68,4 +68,64 @@ class Str extends Helper
 		}
         return false;
 	}
+    
+	/**
+	 * Checks if a string starts by a substring
+	 *
+	 * @param string $string
+     * @param string $substring
+     * @param bool $caseSensitive
+	 * @return bool
+	 */
+    public static function startsWith($string, $subString, $caseSensitive = false)
+    {
+        if ($caseSensitive === false) {
+            $string		= mb_strtolower($string);
+            $subString  = mb_strtolower($subString);
+        }
+
+        if (mb_substr($string, 0, mb_strlen($subString)) == $subString) return true;
+        return false;
+    }
+
+	/**
+	 * Checks if a string ends by a substring
+	 *
+	 * @param string $string
+     * @param string $substring
+     * @param bool $caseSensitive
+	 * @return bool
+	 */
+    public static function endsWith($string, $subString, $caseSensitive = false)
+    {
+        if ($caseSensitive === false) {
+            $string		= mb_strtolower($string);
+            $subString  = mb_strtolower($subString);
+        }
+
+        $strlen 			= strlen($string);
+        $subStringLength 	= strlen($subString);
+
+        if ($subStringLength > $strlen) return false;
+        return substr_compare($string, $subString, $strlen - $subStringLength, $subStringLength) === 0;
+    }
+ 
+	/**
+	 * Checks if a string contains a substring
+	 *
+	 * @param string $string
+     * @param string $substring
+     * @param bool $caseSensitive
+	 * @return bool
+	 */
+    public static function contains($string, $substring, $caseSensitive = false)
+    {
+        if ($caseSensitive === false) {
+            $string	= mb_strtolower($string);
+            $substring    	= mb_strtolower($substring);
+        }
+
+        if (mb_substr_count($string, $substring) > 0) return true;
+        return false;
+    }
 }
