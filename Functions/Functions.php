@@ -1,5 +1,5 @@
 <?php
-namespace KNDCC;
+namespace Wormvc;
 
 /**
  * Returns the Wormvc instance

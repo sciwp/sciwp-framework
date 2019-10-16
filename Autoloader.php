@@ -148,7 +148,7 @@ class Autoloader
      * @param Array $config The plugin config
 	 * @return void
 	 */
-    public static function addPlugin($id, $config = array())
+    public static function addPlugin($id, $config = [], $autoload = [] )
 	{
         self::$plugins[$id] = [
             'namespace' => $config['namespace'],
@@ -156,8 +156,9 @@ class Autoloader
             'dir' => $config['dir'],
             'main_dir' => $config['main_dir'],
             'module_dir' =>  $config['module_dir'],            
-            'autoloader_cache_enabled' => isset($config['autoloader_cache_enabled']) ? $config['autoloader_cache_enabled'] : false,
-            'config_autoloader_reflexive' => isset($config['config_autoloader_reflexive']) ? $config['config_autoloader_reflexive'] : false
+            'cache_enabled' => isset($config['cache_enabled']) ? $config['cache_enabled'] : false,
+            'reflexive' => isset($config['reflexive']) ? $config['reflexive'] : false,
+            'autoload' => $autoload
         ];
 	}
 
@@ -172,7 +173,7 @@ class Autoloader
 	{
 		$class_arr = explode('\\', trim($class,'\\'));
 
-		if (count ($class_arr) < 2 ) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
+		if (count ($class_arr) < 2) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
 
 		// Wormvc files
         if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
@@ -210,21 +211,29 @@ class Autoloader
         } else {
 			$plugin = false;
 			foreach(self::$plugins as $key => &$p) {
+
+                // REV
+                if (isset($p['autoload'][trim($class,'\\')])) {
+                    if (file_exists ($p['main_dir']. '/'. $p['autoload'][trim($class,'\\')])) {
+                        include $p['main_dir']. '/'. $p['autoload'][trim($class,'\\')];
+                    }
+                }
+
 				if ($p['namespace'] == $class_arr[0]) {
 					$plugin = $p;
 				}
-			}            
+			}
 
 			if(!$plugin) return false;
 
             // Check the cache array
-            if ($plugin['autoloader_cache_enabled']) {
+            if ($plugin['cache_enabled']) {
                 $file = self::checkCacheClass($class);
                 if ($file) {
                     require_once $file;
 					return true;	
                 }
-            }            
+            }
 
             // Remove the base plugin namespace
             $relative_class = trim(substr(trim($class,'\\'), strlen($class_arr[0])), '\\'); // Remove base namespace from the class name
@@ -253,21 +262,23 @@ class Autoloader
 
 			if (file_exists($class_file . '.php')) {
                 // OPTION 1: Namespace structure is a folder route
-                if ($plugin['autoloader_cache_enabled']) {
+                if ($plugin['cache_enabled']) {
                     self::$cache[$class] = $class_file . '.php';
 					self::saveCache();						
 				}                        
 				require_once $class_file . '.php';
 				return true;
-			} else if (file_exists($class_file . '.class.php')) {
+			}
+            else if (file_exists($class_file . '.class.php')) {
                 // OPTION 2: Namespace structure is a folder route, and the class has the class suffix
-                if ($plugin['autoloader_cache_enabled']) {
+                if ($plugin['cache_enabled']) {
                     self::$cache[$class] = $class_file . '.class.php';
 					self::saveCache();						
 				}                
 				require_once $class_file . '.class.php';
 				return true;			
-			} else if ($plugin['config_autoloader_reflexive']) {
+			}
+            else if ($plugin['reflexive']) {
 				// OPTION 3: Namespace structure is a file name with the class suffix
                 $found = false;				
 				$class_name = '';
@@ -281,7 +292,7 @@ class Autoloader
 				}
 				$file = self::searchReflexiveClassFile($plugin['dir'], $class_name.'class.php');
 				if($file) {
-					if ($plugin['autoloader_cache_enabled']) {
+					if ($plugin['cache_enabled']) {
 						self::$cache[$class] = $file;
 						self::saveCache();						
 					}

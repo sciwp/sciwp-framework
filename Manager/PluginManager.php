@@ -46,20 +46,23 @@ class PluginManager extends Manager
     public function add($plugin_file, $plugin_id)
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
-        $this->plugins[$plugin_id] = $this->wormvc->get('\Wormvc\Wormvc\Plugin', [$plugin_file, $plugin_id]);        
+        $this->plugins[$plugin_id] = $this->wormvc->get('\Wormvc\Wormvc\Plugin', [$plugin_file, $plugin_id]);
+       
+        $autoload = isset($this->plugins[$plugin_id]->config()['autoload']) ? $this->plugins[$plugin_id]->config()['autoload'] : [];
        
         // Add the plugin to the Autoloader
         $this->autoloader::addPlugin(
             $plugin_id,
-            array(
+            [
                 'namespace' => $this->plugins[$plugin_id]->getNamespace(),
                 'main_namespace' =>  $this->plugins[$plugin_id]->getMainNamespace(),
                 'dir' => $this->plugins[$plugin_id]->getDir(),
                 'main_dir' =>  $this->plugins[$plugin_id]->getMainDir(),
                 'module_dir' =>  $this->plugins[$plugin_id]->getModuleDir(),                
-                'autoloader_cache_enabled' => $this->plugins[$plugin_id]->getAutoloaderCacheEnabled(),
-                'config_autoloader_reflexive' =>  $this->plugins[$plugin_id]->config()['autoloader']['reflexive']
-            )
+                'cache_enabled' => $this->plugins[$plugin_id]->getAutoloaderCacheEnabled(),
+                'reflexive' =>  $this->plugins[$plugin_id]->config()['autoloader']['reflexive']
+            ],
+            $autoload 
         );
 
  

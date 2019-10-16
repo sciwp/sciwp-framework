@@ -71,8 +71,13 @@ ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunct
     }
     fclose($handle);
     $replaceStringFunction($replaceStringFunction, dirname(__FILE__), $old_core_namespace, $new_core_namespace);
-    $file_content = file_get_contents(dirname(__FILE__).'/Traits/Wormvc.php');   
+
+    $file_content = file_get_contents($file_path);   
     file_put_contents($file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
+
+    $functions_file_path = plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
+    $file_content = file_get_contents($functions_file_path);   
+    file_put_contents($functions_file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
 };
 
 // Load config file
