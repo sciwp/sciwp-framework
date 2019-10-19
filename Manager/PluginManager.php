@@ -3,10 +3,10 @@ namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Plugin;
+use \Wormvc\Wormvc\Plugin as Plugin;
 use \Wormvc\Wormvc\Manager;
 use \Wormvc\Wormvc\Autoloader;
-use Wormvc\Wormvc\Services\Activation as ActivationService;
+use \Wormvc\Wormvc\Services\Activation as ActivationService;
 use \Wormvc\Wormvc\Traits\Singleton;
 
 /**
@@ -46,7 +46,7 @@ class PluginManager extends Manager
     public function add($plugin_file, $plugin_id)
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
-        $this->plugins[$plugin_id] = $this->wormvc->get('\Wormvc\Wormvc\Plugin', [$plugin_file, $plugin_id]);
+        $this->plugins[$plugin_id] = $this->wormvc->get(Plugin::class, [$plugin_file, $plugin_id]);
 
         $autoload = isset($this->plugins[$plugin_id]->config()['autoload']) ? $this->plugins[$plugin_id]->config()['autoload'] : [];
         // Add the plugin to the Autoloader
@@ -65,14 +65,15 @@ class PluginManager extends Manager
         );
 
  
-        $activation_service = $this->wormvc->get(ActivationService::class);
-        $this->plugins[$plugin_id]->services()->add('activation', $activation_service);
-        
+        //$activation_service = $this->wormvc->get(ActivationService::class);
+        //$this->plugins[$plugin_id]->services()->add('activation', $activation_service);
+
         // Add the providers to the provider manager
         $plugin_config = $this->plugins[$plugin_id]->config();
         if (isset($plugin_config['providers'])) {
             $this->wormvc->providers()->add((Array) $plugin_config['providers']);
         }
+        
         return $this->plugins[$plugin_id];
     }
 

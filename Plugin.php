@@ -65,9 +65,9 @@ class Plugin
     /** @var Collection $services Collection to store the services */
     private $services_collection;
     
-    public function __construct($plugin_file_path, $plugin_id, Collection $services_collection, ActivationService $activation_service, DeactivationService $deactivation_service)
+    public function __construct($plugin_file, $plugin_id, Collection $services_collection, ActivationService $activation_service, DeactivationService $deactivation_service)
     {
-        $this->file = $plugin_file_path;
+        $this->file = $plugin_file;
         $this->dir = rtrim( dirname( $this->file ), '/' );
         $this->url = plugin_dir_url( dirname( $this->file ) );
         $this->config = file_exists(  $this->dir . '/config.php' ) ? include  $this->dir . '/config.php' : array();

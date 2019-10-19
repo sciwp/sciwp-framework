@@ -25,8 +25,8 @@ class Activation
 	/** @var string $checks Stores a list of the activation checks */	
 	private $config;
 
-	private $checks = array();
-	/** @var string $checks Stores a list of the activation checks */	
+    /** @var string $checks Stores a list of the activation checks */
+	public $checks = array();
 
 	/** @var string $actions Stores a list of the activation actions */	
 	private $actions = array();
@@ -49,6 +49,7 @@ class Activation
         $this->plugin_name = $plugin_name;
         $this->plugin_file = $plugin_file;
         $this->config = $config_array;
+        
 		register_activation_hook( $plugin_file, array($this,'run'));
 		return $this;
 	}
@@ -64,8 +65,10 @@ class Activation
 	public function addCheck($name, $callback, $params = false) 
 	{
 		$check = array('name' => $name, 'callback' => $callback);
-		if ($params) $check['params'] = (array) $params;
-		$this->checks[] = $check;
+		if ($params) {
+            $check['params'] = (array) $params;
+        }
+		$this->checks[] = $check; 
 		return $this;
 	}
 
@@ -87,8 +90,6 @@ class Activation
 
 	/**
 	 * Plugin activation
-	 * 
-	 * @since 1.0.0
 	 */ 
 	public function run()
 	{
@@ -175,7 +176,7 @@ class Activation
 
 		foreach ($this->checks as $check) {
 			$callback = $check['callback'];
-			
+
             // File inclusion
 			if (is_string($callback) && strpos($callback, ".") !== false) {
 				$result = include ($callback);
@@ -211,8 +212,9 @@ class Activation
 			deactivate_plugins( plugin_basename( __FILE__ ) ) ;
 			wp_die($message,'Plugin Activation Error',  array( 'response'=>200, 'back_link'=>TRUE ) );
 		}
-		foreach ($this->actions as $action) {
 
+		foreach ($this->actions as $action) {
+            
 			$callback = $action['callback'];
 			// File inclusion
 			if (is_string($callback) && strpos($callback, ".") !== false) {
