@@ -157,7 +157,7 @@ class Autoloader
             'module_dir' =>  $config['module_dir'],            
             'cache_enabled' => isset($config['cache_enabled']) ? $config['cache_enabled'] : false,
             'reflexive' => isset($config['reflexive']) ? $config['reflexive'] : false,
-            'namespaces' => isset($config['autoload']['namespaces']) ? $config['autoload']['namespaces'] : [],
+            'autoload' => isset($config['autoload']) ? $config['autoload'] : [],
         ];
 	}
 
@@ -251,8 +251,8 @@ class Autoloader
                 $classToCache = $p['cache_enabled'] ? $class : false;
 
                 // Configured custom namespaces
-                foreach ($p['namespaces'] as $keyAutoload => $folder) {
-                    
+                foreach ($p['autoload'] as $keyAutoload => $folder) {
+
                     $base = trim($keyAutoload,'\\');
                     if (substr($class, 0, strlen($base)) === $base ) {
 

@@ -95,81 +95,84 @@ class Activation
 		global $wp_version;
 		$requirements=true;
 		$message="";
-		if (isset($this->config['check_php'])) {
-			if (!is_array($this->config['check_php']) && $this->config['check_php']) {
-				if ( version_compare( PHP_VERSION, $this->config['check_php'], '<' ) ) {
+		if (isset($this->config['php'])) {
+			if (!is_array($this->config['php']) && $this->config['php']) {
+				if ( version_compare( PHP_VERSION, $this->config['php'], '<' ) ) {
 					$requirements = false;
-					$message .= '<p>'.sprintf('The %1$s plugin requires PHP version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['check_php']).'</p>';
+					$message .= '<p>'.sprintf('The %1$s plugin requires PHP version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['php']).'</p>';
 				}
 			}
-			else if (isset($this->config['check_php']['enabled']) && $this->config['check_php']['enabled']) {
-				if ( version_compare( PHP_VERSION, $this->config['check_php']['version'], '<' ) ) {
+			else if (isset($this->config['php']['enabled']) && $this->config['php']['enabled']) {
+				if ( version_compare( PHP_VERSION, $this->config['php']['version'], '<' ) ) {
 					$requirements = false;
-					if (isset($this->config['check_php']['error'])) {
-						$error = $this->config['check_php']['error'];
+					if (isset($this->config['php']['message'])) {
+						$error = $this->config['php']['message'];
 					}
 					else {
-						$error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
+						$error = 'The %1$s plugin requires the PHP version %2$s or greater. Please make sure it is installed and try again.';
 					}					
-					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['check_php']['version']).'</p>';
+					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['php']['version']).'</p>';
 				}
 			}
 		}
-		if (isset($this->config['check_wordpress'])) {
-			if (!is_array($this->config['check_wordpress']) && $this->config['check_wordpress']) {
-				if (version_compare($wp_version, $this->config['check_wordpress'], '<' )) {
+		if (isset($this->config['wordpress'])) {
+			if (!is_array($this->config['wordpress']) && $this->config['wordpress']) {
+				if (version_compare($wp_version, $this->config['wordpress'], '<' )) {
 					$requirements = false;
-					$message .= '<p>'.sprintf('The %1$s plugin requires WordPress version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['check_wordpress']).'</p>';
+					$message .= '<p>'.sprintf('The %1$s plugin requires WordPress version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['wordpress']).'</p>';
 				}
 			}
-			else if (isset($this->config['check_wordpress']['enabled']) && $this->config['check_wordpress']['enabled']) {
-				if (version_compare($wp_version, $this->config['check_wordpress']['version'], '<' )) {
+			else if (isset($this->config['wordpress']['enabled']) && $this->config['wordpress']['enabled']) {
+				if (version_compare($wp_version, $this->config['wordpress']['version'], '<' )) {
 					$requirements = false;
-					if (isset($this->config['check_wordpress']['error'])) {
-						$error = $this->config['check_wordpress']['error'];
+					if (isset($this->config['wordpress']['message'])) {
+						$error = $this->config['wordpress']['message'];
 					}
 					else {
-						$error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
+						$error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and try again.';
 					}
-					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['check_wordpress']['version']).'</p>';
+					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['wordpress']['version']).'</p>';
 				}
 			}
 		}
-		if (isset($this->config['check_plugins']) && count($this->config['check_plugins'])) {
-			$active_plugins = get_option('active_plugins');
-			foreach($active_plugins  as $key => $plugin) {
-				$plugin_arr = explode('/', trim($plugin,'/'));
-				$active_plugins[$key] = is_array($plugin_arr) ? $plugin_arr[0] : trim($plugin);
-			}			
-			if (is_array($this->config['check_plugins']) && !isset($this->config['check_plugins']['enabled'])) {
-				foreach ( (array) $this->config['check_plugins'] as $key => $name) {
-					if (is_numeric($key)) $key = $name;
-					if (!in_array($key, $active_plugins)) {
-						$requirements = false;
-						$name = isset($name) ? $name : $key;
-						$message .= '<p>'.sprintf('The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.', '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$name.'</strong>').'</p>';
-					}
-				}
-			}
-			else if (isset($this->config['check_plugins']['enabled']) && $this->config['check_plugins']['enabled']) {
-				if ( isset($this->config['check_plugins']['plugins']) && count($this->config['check_plugins']['plugins']) ) {
-					if (isset($this->config['check_plugins']['error'])) {
-						$error = $this->config['check_plugins']['error'];
-					}
-					else {
-						$error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
-					}					
-					foreach ( (array) $this->config['check_plugins']['plugins'] as $key => $name) {
-						if (is_numeric($key)) $key = $name;
-						if (!in_array($key, $active_plugins)) {
-							$requirements = false;
-							$name = isset($name) ? $name : $key;
-							$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$name.'</strong>').'</p>';
-						}
-					}
-				}
-			}
+		if (isset($this->config['plugins'])) {
+            
+            if (!is_array($this->config['plugins'])) {
+                $this->config['plugins'] = [$this->config['plugins']];
+            }
+            
+            if (is_array($this->config['plugins']) && count($this->config['plugins'])) {
+            
+                $active_plugins = get_option('active_plugins');
+                foreach($active_plugins  as $key => $plugin) {
+                    $plugin_arr = explode('/', trim($plugin,'/'));
+                    $active_plugins[$key] = is_array($plugin_arr) ? $plugin_arr[0] : trim($plugin);
+                }
+
+                foreach ((array) $this->config['plugins'] as $key => $requiredPlugin) {
+
+                    if (!is_array($requiredPlugin)) {
+                        if (!in_array($requiredPlugin, $active_plugins)) {
+                                $requirements = false;
+                                $error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
+                                $message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$requiredPlugin.'</strong>').'</p>';
+                        }
+                    } else {
+                        if (!in_array($key, $active_plugins)) {
+                            $requirements = false;
+                            if (isset($requiredPlugin['message'])) {
+                                $error = $requiredPlugin['message'];
+                            } else {
+                                $error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
+                            }					
+                            $name = isset($requiredPlugin['name']) ? $requiredPlugin['name'] : $key;
+                            $message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$name.'</strong>').'</p>';
+                        }
+                    }
+                }
+            }
 		}
+
 		foreach ($this->checks as $check) {
 			$callback = $check['callback'];
 			
