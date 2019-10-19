@@ -20,6 +20,7 @@ include plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
 $file_config = plugin_dir_path(dirname(__FILE__)) . 'config.php';
 $dir_cache = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
 $file_config_cache = $dir_cache . 'config.cache.php';
+$file_autoload_cache = $dir_cache . 'autoload.cache.php';
 $dirname_plugin  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 ))));
 
 /**
@@ -76,7 +77,7 @@ ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunct
     file_put_contents($file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
 
     $functions_file_path = plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
-    $file_content = file_get_contents($functions_file_path);   
+    $file_content = file_get_contents($functions_file_path);
     file_put_contents($functions_file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
 };
 
@@ -84,11 +85,11 @@ ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunct
 if (!file_exists($file_config)) die('Cannot open the config file:  ' . $file_config);
 $config = include $file_config;
 
-$config_cache = file_exists($file_config_cache) ? include $file_config_cache : ['namespace' => null];
+$config_cache = file_exists($file_config_cache) ? include $file_config_cache : ['namespace' => null, 'autoloader' => ['cache' => null]];
 
 $rebuild = !isset($config['namespace']) || (isset($config['rebuild']) && $config['rebuild'] === true) || $config['namespace'] !== $config_cache['namespace'] ? true : false;
 
-if ($rebuild) {  
+if ($rebuild) {
     $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($dirname_plugin) {
         // Try to get the namespace from the main.php file
         $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r")
@@ -107,10 +108,14 @@ if ($rebuild) {
 
     ${$dirname_plugin.'ReplaceCoreNamespaceFunction'}(${$dirname_plugin.'ReplaceStringFunction'}, $namespace);
     $config_cache['namespace'] = $namespace;
+}
 
+if($rebuild || (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== $config_cache['autoloader']['cache'])) {
     if(!file_exists($dir_cache)) mkdir($dir_cache);
-    file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config_cache , true) . ';')
+    file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config, true) . ';')
     or die('Cannot write the file:  '.$file_config_cache);
+    file_put_contents ($file_autoload_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return array ();')
+    or die('Cannot write the file:  '.$file_autoload_cache);
 }
 
 // Require the Autoloader

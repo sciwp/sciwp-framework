@@ -47,9 +47,8 @@ class PluginManager extends Manager
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
         $this->plugins[$plugin_id] = $this->wormvc->get('\Wormvc\Wormvc\Plugin', [$plugin_file, $plugin_id]);
-       
-        $autoload = isset($this->plugins[$plugin_id]->config()['autoload']) ? $this->plugins[$plugin_id]->config()['autoload'] : [];
-       
+
+        $namespaces = isset($this->plugins[$plugin_id]->config()['autoload']['namespaces']) ? $this->plugins[$plugin_id]->config()['autoload']['namespaces'] : [];
         // Add the plugin to the Autoloader
         $this->autoloader::addPlugin(
             $plugin_id,
@@ -60,9 +59,11 @@ class PluginManager extends Manager
                 'main_dir' =>  $this->plugins[$plugin_id]->getMainDir(),
                 'module_dir' =>  $this->plugins[$plugin_id]->getModuleDir(),                
                 'cache_enabled' => $this->plugins[$plugin_id]->getAutoloaderCacheEnabled(),
-                'reflexive' =>  $this->plugins[$plugin_id]->config()['autoloader']['reflexive']
-            ],
-            $autoload 
+                'reflexive' =>  $this->plugins[$plugin_id]->config()['autoloader']['reflexive'],
+                'autoload' =>  [
+                    'namespaces' => $namespaces,
+                ]
+            ]
         );
 
  

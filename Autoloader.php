@@ -9,7 +9,7 @@ use \Wormvc\Wormvc\Manager\PluginManager;
 /**
  * Autoloader Class
  *
- * @author		Eduardo Lazaro Rodriguez <eduzroco@gmail.com>
+ * @author		Eduardo Lazaro Rodriguez <me@edulazaro.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
@@ -62,7 +62,6 @@ class Autoloader
 	/**
 	 * Initialize the autoloader
 	 *
-	 * @static
 	 * @return	object
 	 */
 	public static function start()
@@ -79,7 +78,6 @@ class Autoloader
 	/**
 	 * Loads the autoloader cache
 	 *
-	 * @static
 	 * @return	bool
 	 */
 	public static function loadCache()
@@ -92,7 +90,6 @@ class Autoloader
 	/**
 	 * Saves the autoloader cache
 	 *
-	 * @static
 	 * @return	bool
 	 */
 	public static function saveCache()
@@ -105,24 +102,26 @@ class Autoloader
 	/**
 	 * Checks the autoloader cache
 	 *
-	 * @static
 	 * @return	bool
 	 */
-	public static function checkCacheClass($class)
+	public static function checkCache($class)
 	{
         if (isset(self::$cache[$class])) {
-            if (file_exists (self::$cache[$class])) {
-                return self::$cache[$class];
+            if (self::includeFile(self::$cache[$class])) {
+                return true;
+            } else {
+                unset(self::$cache[$class]);
+                self::saveCache();
             }
-            else unset(self::$cache[$class]);
-		}
+        }
 		return false;
-	}    
-    
+	}
+
 	/**
 	 * Seaches for a class file
 	 *
-	 * @static
+     * @param string $folder The folder to search in
+	 * @param string $class A class to save in the cache
 	 * @return	bool
 	 */	
 	public static function searchReflexiveClassFile($folder, $class)
@@ -148,7 +147,7 @@ class Autoloader
      * @param Array $config The plugin config
 	 * @return void
 	 */
-    public static function addPlugin($id, $config = [], $autoload = [] )
+    public static function addPlugin($id, $config = [])
 	{
         self::$plugins[$id] = [
             'namespace' => $config['namespace'],
@@ -158,14 +157,34 @@ class Autoloader
             'module_dir' =>  $config['module_dir'],            
             'cache_enabled' => isset($config['cache_enabled']) ? $config['cache_enabled'] : false,
             'reflexive' => isset($config['reflexive']) ? $config['reflexive'] : false,
-            'autoload' => $autoload
+            'namespaces' => isset($config['autoload']['namespaces']) ? $config['autoload']['namespaces'] : [],
         ];
+	}
+
+
+	/**
+	 * Includes a file
+	 *
+     * @param string $file The file to include
+	 * @param string $class A class to save in the cache
+	 * @return	bool
+	 */
+	public static function includeFile($file, $class = false)
+	{
+        if (file_exists($file)) {  
+            require_once $file;
+            if ($class) {
+                self::$cache[$class] = $file;
+                self::saveCache();						
+            }
+            return true;
+        }
+        return false;
 	}
 
 	/**
 	 * File name has extension
 	 *
-	 * @static
 	 * @param string $string The file name
      * @param string $extension The file extension
 	 * @return	bool
@@ -182,13 +201,13 @@ class Autoloader
 	/**
 	 *  Main autoload function
 	 *
-	 * @static
 	 * @param string $class The class name
 	 * @return	bool
 	 */
-	public static  function autoload( $class )
+	public static  function autoload($class)
 	{
-		$class_arr = explode('\\', trim($class,'\\'));
+        $class = trim($class);
+		$class_arr = explode('\\', $class);
 
 		if (count ($class_arr) < 2) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
 
@@ -212,70 +231,49 @@ class Autoloader
                 foreach ($class_arr as $key => $element) {
                     $class_file .= '/' . $element;
                 }
-            
-                // OPTION 1: Namespace structure is a folder route
-                if (file_exists($class_file . '.php')) {
-                    require_once $class_file . '.php';
-                    return true;
-                }
-                // OPTION 2: Namespace structure is a folder route, and the class has the class suffix
-                else if (file_exists($class_file . '.class.php')) {
-                    require_once $class_file . '.class.php';
-                    return true;			
-                }
+                
+                if (self::includeFile($class_file . '.php')) return true;
+                else if (self::includeFile($class_file . '.class.php')) return true;
                 return false;
             }        
         } else {
+            // Check the cache array
+            if (self::checkCache($class)) return true;
+
 			$plugin = false;
+
 			foreach(self::$plugins as $key => &$p) {
 
 				if ($p['namespace'] == $class_arr[0]) {
 					$plugin = $p;
 				}
+                
+                $classToCache = $p['cache_enabled'] ? $class : false;
 
-                // Check the cache array
-                if ($plugin && $plugin['cache_enabled']) {
-                    $file = self::checkCacheClass($class);
-                    if ($file) {
-                        require_once $file;
-                        return true;	
-                    }
-                }
+                // Configured custom namespaces
+                foreach ($p['namespaces'] as $keyAutoload => $folder) {
+                    
+                    $base = trim($keyAutoload,'\\');
+                    if (substr($class, 0, strlen($base)) === $base ) {
 
-                // Configured autoload files
-                foreach ($p['autoload'] as $keyAutoload => $file) {
-                    if (trim($keyAutoload,'\\') == trim($class,'\\')) {
-                        $file = trim($file,'\\/');
-                        $filePath = $file;
-                        if (!self::hasExtension($filePath, '.php')) $filePath = $filePath.'.php';                        
-                        if (file_exists ($p['dir']. '/'. $filePath)) {
-                            if ($plugin['cache_enabled']) {
-                                self::$cache[$class] = $filePath;
-                                self::saveCache();						
-                            }
-                            require_once $p['dir']. '/'. $filePath;
-                            return true;  
+                        $class_file = $p['dir']. '/'. trim($folder,'\/');
+                        $class_arr_r = explode('\\', substr($class, strlen($base), strlen($class)));
+
+                        foreach ($class_arr_r as $key => $element) {
+                            if ($element) $class_file .= '/' . $element;
                         }
-                        $filePath = $file;
-                        if (!self::hasExtension($file, '.php') && !self::hasExtension($file, '.class.php')) {
-                            $filePath = $file.'.class.php'; 
-                            if (file_exists ($p['dir']. '/'. $filePath)) {
-                                if ($plugin['cache_enabled']) {
-                                    self::$cache[$class] = $filePath;
-                                    self::saveCache();						
-                                }
-                                require_once $p['dir']. '/'. $filePath;
-                                return true;  
-                            }
-                        }                                                   
+
+                        if (self::includeFile($class_file . '.php',  $classToCache)) return true;
+                        if (self::includeFile($class_file . '.class.php',  $classToCache)) return true;
                     }
                 }
 			}
 
-			if(!$plugin) return false;
+			if (!$plugin) return false;
+            $classToCache = $plugin['cache_enabled'] ? $class : false;
 
             // Remove the base plugin namespace
-            $relative_class = trim(substr(trim($class,'\\'), strlen($class_arr[0])), '\\'); // Remove base namespace from the class name
+            $relative_class = trim(substr($class, strlen($class_arr[0])), '\\'); // Remove base namespace from the class name
 			array_shift ($class_arr); // Remove base namespace from the array
             
 			$class_file = $plugin['dir'];
@@ -299,26 +297,11 @@ class Autoloader
 				}
 			}
 
-			if (file_exists($class_file . '.php')) {
-                // OPTION 1: Namespace structure is a folder route
-                if ($plugin['cache_enabled']) {
-                    self::$cache[$class] = $class_file . '.php';
-					self::saveCache();						
-				}                        
-				require_once $class_file . '.php';
-				return true;
-			}
-            else if (file_exists($class_file . '.class.php')) {
-                // OPTION 2: Namespace structure is a folder route, and the class has the class suffix
-                if ($plugin['cache_enabled']) {
-                    self::$cache[$class] = $class_file . '.class.php';
-					self::saveCache();						
-				}                
-				require_once $class_file . '.class.php';
-				return true;			
-			}
-            else if ($plugin['reflexive']) {
-				// OPTION 3: Namespace structure is a file name with the class suffix
+            if (self::includeFile($class_file . '.php',  $classToCache)) return true;
+            if (self::includeFile($class_file . '.class.php',  $classToCache)) return true;
+
+            if ($plugin['reflexive']) {
+				// Namespace structure is a file name with the class suffix
                 $found = false;				
 				$class_name = '';
 				foreach ( array_reverse($class_arr) as $key => $namespace) {
@@ -330,14 +313,7 @@ class Autoloader
 					}
 				}
 				$file = self::searchReflexiveClassFile($plugin['dir'], $class_name.'class.php');
-				if($file) {
-					if ($plugin['cache_enabled']) {
-						self::$cache[$class] = $file;
-						self::saveCache();						
-					}
-					require_once $file;
-					return true;				
-				}
+				if ($file && self::includeFile($file,  $classToCache)) return true;
             }
             return false;
 		}
