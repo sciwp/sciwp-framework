@@ -249,7 +249,14 @@ class Activation
 				}
 				// Functions and static methods
 				else {
-					call_user_func($callback);
+					// Function with parameters
+					if ( isset($action['params']) ) {
+						$result = call_user_func_array($callback, $action['params']);
+					}
+					// Function without parameters
+					else {
+						$result = call_user_func($callback);
+					}
 				}
 			}
 		}

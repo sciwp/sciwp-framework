@@ -83,11 +83,11 @@ class Deactivation
 				}
 				// Functions and static methods
 				else {
-					// Instance with parameters
+					// Function with parameters
 					if ( isset($action['params']) ) {
 						$result = call_user_func_array($callback, $action['params']);
 					}
-					// Instance without parameters
+					// Function without parameters
 					else {
 						$result = call_user_func($callback);
 					}
