@@ -43,10 +43,12 @@ class Deactivation
 	 *
 	 * @return	object
 	 */	
-	public function action($name, $callback, $params = false) 
+	public function addAction($name, $callback, $params = false) 
 	{
 		$action = array('name' => $name, 'callback' => $callback);
-		if ($params) $action['params'] = (array) $params;
+		if ($params) {
+            $action['params'] = (array) $params;
+        }
 		$this->actions[] = $action;
 		return $this;
 	}
@@ -81,7 +83,14 @@ class Deactivation
 				}
 				// Functions and static methods
 				else {
-					call_user_func($callback);
+					// Instance with parameters
+					if ( isset($action['params']) ) {
+						$result = call_user_func_array($callback, $action['params']);
+					}
+					// Instance without parameters
+					else {
+						$result = call_user_func($callback);
+					}
 				}
 			}
 		}

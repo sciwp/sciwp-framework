@@ -80,11 +80,13 @@ class Activation
      * @param array $params The function parameters
 	 * @return	object
 	 */	
-	public function action($name, $callback, $params = false) 
+	public function addAction($name, $callback, $params = false) 
 	{
 		$action = array('name' => $name, 'callback' => $callback);
-		if ($params) $action['params'] = (array) $params;
-		$this->actions[] = $action;
+		if ($params) {
+            $action['params'] = (array) $params;
+		}
+        $this->actions[] = $action;
 		return $this;
 	}
 
@@ -200,14 +202,22 @@ class Activation
 				}
 				// Functions and static methods
 				else {
-					$result = call_user_func($callback);
+					// Instance with parameters
+					if ( isset($check['params']) ) {
+						$result = call_user_func_array($callback, $check['params']);
+					}
+					// Instance without parameters
+					else {
+						$result = call_user_func($callback);
+					}
 				}
 			}
-			if ( $result !== true ) {
+			if ( $result !== true ) { 
 				$requirements = false;
 				$message .= '<p>'.$result.'</p>';
 			}
 		}
+
 		if(!$requirements) {
 			deactivate_plugins( plugin_basename( __FILE__ ) ) ;
 			wp_die($message,'Plugin Activation Error',  array( 'response'=>200, 'back_link'=>TRUE ) );
