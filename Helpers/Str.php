@@ -3,6 +3,9 @@ namespace Wormvc\Wormvc\Helpers;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use \Wormvc\Wormvc\Helper;
+use \Wormvc\Wormvc\Libraries\Inflector;
+
 /**
  * Str Helper class
  *
@@ -127,5 +130,39 @@ class Str extends Helper
 
         if (mb_substr_count($string, $substring) > 0) return true;
         return false;
+    }
+    
+	/**
+	 * Transforms a plural string into singular
+	 *
+	 * @param string $string
+	 * @return string
+	 */
+    public static function toSingular($string)
+    {
+        return Inflector::singularize($string);
+    }
+
+    /**
+	 * Transforms a singular string into plural
+	 *
+	 * @param string $string
+	 * @return string
+	 */
+    public static function toPlural($string)
+    {
+        return Inflector::pluralize($string);
+    }
+    
+    /**
+	 * Transforms a singular string into plural
+	 *
+     * @param  number $count
+     * @param  string $word
+	 * @return string
+	 */
+    public static function reckon($number, $string)
+    {
+        return Inflector::reckon($string);
     }
 }

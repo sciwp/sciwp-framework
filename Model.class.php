@@ -3,10 +3,12 @@ namespace Wormvc\Wormvc;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use Wormvc\Wormvc\Helpers\Str;
+
 /**
  * Class Model
  *
- * @author		Eduardo Lazaro Rodriguez <eduzroco@gmail.com>
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
@@ -29,7 +31,7 @@ abstract class Model
     const UPDATED_AT = 'updated_at';
 
      /** @var string The table associated with the model */
-    protected $table;   
+    const TABLE_NAME = false;
 
     /**
      * Constructor.
@@ -76,7 +78,7 @@ abstract class Model
      *
      * @return string
      */
-    public function tablePrefix()
+    public static function tablePrefix()
     {
         global $wpdb;
         return $wpdb->prefix;
@@ -87,9 +89,13 @@ abstract class Model
      *
      * @return string
      */
-    public static function table()
+    public function table()
     {
-        return static::tablePrefix().static::TABLE_NAME;
+        if (static::TABLE_NAME) {
+            return static::tablePrefix().static::TABLE_NAME;
+        } else {
+            return static::tablePrefix().Str::toPlural(strtolower(substr(strrchr(get_class($this), "\\"), 1)));
+        }
     }
 
     /**
@@ -155,7 +161,7 @@ abstract class Model
         // Flatten complex objects
         $props = $this->flattenProps($props);
         // Insert or update?
-        if (is_null($props[static::primaryKey()])) {
+        if (array_key_exists(static::primaryKey(), $props)) {
             $wpdb->insert($this->table(), $props);
             $this->{static::primaryKey()} = $wpdb->insert_id;
         } else {
@@ -224,7 +230,7 @@ abstract class Model
      *
      * @return array
      */
-    public static function all()
+    public static function findAll()
     {
         global $wpdb;
         // Get the table name
