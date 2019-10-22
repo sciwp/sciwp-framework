@@ -30,48 +30,11 @@ abstract class Model
     /** @const string The name of the "updated at" column */
     const UPDATED_AT = 'updated_at';
 
-     /** @var string The table associated with the model */
+    /** @var string The table associated with the model */
     const TABLE_NAME = false;
 
-    /**
-     * Constructor.
-     *
-     * @param array $properties
-     */
-    public function __construct(array $properties = array())
-    {
-        foreach ($properties as $property => $value) {
-            $this->{$property} = maybe_unserialize($value);
-        }
-    }
-
-    /**
-     * Magically handle getters and setters.
-     *
-     * @param  string $function
-     * @param  array  $arguments
-     * @return mixed
-     */
-    public function __call($function, $arguments)
-    {
-        // Getters following the pattern 'get_{$property}'
-        if (substr($function, 0, 3) == 'get') {
-            $model_props = $this->properties();
-            $property    = lcfirst(substr($function, 3));
-            if (array_key_exists($property, $model_props)) {
-                return $this->{$property};
-            }
-        }
-
-        // Setters following the pattern 'set_{$property}'
-        if (substr($function, 0, 3) == 'set') {
-            $model_props = $this->properties();
-            $property    = lcfirst(substr($function, 3));
-            if (array_key_exists($property, $model_props)) {
-                $this->{$property} = $arguments[0];
-            }
-        }
-    }
+    /** @var list of model attributes */
+    protected $attributes = [];
 
     /**
      * Return configured table prefix
@@ -82,14 +45,14 @@ abstract class Model
     {
         global $wpdb;
         return $wpdb->prefix;
-    }      
+    }
 
     /**
      * Returns the table name
      *
      * @return string
      */
-    public function table()
+    public static function table()
     {
         if (static::TABLE_NAME) {
             return static::tablePrefix().static::TABLE_NAME;
@@ -106,17 +69,83 @@ abstract class Model
     public static function primaryKey()
     {
         return static::PRIMARY_KEY;
-    }    
+    }
 
     /**
-     * Return an array with the properties for this model
+     * Create a new object from the given data
      *
-     * @return array
+     * @return self
      */
-    public function properties()
+    public static function create($attributes)
     {
-        return get_object_vars($this);
-    }    
+        return new static($attributes);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param array $properties
+     */
+    public function __construct(array $attributes = array())
+    {
+        foreach ($attributes as $key => $value) {
+            $this->attributes[$key] = maybe_unserialize($value);
+        }
+    }
+ 
+    /**
+     * Get a property via the mafic get method
+     *
+     * @param string $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        if (isset($this->attributes[$key])) return $this->attributes[$key];
+        else return null;
+    }
+
+    /**
+     * Set a property via the mafic get method
+     *
+     * @param string $key
+     * @param mixed $value
+     * @return self
+     */
+    public function __set($key, $value)
+    {
+        $this->attributes[$key] = $value;
+        return $this;
+    }
+
+    /**
+     * Magically handle getters and setters.
+     *
+     * @param  string $function
+     * @param  array  $arguments
+     * @return mixed
+     */
+    public function __call($function, $arguments)
+    {
+        // Getters following the pattern 'get_{$property}'
+        if (substr($function, 0, 4) == 'get_') {
+            $model_props = get_object_vars($this);
+            $property    = lcfirst(substr($function, 4));
+            if (array_key_exists($property, $model_props)) {
+                return $this->{$property};
+            }
+        }
+
+        // Setters following the pattern 'set_{$property}'
+        if (substr($function, 0, 4) == 'set_') {
+            $model_props = get_object_vars($this);
+            $property    = lcfirst(substr($function, 4));
+
+            if (array_key_exists($property, $model_props)) { 
+                $this->{$property} = $arguments[0];
+            }
+        }
+    }
 
     /**
      * Convert complex objects to strings to insert into the database
@@ -139,16 +168,6 @@ abstract class Model
     }
 
     /**
-     * Create a new model from the given data
-     *
-     * @return self
-     */
-    public static function create($properties)
-    {
-        return new static($properties);
-    }    
-
-    /**
      * Save the model into the database creating or updating a record
      *
      * @return integer
@@ -156,18 +175,18 @@ abstract class Model
     public function save()
     {
         global $wpdb;
-        // Get the model's properties
-        $props = $this->properties();
+
         // Flatten complex objects
-        $props = $this->flattenProps($props);
+        $attributes = $this->flattenProps($this->attributes);
+
         // Insert or update?
-        if (array_key_exists(static::primaryKey(), $props)) {
-            $wpdb->insert($this->table(), $props);
+        if (!array_key_exists(static::primaryKey(), $attributes)) {            
+            $wpdb->insert($this->table(), $attributes);
             $this->{static::primaryKey()} = $wpdb->insert_id;
         } else {
-            $wpdb->update(static::table(), $props, array(static::primaryKey() => $this->{static::primaryKey()}));
+            $wpdb->update(static::table(), $attributes, array(static::primaryKey() => $attributes[static::primaryKey()]));
         }
-        return $this->id;
+        return $this;
     }
 
     /**
@@ -241,5 +260,5 @@ abstract class Model
             $results[$index] = static::create((array) $result);
         }
         return $results;
-    }
+    } 
 }
