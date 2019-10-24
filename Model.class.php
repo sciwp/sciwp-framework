@@ -32,6 +32,9 @@ abstract class Model
 
     /** @var string The table associated with the model */
     const TABLE_NAME = false;
+    
+    /** @var string The table associated with the model */
+    const TABLE_PREFIX = true;
 
     /** @var list of model attributes */
     protected $attributes = [];
@@ -43,8 +46,12 @@ abstract class Model
      */
     public static function tablePrefix()
     {
-        global $wpdb;
-        return $wpdb->prefix;
+        if (static::TABLE_PREFIX) {
+            global $wpdb;
+            return $wpdb->prefix;
+        } else {
+            return '';
+        }
     }
 
     /**
@@ -106,7 +113,7 @@ abstract class Model
     }
 
     /**
-     * Set a property via the mafic get method
+     * Set a property via the magic get method
      *
      * @param string $key
      * @param mixed $value
@@ -119,7 +126,7 @@ abstract class Model
     }
 
     /**
-     * Magically handle getters and setters.
+     * Magically handle getters and setters for the class properties
      *
      * @param  string $function
      * @param  array  $arguments
@@ -128,18 +135,19 @@ abstract class Model
     public function __call($function, $arguments)
     {
         // Getters following the pattern 'get_{$property}'
-        if (substr($function, 0, 4) == 'get_') {
+        if (substr($function, 0, 3) == 'get') {
             $model_props = get_object_vars($this);
-            $property    = lcfirst(substr($function, 4));
+            $property    = lcfirst(substr($function, 3));
+
             if (array_key_exists($property, $model_props)) {
                 return $this->{$property};
             }
         }
 
         // Setters following the pattern 'set_{$property}'
-        if (substr($function, 0, 4) == 'set_') {
+        if (substr($function, 0, 3) == 'set') {
             $model_props = get_object_vars($this);
-            $property    = lcfirst(substr($function, 4));
+            $property    = lcfirst(substr($function, 3));
 
             if (array_key_exists($property, $model_props)) { 
                 $this->{$property} = $arguments[0];
@@ -148,7 +156,7 @@ abstract class Model
     }
 
     /**
-     * Convert complex objects to strings to insert into the database
+     
      *
      * @param  array $props
      * @return array
@@ -161,7 +169,7 @@ abstract class Model
             } else if (is_array($value)) {
                 $props[$property] = serialize($value);
             } else if ($value instanceof AbstractClass) {
-                $props[$property] = $value->primaryKey();
+                $props[$property] = $value->{$value->primaryKey()}[0];
             }
         }
         return $props;
@@ -176,8 +184,18 @@ abstract class Model
     {
         global $wpdb;
 
-        // Flatten complex objects
-        $attributes = $this->flattenProps($this->attributes);
+        $attributes = $this->attributes;
+
+        // Convert complex objects to strings to insert into the database
+        foreach ($attributes as $key => $value) {
+            if (is_object($value) && get_class($value) == 'DateTime') {
+                $attributes[$key] = $value->format('Y-m-d H:i:s');
+            } else if (is_array($value)) {
+                $attributes[$key] = serialize($value);
+            } else if ($value instanceof AbstractClass) {
+                $attributes[$key] = $value->{$value->primaryKey()}[0];
+            }
+        }
 
         // Insert or update?
         if (!array_key_exists(static::primaryKey(), $attributes)) {            

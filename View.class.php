@@ -23,9 +23,9 @@ class View {
 	/** @var \Documentor\Core\Plugin $plugin Plugin reference*/
 	protected $plugin = Plugin::class;
 	
-	/**---------------------------------------------------------------
+	/**
 	 * Set the view params
-	 * ---------------------------------------------------------------
+	 * 
 	 * @return	Page
 	 */
 	public function params($params = array(), $override = false)
@@ -35,9 +35,9 @@ class View {
 		return $this;
 	}
 	
-	/**---------------------------------------------------------------
+	/**
 	 * Set a view param
-	 * ---------------------------------------------------------------
+	 * 
 	 * @return	Page
 	 */
 	public function param($key, $value)
@@ -46,9 +46,9 @@ class View {
 		return $this;
 	}
 
-	/**---------------------------------------------------------------
+	/**
 	 * Renders the current page
-	 * ---------------------------------------------------------------
+	 *
 	 * @return	Void
 	 */
 	public function render($content = false)
@@ -62,9 +62,9 @@ class View {
 			echo("<pre>");
 		}
 	}
-	/**---------------------------------------------------------------
+	/**
 	 * Gets the result of rendering the view, not rendering it
-	 * ---------------------------------------------------------------
+	 * 
 	 * @return	String
 	 */
 	public function process($path_to_file = false)
