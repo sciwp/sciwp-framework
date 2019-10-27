@@ -25,7 +25,7 @@ class Query
     protected $limit = 0;
 
     /** @var integer */
-    protected $offset = 0;
+    protected $skip = 0;
     
 	/** @var array */
     protected $where = array();
@@ -59,6 +59,7 @@ class Query
     public function __construct($model)
     {
         $this->model = $model;
+        $this->primary_key = $model::primaryKey();
     }
     /**
      * Return the string representation of the query.
@@ -100,14 +101,14 @@ class Query
         return $this;
     }
     /**
-     * Set the offset to use when calculating results.
+     * Set the skip to use when calculating results.
      *
-     * @param  integer $offset
+     * @param  integer $skip
      * @return self
      */
-    public function offset($offset)
+    public function skip($skip)
     {
-        $this->offset = (int) $offset;
+        $this->skip = (int) $skip;
         return $this;
     }
     /**
@@ -133,212 +134,380 @@ class Query
         return $this;
     }
 
-    /**---------------------------------------------------------------
-     * Add a variable clause to the search query.
-     * ---------------------------------------------------------------
-     * @param mixed $args,... An set of condition, operator and value,
-	 * or anarray of sets
-     * @return self
-     */	
-	 
-	 
 
+
+    public function open($boolean = 'AND')
+    {
+        $this->where[] = array('type' => 'open', 'boolean' => $boolean);
+		return $this;
+    }
+
+    public function close()
+    {
+        $this->where[] = array('type' => 'close');
+		return $this;
+    }
+
+    public function andOpen()
+    {
+        $this->open('AND');
+		return $this;
+    }
+    
+    public function orOpen()
+    {
+        $this->open('OR');
+		return $this;
+    }
+
+    public function group(...$args)
+    {
+        $this->where[] = array('type' => 'open', 'boolean' => 'AND');
+        foreach ($args as $query) {
+            echo("<pre>");
+            print_r($query);echo("</pre>");
+            call_user_func_array([$this, $query[0]], (array) $query[1]);
+        }
+        $this->where[] = array('type' => 'close');
+        return $this;
+    }
+
+
+    /**
+     * Add a where clause to the search query.
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @param array $options An array of options
+     * @return self
+     */
+    private function addWhere($args, $options = []) {
+        if (!is_array($args[0])) $args = array($args);
+        
+        if (!isset($options['negation'])) $options['negation'] = '';
+        if (!isset($options['boolean'])) $options['boolean'] = 'AND';
+        if (!isset($options['many'])) $options['many'] = 'OR';
+        
+        
+		foreach ($args as $key => $arg) {
+            // If only a value is present
+            if (count($args[$key]) == 1) {
+                $args[$key][1] = $args[$key][0];
+                $args[$key][0] = $this->primary_key;
+			}
+            // If only a key and a value is present
+			if (count($args[$key]) == 2) {
+				$args[$key][2] = $args[$key][1];
+				$args[$key][1] = '=';
+			}
+            // If only key, value and operator is present
+			if (count($args[$key]) == 3) {
+				$args[$key][3] = $options['boolean'];
+			}
+            // If only key, value, operator and (AND|OR) is present, add empty for negation
+			if (count($args[$key]) == 4) {
+				$args[$key][4] = $options['negation'];
+			}
+		}
+        foreach ($args as $arg) {
+            $this->where[] = array('type' => 'where', 'column' => $arg[0], 'operator' => $arg[1], 'value' => $arg[2], 'boolean' => $arg[3], 'negation' => $arg[4], 'many' => $options['many']);
+        }
+		return $this;
+    }
+
+    /**
+     * Add a and where variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @return self
+     */
     public function where(...$args)
     {
-		/*
-        if ($args[0] instanceof Closure) {
-            $args[0]($query = $this->model->query());
-            $this->query->addNestedWhereQuery($query->getQuery(), $boolean);
-        }
-		*/
-		if (!is_array($args[0])) $args = array($args);		
-		foreach ($args as $arg) {
-			if (count($arg) == 2) {
-				$arg[2] = $arg[1];
-				$arg[1] = '=';
-			}
-			if(!isset($arg[3])) $arg[3] = 'AND';
-			$this->where[] = array('type' => 'where', 'column' => $arg[0], 'operator' => $arg[1], 'value' => $arg[2], 'boolean' => $arg[3]);
-		}
+        $this->addWhere($args);
 		return $this;
     }
 
-    /**---------------------------------------------------------------
-     * Add a conditional variable clause to the search query.
-     * ---------------------------------------------------------------
-     * @param mixed $args,... An set of condition, operator and value,
-	 * or anarray of sets
+    /**
+     * Add a and where variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
      * @return self
-     */		
-    public function orWhere(...$args)
+     */
+    public function whereAny(...$args)
     {
-		if (!is_array($args[0])) $args = array($args);		
-		foreach ($args as $arg) {
-			if (count($arg) == 2) {
-				$arg[3] = $arg[2];
-				$arg[2] = '=';
-			}
-			if(!isset($arg[3])) $arg[3] = 'OR';
-			$this->where[] = array('type' => 'orwhere', 'column' => $arg[0], 'operator' => $arg[1], 'value' => $arg[2], 'boolean' => $arg[3]);
-		}
+        $this->addWhere($args, ['many' => 'OR']);
 		return $this;
-    }		
-	
-    public function whereRaw($query, $replace = null, $symbol = 'AND')
+    }
+
+    /**
+     * Add a and where variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @return self
+     */
+    public function whereAll(...$args)
     {
-		if (isset($replace)) $query = preg_replace('/(^\? )|( \? )/', $replace, $query); 
-        $this->where[] = array('type' => 'raw', 'query' => $query, 'boolean' => $symbol);
+        $this->addWhere($args, ['many' => 'AND']);
+		return $this;
+    }
+
+    /**
+     * Add a where not variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @return self
+     */
+    public function whereNot(...$args)
+    {
+        $this->addWhere($args, ['negation' => 'NOT']);
         return $this;
     }
 	
-    public function orWhereRaw($query, $replace = null, $symbol = 'OR')
-    {
-		if (isset($replace)) $query = preg_replace('/(^\? )|( \? )/', $replace, $query); 
-        $this->where[] = array('type' => 'raw', 'query' => $query, 'boolean' => $symbol);
-        return $this;
+    /**
+     * Add a or where variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @return self
+     */
+    public function orWhere(...$args)
+    {   
+        $this->addWhere($args, ['negation' => '', 'boolean' => 'OR']);
+		return $this;
+    }
+    
+    /**
+     * Add a or where not variable clause to the search query
+     *
+     * @param mixed $args,... A set (or set of sets) of condition, operator and value,
+     * @return self
+     */
+    public function orWhereNot(...$args)
+    {   
+        $this->addWhere($args, ['negation' => 'NOT', 'boolean' => 'OR']);
+		return $this;
     }	
 
-	
-	
-	
-	
-	//whereNot(sadsa, '', asdasd)
-	//orWhereNot(sadsa, '', asdasd)
-	
-	
-	
     /**
-     * Add a `!=` clause to the search query.
+     * Add a where raw clause to the search query.
      *
-     * @param  string $column
-     * @param  string $value
+     * @param string $query,... The raw query,
+     * @param array $options An array of options
      * @return self
      */
-    public function whereNot($column, $value)
+    private function addWhereRaw($query, $options = [])
     {
-        $this->where[] = array('type' => 'not', 'column' => $column, 'value' => $value);
-        return $this;
+        if (!isset($options['negation'])) $options['negation'] = '';
+        if (!isset($options['boolean'])) $options['boolean'] = 'AND';
+        if (!isset($options['replace'])) $options['replace'] = false;
+        
+        if ($options['replace']) $query = preg_replace('/(^\? )|( \? )/', $replace, $query); 
+
+        $this->where[] = array('type' => 'raw', 'query' => $query, 'boolean' => $options['boolean'], 'negation' => $options['negation']);
+		return $this;
     }
+
     /**
-     * Add a `LIKE` clause to the search query.
+     * Add a where raw clause to the search query
      *
-     * @param  string $column
-     * @param  string $value
+     * @param string $query The raw query,
+     * @param boolean $replace Replace dangerous characters
+     * @param string $symbol Use and or OR symbol
      * @return self
      */
-    public function whereLike($column, $value)
+    public function whereRaw($query, $replace = false, $symbol = 'AND')
     {
-        $this->where[] = array('type' => 'like', 'column' => $column, 'value' => $value);
+        $this->addWhereRaw($query, ['boolean' => $symbol, 'negation' => '', 'replace' => $replace]);
         return $this;
     }
+  
     /**
-     * Add a `NOT LIKE` clause to the search query.
+     * Add a where not raw clause to the search query
      *
-     * @param  string $column
-     * @param  string $value
+     * @param string $query The raw query,
+     * @param boolean $replace Replace dangerous characters
+     * @param string $symbol Use and or OR symbol
      * @return self
      */
-    public function whereNotLike($column, $value)
+    public function whereNotRaw($query, $replace = false, $symbol = 'AND')
     {
-        $this->where[] = array('type' => 'not_like', 'column' => $column, 'value' => $value);
+        $this->addWhereRaw($query, ['boolean' => $symbol, 'negation' => 'NOT', 'replace' => $replace]);
         return $this;
     }
+
     /**
-     * Add a `<` clause to the search query.
+     * Add a or where raw clause to the search query
      *
-     * @param  string $column
-     * @param  string $value
+     * @param string $query The raw query,
+     * @param boolean $replace Replace dangerous characters
      * @return self
      */
-    public function whereLess($column, $value)
+    public function orWhereRaw($query, $replace = null)
     {
-		$this->where[] = array('type' => 'orwhere', 'column' => $arg[0], 'operator' => '<', 'value' => $arg[2]);
+        $this->addWhereRaw($query, ['boolean' => 'OR', 'negation' => '', 'replace' => $replace]);
         return $this;
     }
+
+    /**
+     * Add a or where not raw clause to the search query
+     *
+     * @param string $query The raw query,
+     * @param boolean $replace Replace dangerous characters
+     * @return self
+     */
+    public function orWhereNotRaw($query, $replace = null)
+    {
+        $this->addWhereRaw($query, ['boolean' => 'OR', 'negation' => 'NOT', 'replace' => $replace]);
+        return $this;
+    }
+
+    /**
+     * Add a where like clause to the search query.
+     *
+     * @param mixed $args,... A set (or set of sets) of condition and value,
+     * @param array $options An array of options
+     * @return self
+     */
+    private function addWhereOp($args, $operator, $options = []) {
+        if (!is_array($args[0])) $args = array($args);
+        if (!isset($options['negation'])) $options['negation'] = '';
+        if (!isset($options['boolean'])) $options['boolean'] = 'AND';
+        if (!isset($options['type'])) $options['type'] = 'where';
+
+		foreach ($args as $key => $arg) {
+            // If only key, value and operator is present
+			if (count($args[$key]) == 2) {
+				$args[$key][2] = $options['boolean'];
+			}
+            // If only key, value, operator and (AND|OR) is present, add empty for negation
+			if (count($args[$key]) == 3) {
+				$args[$key][3] = $options['negation'];
+			}
+		}
+        foreach ($args as $arg) {
+            $this->where[] = array('type' => $options['type'], 'column' => $arg[0], 'operator' => $operator, 'value' => $arg[1], 'boolean' => $arg[2], 'negation' => $arg[3]);
+        }
+		return $this;
+    }
+
+    /**
+     * Add a '<' clause clause to the search query.
+     *
+     * @param mixed $args,... A set (or set of sets) of column and value,
+     * @return self
+     */
+    public function whereLess(...$args)
+    {
+        $this->addWhereOp($args, '<');
+		return $this; 
+    }
+
     /**
      * Add a `<=` clause to the search query.
      *
-     * @param  string $column
-     * @param  string $value
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereLessEqual($column, $value)
+    public function whereLessEqual(...$args)
     {
-       $this->where[] = array('type' => 'orwhere', 'column' => $arg[0], 'operator' => '<=', 'value' => $arg[2]);
-       return $this;
+        $this->addWhereOp($args, '<=');
+		return $this;
     }
+
     /**
      * Add a `>` clause to the search query.
      *
-     * @param  string $column
-     * @param  string $value
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereMore($column, $value)
+    public function whereMore(...$args)
     {
-        $this->where[] = array('type' => 'orwhere', 'column' => $arg[0], 'operator' => '>', 'value' => $arg[2]);
-        return $this;
+        $this->addWhereOp($args, '>');
+		return $this;
     }
+
     /**
      * Add a `>=` clause to the search query.
      *
-     * @param  string $column
-     * @param  string $value
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereMoreEqual($column, $value)
+    public function whereMoreEqual(...$args)
     {
-        $this->where[] = array('type' => 'orwhere', 'column' => $arg[0], 'operator' => '>=', 'value' => $arg[2]);
-        return $this;
+        $this->addWhereOp($args, '>=');
+		return $this;
     }
+
     /**
-     * Add an `IN` clause to the search query.
+     * Add a `in` clause to the search query.
      *
-     * @param  string $column
-     * @param  array  $value
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereIn($column, array $in)
+    public function whereIn(...$args)
     {
-        $this->where[] = array('type' => 'in', 'column' => $column, 'value' => $in);
-        return $this;
+        $this->addWhereOp($args, 'IN', ['type' => 'in']);
+		return $this;
     }
+
     /**
-     * Add a `NOT IN` clause to the search query.
+     * Add a `not in` clause to the search query.
      *
-     * @param  string $column
-     * @param  array  $value
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereNotIn($column, array $not_in)
+    public function whereNotIn(...$args)
     {
-        $this->where[] = array('type' => 'not_in', 'column' => $column, 'value' => $not_in);
+        $this->addWhereOp($args, 'NOT IN', ['type' => 'in']);
         return $this;
     }
+    
     /**
-     * Add an OR statement to the where clause (e.g. (var = foo OR var = bar OR
-     * var = baz)).
+     * Add a where like clause
      *
-     * @param  array $where
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereAny(array $where)
-    {
-        $this->where[] = array('type' => 'any', 'where' => $where);
-        return $this;
-    }
+    public function whereLike(...$args)
+    {   
+        $this->addWhereOp($args, 'LIKE');
+		return $this;
+    }	
+
     /**
-     * Add an AND statement to the where clause (e.g. (var1 = foo AND var2 = bar
-     * AND var3 = baz)).
+     * Add a where not like clause
      *
-     * @param  array $where
+     * @param mixed $args,... A set (or set of sets) of column and value,
      * @return self
      */
-    public function whereAll(array $where)
+    public function whereNotLike(...$args)
     {
-        $this->where[] = array('type' => 'all', 'where' => $where);
-        return $this;
+        $this->addWhereOp($args, 'NOT LIKE');
+		return $this; 
     }
+    
+    /**
+     * Add a or where like clause
+     *
+     * @param mixed $args,... A set (or set of sets) of column and value,
+     * @return self
+     */
+    public function orWhereLike(...$args)
+    {
+        $this->addWhereOp($args, 'LIKE', ['boolean' => 'OR']);
+		return $this; 
+    }
+
+    /**
+     * Add a or where not like clause
+     *
+     * @param mixed $args,... A set (or set of sets) of column and value,
+     * @return self
+     */
+    public function orWhereNotLike(...$args)
+    {
+        $this->addWhereOp($args, 'NOT LIKE', ['boolean' => 'OR']);
+		return $this; 
+    }
+
     /**
      * Get models where any of the designated fields match the given value.
      *
@@ -384,11 +553,13 @@ class Query
     {
         global $wpdb;
         $model = $this->model;
+
         // Query
         if ($only_count) {
             return (int) $wpdb->get_var($this->composeQuery(true));
         }
         $results = $wpdb->get_results($this->composeQuery(false));
+
         if ($results) {
             foreach ($results as $index => $result) {
                 $results[$index] = $model::create((array) $result);
@@ -405,11 +576,11 @@ class Query
     public function composeQuery($only_count = false)
     {
         $model  = $this->model;
-        $table  = $model::getTable();
+        $table  = $model::table();
         $where  = '';
         $order  = '';
         $limit  = '';
-        $offset = '';
+        $skip = '';
         // Search
         if (!empty($this->search_term)) {
             $where .= ' AND (';
@@ -418,70 +589,57 @@ class Query
             }
             $where = substr($where, 0, -4) . ')';
         }
+
         // Where clauses
+        $initial = true;
         foreach ($this->where as $wherex) {
+            if ($initial) {
+                $wherex['boolean'] = '';
+                $initial = false;
+            }
 			switch ($wherex['type']) {
 				case 'where':
 					if(!is_array($wherex['value'])) {
-						$where .= ' '.esc_sql(strtoupper($wherex['boolean'])).' `' . $wherex['column'] . '` '.esc_sql($wherex['operator']).' "' . esc_sql($wherex['value']) . '"';
-					}
+						$where .= ' '.esc_sql(strtoupper($wherex['boolean'])).' '. $wherex['negation'] .' ( `' . $wherex['column'] . '` '.esc_sql($wherex['operator']).' "' . esc_sql($wherex['value']) . '"  )';
+                    }
 					else {
-						$where .= ' '.esc_sql(strtoupper($wherex['boolean'])).' (';
-						foreach ((array)$wherex['value'] as $key => $value) {
-							if(!$key) $where .= ' `' . $wherex['column'] . '` '.esc_sql($wherex['operator']).' "' . esc_sql($wherex['value']) . '"';
-							else $where .= ' OR `' . $wherex['column'] . '` '.esc_sql($wherex['operator']).' "' . esc_sql($wherex['value']) . '"';
-						}
+						$where .= ' '.esc_sql( strtoupper($wherex['boolean'])) . ' ' .strtoupper($wherex['negation']) . ' (';
+						$count = 0;
+                        $associative = array_keys((array)$wherex['value']) !== range(0, count((array)$wherex['value']) - 1) ? true : false;
+                        foreach ((array)$wherex['value'] as $key => $value) {
+                            // If assocaitive, use the arr keys as the columns to check
+                            $column = $associative ? $key : $wherex['column'];                            
+							if($count) $where .= ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
+							else $where .= ' ' . $wherex['many'] . ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
+                            $count++;
+                        }
 						$where .= ' )';
 					}
-					break;				
+					break;
 				case 'raw':
-					$where .= ' AND ' . $wherex['value'];
-					break;
-				case 'orraw':
-					$where .= ' OR ' . $wherex['value'];
-					break;
-				case 'not':
-					$where .= ' AND `' . $wherex['column'] . '` != "' . esc_sql($wherex['value']) . '"';
-					break;
-				case 'like':
-					$where .= ' AND `' . $wherex['column'] . '` LIKE "' . esc_sql($wherex['value']) . '"';
-					break;
-				case 'not_like':
-					$where .= ' AND `' . $wherex['column'] . '` NOT LIKE "' . esc_sql($wherex['value']) . '"';
-					break;
+					$where .= ' '.strtoupper($wherex['boolean']). ' ' . strtoupper($wherex['negation']) . ' ' . $wherex['query'];  
+                    break;
 				case 'in':
-					$where .= ' AND `' . $wherex['column'] . '` IN (';
-					foreach ($wherex['value'] as $value) {
+					$where .= ' '.esc_sql(strtoupper($wherex['boolean'])).' '. $wherex['negation'] .' `' . $wherex['column'] . '` '.$wherex['operator'].' (';
+					foreach ((array)$wherex['value'] as $value) {
 						$where .= '"' . esc_sql($value) . '",';
 					}
 					$where = substr($where, 0, -1) . ')';
-					break;
-				case 'not_in':
-					$where .= ' AND `' . $wherex['column'] . '` NOT IN (';
-					foreach ($wherex['value'] as $value) {
-						$where .= '"' . esc_sql($value) . '",';
-					}
-					$where = substr($where, 0, -1) . ')';
-					break;	
-				case 'any':
-					$where .= ' AND (';
-					foreach ($wherex['where'] as $column => $value) {
-						$where .= '`' . $column . '` = "' . esc_sql($value) . '" OR ';
-					}
-					$where = substr($where, 0, -5) . ')';
-					break;	
-				case 'all':
-					$where .= ' AND (';
-					foreach ($wherex['where'] as $column => $value) {
-						$where .= '`' . $column . '` = "' . esc_sql($value) . '" AND ';
-					}
-					$where = substr($where, 0, -5) . ')';
-					break;	
+                    break;
+				case 'open':
+					$where .= ' '.strtoupper($wherex['boolean']).' (';
+					$initial = true;
+                    break;
+				case 'close':
+					$where .= ')';
+                    break;	
 				default:
 					break;				
 			}
         }
-        if (!empty($where)) $where = ' WHERE ' . substr($where, 5);
+
+        if (!empty($where)) $where = ' WHERE ' . $where;
+        
 
         // Order
         if (strstr($this->sort_by, '(') !== false && strstr($this->sort_by, ')') !== false) {
@@ -495,14 +653,20 @@ class Query
         if ($this->limit > 0) {
             $limit = ' LIMIT ' . $this->limit;
         }
-        // Offset
-        if ($this->offset > 0) {
-            $offset = ' OFFSET ' . $this->offset;
+        // skip
+        if ($this->skip > 0) {
+            $skip = ' OFFSET ' . $this->skip;
+            if ($this->limit == 0) {
+                $limit = ' LIMIT 9999999999';
+            }
         }
+        
+
+       echo("<br>"); print_r(apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$table}`{$where}", $this->model));
         // Query
         if ($only_count) {
             return apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$table}`{$where}", $this->model);
         }
-        return apply_filters('wporm_query', "SELECT * FROM `{$table}`{$where}{$order}{$limit}{$offset}", $this->model);
+        return apply_filters('wporm_query', "SELECT * FROM `{$table}`{$where}{$order}{$limit}{$skip}", $this->model);
     }
 }

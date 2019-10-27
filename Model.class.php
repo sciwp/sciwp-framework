@@ -83,7 +83,7 @@ abstract class Model
      *
      * @return self
      */
-    public static function create($attributes)
+    public static function create($attributes = [])
     {
         return new static($attributes);
     }
@@ -156,7 +156,7 @@ abstract class Model
     }
 
     /**
-     
+     * flattenProps
      *
      * @param  array $props
      * @return array
@@ -198,13 +198,47 @@ abstract class Model
         }
 
         // Insert or update?
-        if (!array_key_exists(static::primaryKey(), $attributes)) {            
+        if (!array_key_exists(static::primaryKey(), $attributes)) { 
+            if (!static::AUTO_INCREMENT) {
+                $attributes[static::primaryKey()] = uniqid();
+            }
             $wpdb->insert($this->table(), $attributes);
             $this->{static::primaryKey()} = $wpdb->insert_id;
         } else {
             $wpdb->update(static::table(), $attributes, array(static::primaryKey() => $attributes[static::primaryKey()]));
         }
         return $this;
+    }
+
+    /**
+     * Return all database records for this model
+     *
+     * @param int skip
+     * @param int limit
+     * @return array
+     */
+    public static function all($skip = false, $limit = false)
+    {
+        $query = new Query(get_called_class());
+        if ($skip) $query->skip($skip);
+        if ($limit) $query->limit($limit);
+        return $query->get();        
+    }
+
+    /**
+     * Find a model by ID or array of IDs
+     *
+     * @param  integer|array $id
+     * @return array|self
+     */
+    public static function find(...$queries)
+    {
+        $query = new Query(get_called_class());
+        foreach ($queries as $queryArr) {
+             $query->orWhere($queryArr);
+
+        }
+        return $query->get();  
     }
 
     /**
@@ -238,16 +272,7 @@ abstract class Model
         return ($obj ? static::create($obj) : false);
     }
 
-    /**
-     * Find a model by ID
-     *
-     * @param  integer $id
-     * @return false|self
-     */
-    public static function findOne($id)
-    {
-        return static::findOneBy(static::primaryKey(), (int) $id);
-    }
+
 
     /**
      * Start a query to find models matching specific criteria.
@@ -257,26 +282,10 @@ abstract class Model
     public static function query()
     {
         $query = new Query(get_called_class());
-        $query->setSearchableFields(static::getSearchableFields());
+        //$query->setSearchableFields(static::getSearchableFields());
         $query->setPrimaryKey(static::primaryKey());
         return $query;
     }
 
-    /**
-     * Return all database records for this model
-     *
-     * @return array
-     */
-    public static function findAll()
-    {
-        global $wpdb;
-        // Get the table name
-        $table = static::table();
-        // Get the items
-        $results = $wpdb->get_results("SELECT * FROM `{$table}`");
-        foreach ($results as $index => $result) {
-            $results[$index] = static::create((array) $result);
-        }
-        return $results;
-    } 
+
 }
