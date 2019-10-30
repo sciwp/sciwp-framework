@@ -24,16 +24,22 @@ abstract class Model
     /** @const bool Indicates if the IDs are auto-incrementing */
     const AUTO_INCREMENT = true;    
 
+    /** @var boolean Enable created, deleted and updated date fields */
+    const TIMESTAMPS  = false;
+
     /** @const string The name of the "created at" column */
     const CREATED_AT = 'created_at';
 
     /** @const string The name of the "updated at" column */
     const UPDATED_AT = 'updated_at';
+    
+        /** @const string The name of the "deleted at" column */
+    const DELETED_AT = 'deleted_at';
 
-    /** @var string The table associated with the model */
+    /** @var boolean The table associated with the model */
     const TABLE_NAME = false;
     
-    /** @var string The table associated with the model */
+    /** @var boolean The table associated with the model */
     const TABLE_PREFIX = true;
 
     /** @var list of model attributes */
@@ -64,7 +70,7 @@ abstract class Model
         if (static::TABLE_NAME) {
             return static::tablePrefix().static::TABLE_NAME;
         } else {
-            return static::tablePrefix().Str::toPlural(strtolower(substr(strrchr(get_class($this), "\\"), 1)));
+            return static::tablePrefix().Str::toPlural(strtolower(substr(strrchr(get_called_class(), "\\"), 1)));
         }
     }
 
@@ -242,6 +248,60 @@ abstract class Model
     }
 
     /**
+     * Find a specific model by a given property value.
+     *
+     * @param  string $property
+     * @param  string $value
+     * @return false|self
+     */
+    public static function findOne(...$queries)
+    {
+        $results = static::find(...$queries);
+        if (!count($results)) return null;
+        return ($results[0]);
+    }
+
+
+    /**
+     * Find a specific model by a given property value.
+     *
+     * @param  string $field The table field
+     * @param  string $value The field value
+     * @return array
+     */
+    public static function findBy($field, $value)
+    {
+        global $wpdb;
+        
+        if (count($values) === 1) {
+            // Escape the value
+            $value = esc_sql($value);
+            // Get the table name
+            $table = static::table();
+            // Get the item
+            $obj = $wpdb->get_row("SELECT * FROM `{$table}` WHERE `".$field."` = ".$value, ARRAY_A);
+            // Return null if no item was found, or a new model
+            return ($obj ? static::create($obj) : null);
+        } else {
+        
+        }
+    }
+    
+    /**
+     * Find a specific model by a given property value.
+     *
+     * @param  string $field The table field
+     * @param  string $value The field value
+     * @return self|null
+     */
+    public static function findOneBy($field, $value)
+    {
+        $results = static::findBy($field, $value);
+        if (!count($results)) return null;
+        return ($results[0]);
+    }
+
+    /**
      * Delete the model from the database
      *
      * @return boolean
@@ -253,24 +313,18 @@ abstract class Model
     }
 
     /**
-     * Find a specific model by a given property value.
+     * Soft delete the model from the database
      *
-     * @param  string $property
-     * @param  string $value
-     * @return false|self
+     * @return self
      */
-    public static function findOneBy($property, $value)
+    public function remove()
     {
         global $wpdb;
-        // Escape the value
-        $value = esc_sql($value);
-        // Get the table name
-        $table = static::table();
-        // Get the item
-        $obj = $wpdb->get_row("SELECT * FROM `{$table}` WHERE `{$property}` = '{$value}'", ARRAY_A);
-        // Return false if no item was found, or a new model
-        return ($obj ? static::create($obj) : false);
+        $wpdb->update(static::table(),[${static::DELETED_AT} => date("Y-m-d h:i:s")], array(static::primaryKey() => $attributes[static::primaryKey()]));
+        return $this;
     }
+
+
 
 
 
