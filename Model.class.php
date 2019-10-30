@@ -184,13 +184,14 @@ abstract class Model
     /**
      * Save the model into the database creating or updating a record
      *
-     * @return integer
+     * @return self
      */
     public function save()
     {
         global $wpdb;
 
         $attributes = $this->attributes;
+        $isNewRecord = !array_key_exists(static::primaryKey(), $attributes);
 
         // Convert complex objects to strings to insert into the database
         foreach ($attributes as $key => $value) {
@@ -203,17 +204,62 @@ abstract class Model
             }
         }
 
-        // Insert or update?
-        if (!array_key_exists(static::primaryKey(), $attributes)) { 
+        if (static::TIMESTAMPS) {
+            $attributes[static::UPDATED_AT] = date("Y-m-d h:i:s");
+            if ($isNewRecord) $attributes[static::CREATED_AT] = $attributes[static::UPDATED_AT];
+        }
+
+        if ($isNewRecord) {
             if (!static::AUTO_INCREMENT) {
                 $attributes[static::primaryKey()] = uniqid();
             }
             $wpdb->insert($this->table(), $attributes);
             $this->{static::primaryKey()} = $wpdb->insert_id;
         } else {
-            $wpdb->update(static::table(), $attributes, array(static::primaryKey() => $attributes[static::primaryKey()]));
+            $wpdb->update(static::table(), $attributes, [static::primaryKey() => $attributes[static::primaryKey()]]);
         }
+        
+        if (static::TIMESTAMPS) {
+            $this->attributes[static::UPDATED_AT] =  $attributes[static::UPDATED_AT];
+            if ($isNewRecord) $this->attributes[static::CREATED_AT] = $attributes[static::CREATED_AT];
+        }
+
         return $this;
+    }
+
+    /**
+     * Find an array if models by ID or array of IDs
+     *
+     * @param  integer|array $id
+     * @return array
+     */
+    public static function find(...$queries)
+    {
+        $hasArray = false;
+        $skip = false;
+        $limit = false;
+
+        foreach($queries as $query) {
+           if (is_array($query)) $hasArray = true;
+        }
+
+        if ($hasArray && is_int($queries[count($queries) - 1])) {
+            $skip = array_pop($queries);
+            if (is_int($queries[count($queries) - 2])) {
+                $limit = $skip;
+                $skip = array_pop($queries);
+            }
+        }
+
+        $query = new Query(get_called_class());
+        foreach ($queries as $queryArr) {
+             $query->orWhere($queryArr);
+        }
+
+        if ($skip) $query->skip($skip);
+        if ($limit) $query->limit($limit);
+
+        return $query->get();  
     }
 
     /**
@@ -223,28 +269,12 @@ abstract class Model
      * @param int limit
      * @return array
      */
-    public static function all($skip = false, $limit = false)
+    public static function findAll($skip = false, $limit = false)
     {
         $query = new Query(get_called_class());
         if ($skip) $query->skip($skip);
         if ($limit) $query->limit($limit);
         return $query->get();        
-    }
-
-    /**
-     * Find a model by ID or array of IDs
-     *
-     * @param  integer|array $id
-     * @return array|self
-     */
-    public static function find(...$queries)
-    {
-        $query = new Query(get_called_class());
-        foreach ($queries as $queryArr) {
-             $query->orWhere($queryArr);
-
-        }
-        return $query->get();  
     }
 
     /**
@@ -256,9 +286,12 @@ abstract class Model
      */
     public static function findOne(...$queries)
     {
-        $results = static::find(...$queries);
-        if (!count($results)) return null;
-        return ($results[0]);
+        $query = new Query(get_called_class());
+        foreach ($queries as $queryArr) {
+             $query->orWhere($queryArr);
+        }
+        $query->skip(0)->limit(1);
+        return $query->get();
     }
 
 
@@ -320,13 +353,11 @@ abstract class Model
     public function remove()
     {
         global $wpdb;
-        $wpdb->update(static::table(),[${static::DELETED_AT} => date("Y-m-d h:i:s")], array(static::primaryKey() => $attributes[static::primaryKey()]));
+        if (static::TIMESTAMPS) {
+            $wpdb->update(static::table(),[static::DELETED_AT => date("Y-m-d h:i:s")], array(static::primaryKey() => $this->attributes[static::primaryKey()]));
+        }
         return $this;
     }
-
-
-
-
 
     /**
      * Start a query to find models matching specific criteria.
