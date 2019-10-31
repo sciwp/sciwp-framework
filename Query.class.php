@@ -181,13 +181,13 @@ class Query
      * @return self
      */
     private function addWhere($args, $options = []) {
+        if (!is_array($args)) $args = array($args);
         if (!is_array($args[0])) $args = array($args);
         
         if (!isset($options['negation'])) $options['negation'] = '';
         if (!isset($options['boolean'])) $options['boolean'] = 'AND';
         if (!isset($options['many'])) $options['many'] = 'OR';
-        
-        
+
 		foreach ($args as $key => $arg) {
             // If only a value is present
             if (count($args[$key]) == 1) {
@@ -268,9 +268,9 @@ class Query
      * @param mixed $args,... A set (or set of sets) of condition, operator and value,
      * @return self
      */
-    public function orWhere(...$args)
-    {   
-        $this->addWhere($args, ['negation' => '', 'boolean' => 'OR']);
+    public function orWhere(...$clauses)
+    {
+        $this->addWhere($clauses , ['negation' => '', 'boolean' => 'OR']);
 		return $this;
     }
     
@@ -606,11 +606,11 @@ class Query
 						$where .= ' '.esc_sql( strtoupper($wherex['boolean'])) . ' ' .strtoupper($wherex['negation']) . ' (';
 						$count = 0;
                         $associative = array_keys((array)$wherex['value']) !== range(0, count((array)$wherex['value']) - 1) ? true : false;
-                        foreach ((array)$wherex['value'] as $key => $value) {
+                        foreach ($wherex['value'] as $key => $value) {
                             // If assocaitive, use the arr keys as the columns to check
                             $column = $associative ? $key : $wherex['column'];                            
-							if($count) $where .= ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
-							else $where .= ' ' . $wherex['many'] . ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
+							if($count) $where .= ' ' . $wherex['many'] . ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
+							else $where .= ' `' . $column . '` '.esc_sql($wherex['operator']).' "' . esc_sql($value) . '"';
                             $count++;
                         }
 						$where .= ' )';

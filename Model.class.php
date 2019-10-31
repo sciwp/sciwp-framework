@@ -235,6 +235,7 @@ abstract class Model
      */
     public static function find(...$queries)
     {
+        $queries = func_get_args();
         $hasArray = false;
         $skip = false;
         $limit = false;
@@ -252,9 +253,8 @@ abstract class Model
         }
 
         $query = new Query(get_called_class());
-        foreach ($queries as $queryArr) {
-             $query->orWhere($queryArr);
-        }
+
+        call_user_func_array([$query, 'orWhere'], $queries);
 
         if ($skip) $query->skip($skip);
         if ($limit) $query->limit($limit);
