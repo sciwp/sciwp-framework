@@ -228,6 +228,30 @@ abstract class Model
     }
 
     /**
+     * Return all database records for this model
+     *
+     * @param int skip
+     * @param int limit
+     * @return array
+     */
+    public static function all($skip = false, $limit = false)
+    {
+        $query = new Query();
+        $query->setModel(get_called_class());
+        if ($skip) $query->skip($skip);
+        if ($limit) $query->limit($limit);
+        
+        $models = [];
+        $results = $query->get();
+        if ($results) {
+            foreach ($results as $index => $result) {
+                $models[$index] = static::create((array) $result);
+            }
+        }
+        return $models;
+    }
+
+    /**
      * Find an array if models by ID or array of IDs
      *
      * @param  integer|array $id
@@ -246,35 +270,28 @@ abstract class Model
 
         if ($hasArray && is_int($queries[count($queries) - 1])) {
             $skip = array_pop($queries);
-            if (is_int($queries[count($queries) - 2])) {
+            if (is_int($queries[count($queries) - 1])) {
                 $limit = $skip;
                 $skip = array_pop($queries);
             }
         }
 
-        $query = new Query(get_called_class());
+        $query = new Query();
+        $query->setModel(get_called_class());
 
-        call_user_func_array([$query, 'orWhere'], $queries);
+        call_user_func_array([$query, 'where'], $queries);
 
         if ($skip) $query->skip($skip);
         if ($limit) $query->limit($limit);
 
-        return $query->get();  
-    }
-
-    /**
-     * Return all database records for this model
-     *
-     * @param int skip
-     * @param int limit
-     * @return array
-     */
-    public static function findAll($skip = false, $limit = false)
-    {
-        $query = new Query(get_called_class());
-        if ($skip) $query->skip($skip);
-        if ($limit) $query->limit($limit);
-        return $query->get();        
+        $models = [];   
+        $results = $query->get();
+        if ($results) {
+            foreach ($results as $index => $result) {
+                $models[$index] = static::create((array) $result);
+            }
+        }
+        return $models;  
     }
 
     /**
@@ -284,54 +301,21 @@ abstract class Model
      * @param  string $value
      * @return false|self
      */
-    public static function findOne(...$queries)
+    public static function one(...$queries)
     {
-        $query = new Query(get_called_class());
-        foreach ($queries as $queryArr) {
-             $query->orWhere($queryArr);
-        }
+        $queries = func_get_args();
+        $query = new Query();
+        $query->setModel(get_called_class());
+
+        call_user_func_array([$query, 'where'], $queries);
+
         $query->skip(0)->limit(1);
-        return $query->get();
-    }
 
-
-    /**
-     * Find a specific model by a given property value.
-     *
-     * @param  string $field The table field
-     * @param  string $value The field value
-     * @return array
-     */
-    public static function findBy($field, $value)
-    {
-        global $wpdb;
-        
-        if (count($values) === 1) {
-            // Escape the value
-            $value = esc_sql($value);
-            // Get the table name
-            $table = static::table();
-            // Get the item
-            $obj = $wpdb->get_row("SELECT * FROM `{$table}` WHERE `".$field."` = ".$value, ARRAY_A);
-            // Return null if no item was found, or a new model
-            return ($obj ? static::create($obj) : null);
-        } else {
-        
+        $results = $query->get();
+        if (count($results)) {
+            return static::create((array) $results[0]);
         }
-    }
-    
-    /**
-     * Find a specific model by a given property value.
-     *
-     * @param  string $field The table field
-     * @param  string $value The field value
-     * @return self|null
-     */
-    public static function findOneBy($field, $value)
-    {
-        $results = static::findBy($field, $value);
-        if (!count($results)) return null;
-        return ($results[0]);
+        return false;
     }
 
     /**
@@ -366,11 +350,8 @@ abstract class Model
      */
     public static function query()
     {
-        $query = new Query(get_called_class());
-        //$query->setSearchableFields(static::getSearchableFields());
-        $query->setPrimaryKey(static::primaryKey());
+        $query = new Query();
+        $query->setModel(get_called_class());
         return $query;
     }
-
-
 }

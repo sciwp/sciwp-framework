@@ -64,10 +64,6 @@ class PluginManager extends Manager
             ]
         );
 
- 
-        //$activation_service = $this->wormvc->get(ActivationService::class);
-        //$this->plugins[$plugin_id]->services()->add('activation', $activation_service);
-
         // Add the providers to the provider manager
         $plugin_config = $this->plugins[$plugin_id]->config();
         if (isset($plugin_config['providers'])) {
