@@ -1,6 +1,7 @@
 <?php
 namespace Wormvc\Wormvc;
-
+use \Exception;
+use \Closure;
 /**
  * Class Query
  *
@@ -46,6 +47,25 @@ class Query
     /**
      * @var string
      */
+    protected $from;
+
+    /**
+     * @var array $bindings
+     */
+    protected $bindings = [
+        'select' => [],
+        'from'   => [],
+        'join'   => [],
+        'where'  => [],
+        'having' => [],
+        'order'  => [],
+        'union'  => [],
+        'unionOrder' => [],
+    ];
+
+    /**
+     * @var string
+     */
     protected $table;
 
     /**
@@ -62,7 +82,97 @@ class Query
         if ($table) $this->table = $table;
         if ($primary_key) $this->setPrimaryKey($primary_key);
     }
+
+
+    public function getBindings()
+    {
+        return $this->bindings;
+    }
+
+
+
+    /**
+     * Add a binding to the query.
+     *
+     * @param  mixed   $value
+     * @param  string  $type
+     * @return $this
+     */
+    public function addBinding($type = 'where', $binding)
+    {
+        if (! array_key_exists($type, $this->bindings)) {
+            throw new Exception("Invalid binding type: {$type}.");
+        }
+        $this->bindings[$type][] = $binding;
+
+        return $this;
+    }
+
+    /**
+     * Set the table which the query is targeting.
+     *
+     * @param  \Wormvc\Wormvc\Query|string  $table
+     * @param  string|null  $as
+     * @return $this
+     */
+    public function from($table, $as = null)
+    { 
+        if ($table instanceof self || $table instanceof Closure) {
+            return $this->fromSub($table, $as);
+        }
+        $this->from = $as ? "`{$table}` as `{$as}`" : $table;
+        return $this;
+    }
     
+    /**
+     * Makes "from" fetch from a subquery.
+     *
+     * @param  \Closure|\Query|string $query
+     * @param  string  $as
+     * @return \Query
+     */
+    public function fromSub($query, $as)
+    {
+        [$query, $bindings] = $this->createSubQuery($query);
+        $this->addBinding('from', $bindings);
+        $this->from = '('.$query.') as `'.$as.'` ';
+        return $this;
+    }
+    
+    /**
+     * Add a raw from clause to the query.
+     *
+     * @param  string  $expression
+     * @param  mixed   $bindings
+     * @return \Query
+     */
+    public function fromRaw($expression, $bindings = [])
+    {
+        $this->from = $expression;
+        $this->addBinding('from', $bindings);
+        return $this;
+    }
+
+    /**
+     * Creates a subquery and parse it.
+     *
+     * @param  \Query|string $query
+     * @return array
+     */
+    protected function createSubQuery($query)
+    {
+        if ($query instanceof Closure) {
+            $callback = $query;
+            $callback($query = new self());
+        }
+        if ($query instanceof self) {
+            return [$query->composeQuery(), $query->getBindings()];
+        } elseif (is_string($query)) {
+            return [$query, []];
+        }
+        throw new Exception('A subquery must be a query instance, a Closure, or a string.');
+    }
+
     /**
      * Set the model
      *
@@ -72,6 +182,7 @@ class Query
     {
         $this->model = $model;
         $this->table = $model::table();
+        $this->from = $model::table();
         $this->primary_key = $model::primaryKey();
     }
 
@@ -85,8 +196,6 @@ class Query
     {
         return $this->composeQuery();
     }
-
-
 
     /**
      * Set the primary key column.
@@ -150,8 +259,8 @@ class Query
      * @return self
      */
     public function open($append = 'AND')
-    {
-        $this->where[] = array('type' => 'open', 'boolean' => $append);
+    {        
+        $this->addBinding('where', ['type' => 'open', 'boolean' => $append]);
 		return $this;
     }
     
@@ -171,21 +280,23 @@ class Query
      */
     public function close()
     {
-        $this->where[] = array('type' => 'close');
+        $this->addBinding('where', ['type' => 'close']);
 		return $this;
     }
 
+    /*
     public function group(...$args)
     {
-        $this->where[] = array('type' => 'open', 'boolean' => 'AND');
+        $this->bindings['where'][] = array('type' => 'open', 'boolean' => 'AND');
         foreach ($args as $query) {
             echo("<pre>");
             print_r($query);echo("</pre>");
             call_user_func_array([$this, $query[0]], (array) $query[1]);
         }
-        $this->where[] = array('type' => 'close');
+        $this->bindings['where'][] = array('type' => 'close');
         return $this;
     }
+    */
 
     /**
      * Add a where clause to the search query.
@@ -226,7 +337,8 @@ class Query
                 $queries[] = ['column' => $query[0], 'operator' => $query[1], 'value' => $query[2], 'joint' => $options['joint']];            
             }
         }
-        $this->where[] = ['type' => 'where', 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries];
+        
+        $this->addBinding('where', ['type' => 'where', 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries]);
 		return $this;
     }
 
@@ -356,8 +468,8 @@ class Query
         }
         
         $boolean = $options['boolean'] ? '' : 'NOT';
-        $this->where[] = ['type' => 'raw', 'append' => $options['append'], 'queries' => $queries, 'negation' => $negation];
-		return $this;
+		$this->addBinding('where', ['type' => 'raw', 'append' => $options['append'], 'queries' => $queries, 'negation' => $negation]);
+        return $this;
     }
 
     /**
@@ -491,8 +603,7 @@ class Query
 
             $queries[] = ['column' => $query[0], 'operator' => $operator, 'value' => $query[1], 'joint' => $options['joint']];
 		}
-
-        $this->where[] = ['type' => $options['type'], 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries];       
+        $this->addBinding('where', ['type' => $options['type'], 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries]);    
 		return $this;  
     }
 
@@ -1112,9 +1223,9 @@ class Query
             }
 
             $queries[] = ['column' => $query[0], 'value' => $query[1], 'joint' => $options['joint']];
-		}
-        $this->where[] = ['type' => 'like', 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries];        
-		return $this;  
+		}  
+		$this->addBinding('where', ['type' => 'like', 'append' => $options['append'], 'negation' => $negation, 'queries' => $queries]);
+        return $this;  
     }
 
     /**
@@ -1569,7 +1680,7 @@ class Query
 
         // Where clauses
         $initial = true;
-        foreach ($this->where as $wherex) {
+        foreach ($this->bindings['where'] as $wherex) {
             if ($initial) {
                 $wherex['append'] = '';
                 $initial = false;
@@ -1679,11 +1790,11 @@ class Query
             }
         }
 
-        echo("<br>"); print_r(apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$table}`{$where}", $this->model));
+        echo("<br>"); print_r(apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$this->from}`{$where}", $this->model));
 
         if ($only_count) {
-            return apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$table}`{$where}", $this->model);
+            return apply_filters('wporm_count_query', "SELECT COUNT(*) FROM {$this->from} {$where}", $this->model);
         }
-        return apply_filters('wporm_query', "SELECT * FROM `{$table}`{$where}{$order}{$limit}{$skip}", $this->model);
+        return apply_filters('wporm_query', "SELECT * FROM {$this->from} {$where}{$order}{$limit}{$skip}", $this->model);
     }
 }
