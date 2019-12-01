@@ -4,6 +4,7 @@ namespace Wormvc\Wormvc;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Wormvc\Wormvc\Helpers\Str;
+use Wormvc\Wormvc\Query;
 
 /**
  * Class Model

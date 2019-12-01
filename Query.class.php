@@ -40,6 +40,13 @@ class Query
     protected $order = 'ASC';
 
     /**
+     * The columns that should be returned.
+     *
+     * @var array
+     */
+    public $columns;
+
+    /**
      * @var string
      */
     protected $model;
@@ -57,10 +64,6 @@ class Query
         'from'   => [],
         'join'   => [],
         'where'  => [],
-        'having' => [],
-        'order'  => [],
-        'union'  => [],
-        'unionOrder' => [],
     ];
 
     /**
@@ -83,13 +86,10 @@ class Query
         if ($primary_key) $this->setPrimaryKey($primary_key);
     }
 
-
     public function getBindings()
     {
         return $this->bindings;
     }
-
-
 
     /**
      * Add a binding to the query.
@@ -105,51 +105,6 @@ class Query
         }
         $this->bindings[$type][] = $binding;
 
-        return $this;
-    }
-
-    /**
-     * Set the table which the query is targeting.
-     *
-     * @param  \Wormvc\Wormvc\Query|string  $table
-     * @param  string|null  $as
-     * @return $this
-     */
-    public function from($table, $as = null)
-    { 
-        if ($table instanceof self || $table instanceof Closure) {
-            return $this->fromSub($table, $as);
-        }
-        $this->from = $as ? "`{$table}` as `{$as}`" : $table;
-        return $this;
-    }
-    
-    /**
-     * Makes "from" fetch from a subquery.
-     *
-     * @param  \Closure|\Query|string $query
-     * @param  string  $as
-     * @return \Query
-     */
-    public function fromSub($query, $as)
-    {
-        [$query, $bindings] = $this->createSubQuery($query);
-        $this->addBinding('from', $bindings);
-        $this->from = '('.$query.') as `'.$as.'` ';
-        return $this;
-    }
-    
-    /**
-     * Add a raw from clause to the query.
-     *
-     * @param  string  $expression
-     * @param  mixed   $bindings
-     * @return \Query
-     */
-    public function fromRaw($expression, $bindings = [])
-    {
-        $this->from = $expression;
-        $this->addBinding('from', $bindings);
         return $this;
     }
 
@@ -186,7 +141,138 @@ class Query
         $this->primary_key = $model::primaryKey();
     }
 
+    /**
+     * Set the table
+     *
+     * @param string $model
+     */
+    public function setTable($table)
+    {
+        $this->table = $table;
+        $this->from = $table;
+    }
+
+    /**
+     * Set the table which the query is targeting.
+     *
+     * @param  \Wormvc\Wormvc\Query|string  $table
+     * @param  string|null  $as
+     * @return $this
+     */
+    public function from($table, $as = null)
+    { 
+        if ($table instanceof self || $table instanceof Closure) {
+            return $this->fromSub($table, $as);
+        }
+        $this->from = $as ? "`{$table}` as `{$as}`" : $table;
+        return $this;
+    }
     
+    /**
+     * Makes "from" fetch from a subquery.
+     *
+     * @param  \Closure|\Query|string $query
+     * @param  string  $as
+     * @return \Query
+     */
+    public function fromSub($query, $as)
+    {
+        [$query, $bindings] = $this->createSubQuery($query);
+        $this->addBinding('from', $bindings);
+        $this->from = '('.$query.') as `'.$as.'` ';
+        return $this;
+    }
+
+    /**
+     * Add a raw from clause to the query.
+     *
+     * @param  string  $expression
+     * @param  mixed   $bindings
+     * @return \Query
+     */
+    public function fromRaw($expression, $bindings = [])
+    {
+        $this->from = $expression;
+        if ($bindings) $this->addBinding('from', $bindings);
+        return $this;
+    }
+
+    /**
+     * Add a new select column to the query.
+     *
+     * @param  array|mixed  $column
+     * @return $this
+     */
+    public function addSelect($column)
+    {
+        $columns = is_array($column) ? $column : func_get_args();
+        foreach ($columns as $as => $column) {
+            if (is_string($as) && ($column instanceof self || $column instanceof Closure)) {
+                if (is_null($this->columns)) {
+                    $this->select($this->from.'.*');
+                }
+                $this->selectSub($column, $as);
+            } else {
+                $this->columns[] = $column;
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Set the columns to be selected.
+     *
+     * @param  array|mixed  $columns
+     * @return $this
+     */
+    public function select($columns = ['*'])
+    {
+        $this->columns = [];
+        $columns = is_array($columns) ? $columns : func_get_args();
+        foreach ($columns as $key => $column) {
+            if (is_string($key) && ($column instanceof self || $column instanceof Closure)) {   
+                $this->selectSub($column, $key);
+            } else {
+                if (is_integer($key)) {
+                    $this->columns[] = $column;
+                } else {
+                    $this->columns[$key] = $column;
+                }                
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Add a subselect expression to the query.
+     *
+     * @param  \Closure|\Query|string $query
+     * @param  string  $as
+     * @return $this
+     */
+
+    public function selectSub($query, $as)
+    {
+        [$query, $bindings] = $this->createSubQuery($query);
+        $this->addSelect('('.$query.') as '.$as); //Expression
+        $this->addBinding('select', $bindings);
+        return $this;
+    }
+
+    /**
+     * Add a new "raw" select expression to the query.
+     *
+     * @param  string  $expression
+     * @param  array   $bindings
+     * @return $this
+     */
+    public function selectRaw($expression, array $bindings = [])
+    {
+        $this->addSelect($expression);
+        if ($bindings) $this->addBinding('select', $bindings);
+        return $this;
+    }
+
     /**
      * Return the string representation of the query.
      *
@@ -1612,7 +1698,6 @@ class Query
         return $this;
     }
 
-
     /**
      * Runs the same query as find, but with no limit and don't retrieve the
      * results, just the total items found.
@@ -1624,7 +1709,6 @@ class Query
         global $wpdb;
         return (int) $wpdb->get_var($this->composeQuery(true));
     }
-
 
     /**
      * Get first result.
@@ -1789,12 +1873,26 @@ class Query
                 $limit = ' LIMIT 9999999999';
             }
         }
+ 
+        $select = "";
+        $i = 0;
+        if (count($this->columns)) {
+            foreach ($this->columns as $key => $column) {
+                $select .= $column;
+                if (!is_integer($key)) $select .= ' as ' . $key;
+                $select .= !$i && count($this->columns) > 1 ? ', ' : ' ';
+                $i++;
+            }
+        } else {
+            $select .= ' * ';
+        }
 
-        echo("<br>"); print_r(apply_filters('wporm_count_query', "SELECT COUNT(*) FROM `{$this->from}`{$where}", $this->model));
+        // print_r(apply_filters('wporm_count_query', "SELECT {$select} FROM {$this->from} {$where}{$order}{$limit}{$skip}", $this->table));
 
         if ($only_count) {
-            return apply_filters('wporm_count_query', "SELECT COUNT(*) FROM {$this->from} {$where}", $this->model);
+            return apply_filters('wporm_count_query', "SELECT COUNT(*) FROM {$this->from} {$where}", $this->table);
         }
-        return apply_filters('wporm_query', "SELECT * FROM {$this->from} {$where}{$order}{$limit}{$skip}", $this->model);
+
+        return apply_filters('wporm_query', "SELECT {$select} FROM {$this->from} {$where}{$order}{$limit}{$skip}", $this->table);
     }
 }

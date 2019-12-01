@@ -1,8 +1,10 @@
 <?php
 namespace Wormvc\Wormvc;
 
+use Wormvc\Wormvc\Services\TemplateService;
 use Wormvc\Wormvc\Services\Activation as ActivationService;
 use Wormvc\Wormvc\Services\Deactivation as DeactivationService;
+use Wormvc\Wormvc\Template as Template;
 use Wormvc\Wormvc\Collection;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
@@ -26,7 +28,7 @@ class Plugin
     /** @var $name The plugin name */
     private $name;
     
-    /** @var $fir The Plugin base full path dir */
+    /** @var $dir The Plugin base full path dir */
     private $dir;
 
 	/** @var string $main_folder Stores de plugin main full path folder */	
@@ -65,7 +67,14 @@ class Plugin
     /** @var Collection $services Collection to store the services */
     private $services_collection;
     
-    public function __construct($plugin_file, $plugin_id, Collection $services_collection, ActivationService $activation_service, DeactivationService $deactivation_service)
+    public function __construct(
+        $plugin_file,
+        $plugin_id,
+        Collection $services_collection,
+        ActivationService $activation_service,
+        DeactivationService $deactivation_service,
+        TemplateService $template_service
+    )
     {
         $this->file = $plugin_file;
         $this->dir = rtrim( dirname( $this->file ), '/' );
@@ -139,6 +148,15 @@ class Plugin
 		}
 		else $this->config['module_folder'] = file_exists($this->config['base_folder'] . '/modules') ? $this->dir . '/modules' : false;        
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
         // Autoloader Cache
         $this->autoloader_cache  = isset($this->config['autoloader']['cache']) && $this->config['autoloader']['cache'] ? true : false;
 
@@ -146,11 +164,33 @@ class Plugin
         $this->services_collection = $services_collection;
         
         // Services
-        $activation_service->init($this->config['name'], $this->file, $this->config()['activation']);
-        $deactivation_service->init($this->file);
+        $activation_service->init($this);
+        $deactivation_service->init($this);
+        
         $this->services_collection->add('activation', $activation_service);
         $this->services_collection->add('deactivation', $deactivation_service);
+        
+        
+        $template_service->init($this);
+
+
+
+        /*
+        $template_service->setPlugin($this);
+        if ($this->config()['templates']) $template_service->addTemplates((array) $this->config()['templates']);
+        $this->services_collection->add('template', $template_service);
+        
+        $template_manager->addTemplates($this, (array) $this->config()['templates']);
+        */
+
+  
+        
+        // Template service
+        //TemplateService::init();
+		//TemplateService::addTemplates($this->config()['templates']);
     }
+
+    
 
     /**
      * Get the services collection
@@ -171,6 +211,36 @@ class Plugin
     {
         return $this->services_collection->get($service_id);
     }    
+
+    /**
+     * Get the template manager
+     * 
+     * @return mixed The requested service
+     */
+    public function templateManager()
+    {
+        if (!$this->template_manager) $this->template_manager = $this->wormvc->get(TemplateManager::class, [$this->dir]);
+        return $this->template_manager;
+    }   
+
+
+    public function getId ()
+    {
+        return $this->id;
+    }
+
+    public function getName ()
+    {
+        return $this->config['name'];
+    }
+
+    public function getConfig ()
+    {
+        return $this->config;
+    }
+
+
+
 
     /**
      * Get the namespace form the main plugin file
@@ -409,8 +479,7 @@ class Plugin
 		Service\Assets::addAssets(self::$config['assets']['assets']);
 		Service\Assets::addGroups(self::$config['assets']['groups']);
 		
-		Service\Templates::init();
-		Service\Templates::addTemplates(self::$config['templates']);
+
 				
 		//Service\Asset::add('media', 'image_uploader');
 		//TaxonomyController::init();
@@ -423,162 +492,6 @@ class Plugin
 /*
 // Init the Plugin
 return call_user_func('\\'.$namespace.'\Wormvc\Plugin::init', $config);
-*/
-
-    
-
-
-
-
-
-
-/*
-class Plugin
-{
-	use Traits\MethodBinding;
-	use Traits\StaticClass;
-
-	private static $config;
-	private static $dir;
-	private static $url;
-	
-	private static $collections;
-
-	
-
-	\kndcc\Plugin::plugin('cosa')->get('sdfsdfsdfds');
-	
-
-
-
-		
-	public static function dir($path = false)
-	{
-		if ($path) return self::$dir.$path;
-		return self::$dir;
-	}
-
-		
-	public static function file($path = false)
-	{
-		if ($path) return self::$dir.$path;
-		return self::$dir;
-	}
-
-		
-	public static function url($route = false)
-	{
-		if ($route) return self::$url.$route;
-		return self::$url;
-	}
-
-		
-
-
-
-	public static function namespace($class = false)
-	{
-		if (!$class) $class = self::class;
-		if (strpos($class, '\\') == false) return '\\';
-		else return substr($class, 0, strrpos($class, '\\')); 
-	}	
-
-			
-
-	public static function get($class_name, $params = array())
-	{
-		//if (is_string($class_name) && strpos($class_name, '.') !== false) {
-		//	if (isset(self::$registered[$class_name])) return self::$registered[$class_name];
-		//	else return false;
-	//	}			
-		
-		$class_method_name = false;
-		$class_method = false;
-	
-		if (is_array($class_name) && count($class_name) == 2) {
-			$class_method_name = $class_name[1];
-			$class_name   = $class_name[0];	
-		}		
-		
-		$reflector = new \ReflectionClass($class_name);
-		$constructor = $reflector->getConstructor();
-
-		// Singleton or static class
-		if (!$constructor->isPublic() || $class_method_name) {
-			if ($class_method_name) {
-				$class_method = $reflector->getMethod ($class_method_name);
-				if($class_method->getParameters()) {
-					$instances = array();
-					foreach ($class_method->getParameters() as $key => $parameter) {
-						if ($parameter->getClass()) {
-							if (isset($params[$key]) && is_array($params[$key])) {
-								$instances[] = self::get($parameter->getClass()->name, $params[$key]);
-							}
-							else {
-								$instances[] = self::get($parameter->getClass()->name);
-							}
-						}
-						else {
-							$instances[] = isset($params[$key]) ? $params[$key] : null;
-						}
-					}				
-					return call_user_func_array(array($reflector->getName(), $class_method_name), $instances);
-				}
-				else {
-					return call_user_func(array($reflector->getName(), $class_method_name));
-				}	
-			}
-			else {
-				return $reflector->getName();
-			}
-		}
-		// New object instance
-		else {
-			$instances = array();
-			foreach ($constructor->getParameters() as $key => $parameter) {	
-				if ($parameter->getClass()) {
-					if ( isset($params[$key]) && is_array($params[$key]) ) {
-						$instances[] = self::get($parameter->getClass()->name, $params[$key]);
-					}
-					else {
-						$instances[] = self::get($parameter->getClass()->name);
-					}
-				}
-				else {
-					$instances[] = isset($params[$key]) ? $params[$key] : null;
-				}
-			}		 
-
-			return $reflector->newInstanceArgs($instances);			
-		}
-	}
-
-
-	public static function services()
-	{
-		if ( !isset(self::$collections['services']) || !is_object( self::$collections['services']) ) {
-			$collections['services'] = Collection\Services::getInstance();
-		}
-		return $collections['services'];
-	}
-
-
-	public static function controllers()
-	{
-		if (! is_object( self::$collections['controllers']) ) $collections['controllers'] = Collection\Controllers::getInstance();
-		return $collections['controllers'];
-	}
-
-	public static function collections()
-	{
-		return self::$collections;
-	}	
-
-	
-	
-	
-	
-}
 */
 
 }

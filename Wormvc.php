@@ -2,6 +2,7 @@
 namespace Wormvc\Wormvc;
 
 use \Wormvc\Wormvc\Manager\PluginManager;
+use \Wormvc\Wormvc\Manager\TemplateManager;
 use \Wormvc\Wormvc\Manager\ProviderManager;
 use \Wormvc\Wormvc\Manager\RouteManager;
 use \Wormvc\Wormvc\Traits\Singleton;
@@ -30,6 +31,9 @@ class Wormvc
 
     /** @var ProviderManager $provider_manager Stores a reference to the provider manager. */
     private $provider_manager;
+    
+    /** @var TemplateManager $template_manager Stores a reference to the template manager. */
+    private $template_manager;
     
     /** @var RouteManager $route_manager Stores a reference to the route manager. */
     private $route_manager;    
@@ -67,6 +71,7 @@ class Wormvc
     public function init ()
     {
         $this->plugin_manager = self::get(PluginManager::class);
+        $this->template_manager = self::get(TemplateManager::class);
         $this->provider_manager = self::get(ProviderManager::class);
         $this->route_manager = self::get(RouteManager::class);
         return $this;
@@ -81,8 +86,7 @@ class Wormvc
     public function plugin($plugin_id)
     {
         return $this->plugin_manager->get($plugin_id);
-    }    
-    
+    }
     
     /**
      * Get the plugin manager
@@ -95,6 +99,34 @@ class Wormvc
     }
 
     /**
+     * Get the plugin manager
+     *
+     * @return PluginManager
+     */
+    public function pluginManager()
+    {
+        return $this->plugin_manager;
+    }
+
+    /**
+     * Get the template manager
+     *
+     * @return TemplateManager
+     */
+     /*
+    public function templateManager($plugin_id = false)
+    {
+        if ($plugin_id) {
+            $this->plugin_manager->get($plugin_id);
+            
+            //return $this->get(TemplateManager::class);
+        } else {
+            return $this->template_manager;
+        }
+    }
+    */
+
+    /**
      * Get the provider manager
      *
      * @return PRoviderManager
@@ -102,6 +134,16 @@ class Wormvc
     public function providers()
     {
         return $this->provider_manager;
+    }
+
+    /**
+     * Get the template manager
+     *
+     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     */    
+    public function templateManager()
+    {
+        return $this->template_manager;
     }
 
     /**

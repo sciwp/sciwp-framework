@@ -17,6 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class Deactivation
 {
 	use \Wormvc\Wormvc;
+    
+	/** @var string $plugin The plugin this service belongs to. */
+	private $plugin;
 
 	/** @var string $actions Stores a list of the deactivation actions */	
 	private $actions = array();
@@ -32,9 +35,10 @@ class Deactivation
      * @param string $plugin_file The main plugin file
 	 * @return	object
 	 */
-	public function init($plugin_file)
+	public function init($plugin_id)
     {
-		register_deactivation_hook( $plugin_file, array($this,'run'));
+        $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->pluginManager()->get($plugin_id);
+		register_deactivation_hook($this->plugin->getFile(), array($this,'run'));
 		return $this;
 	}
 

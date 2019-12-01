@@ -16,6 +16,9 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  */
 class Activation
 {
+	/** @var string $plugin The plugin this service belongs to. */
+	private $plugin;
+    
     /** @var string $plugin_name The plugin name */
     private $plugin_name;    
     
@@ -44,13 +47,15 @@ class Activation
      * @param array $config The plugin activation config array
 	 * @return	object
 	 */	
-	public function init($plugin_name, $plugin_file, $config_array)
+	public function init($plugin_id)
     {
-        $this->plugin_name = $plugin_name;
-        $this->plugin_file = $plugin_file;
-        $this->config = $config_array;
+        $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->plugins()->get($plugin_id);
         
-		register_activation_hook( $plugin_file, array($this,'run'));
+        $this->plugin_name = $this->plugin->getName();
+        $this->plugin_file = $this->plugin->getFile();
+        $this->config = $this->plugin->getConfig();
+        
+		register_activation_hook($this->plugin_file, array($this,'run'));
 		return $this;
 	}
 
