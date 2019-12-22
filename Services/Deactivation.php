@@ -15,9 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @since		Version 1.0.0 
  */
 class Deactivation
-{
-	use \Wormvc\Wormvc;
-    
+{    
 	/** @var string $plugin The plugin this service belongs to. */
 	private $plugin;
 

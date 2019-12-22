@@ -147,16 +147,7 @@ class Plugin
 			$this->module_dir = $this->config['folders']['modules'] == '' ? file_exists($this->dir . '/modules') ? $this->dir . '/modules' : false : $this->dir .'/'. $this->config['folders']['modules'];
 		}
 		else $this->config['module_folder'] = file_exists($this->config['base_folder'] . '/modules') ? $this->dir . '/modules' : false;        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
         // Autoloader Cache
         $this->autoloader_cache  = isset($this->config['autoloader']['cache']) && $this->config['autoloader']['cache'] ? true : false;
 
@@ -166,28 +157,11 @@ class Plugin
         // Services
         $activation_service->init($this);
         $deactivation_service->init($this);
+        $template_service->init($this);
         
         $this->services_collection->add('activation', $activation_service);
         $this->services_collection->add('deactivation', $deactivation_service);
-        
-        
-        $template_service->init($this);
-
-
-
-        /*
-        $template_service->setPlugin($this);
-        if ($this->config()['templates']) $template_service->addTemplates((array) $this->config()['templates']);
         $this->services_collection->add('template', $template_service);
-        
-        $template_manager->addTemplates($this, (array) $this->config()['templates']);
-        */
-
-  
-        
-        // Template service
-        //TemplateService::init();
-		//TemplateService::addTemplates($this->config()['templates']);
     }
 
     

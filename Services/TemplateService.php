@@ -37,7 +37,7 @@ class TemplateService
     public function template($key, $array_or_path, $name = false, $post_types = false, $theme_path = false)
     {
         $template = new Template($this->plugin, $array_or_path, $name, $post_types, $theme_path);
-        $this->template_manager->add($key, $template);
+        $this->template_manager->register($key, $template);
         return $template;
     }
     

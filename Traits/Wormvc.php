@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc;
+namespace Wormvc\Wormvc\Traits;
 
 use \Wormvc\Wormvc\Wormvc as WormvcMain;
 

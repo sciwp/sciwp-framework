@@ -3,9 +3,11 @@ namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use \Wormvc\Wormvc\Traits\Singleton;
 use \Wormvc\Wormvc\Manager;
 use \Wormvc\Wormvc\Route;
 use \Wormvc\Wormvc\Helpers\Url;
+
 /**
  * Route Manager
  *
@@ -20,226 +22,164 @@ use \Wormvc\Wormvc\Helpers\Url;
 
 class RouteManager extends Manager
 {
+    use Singleton;
+
     /** @var array $routes Stores a list of the registered routes */
     private $routes = array();
-	
+
+	/** @var boolean $filters_added If the WP filters have been added or not. */
+	private $filters_added = false;
+
 	/** @var array $segments Segments in the url */
 	private $segments = array();    
-
-    private $index = 1;    
 	
-	/**
-	 * Parameters to pass to the callback function or method
-	 * @var array
-	 */
-	private $params = array();    
+	/** @var array $params Parameters to pass to the action function or method */
+	private $params = array();
     
+    /** @var array $cache Stores de cached rewrite rules */
+	public $cache = array();
+    
+    /** @var string $file_cache Stores de cache file path */
+	private $file_cache;
+    
+    /** @var boolean $rewrite_rules_flushed Stores if the rules have been flushed */
+	private $rewrite_rules_flushed = false;
+
+	/**
+	 * Class constructor
+	 */
+	private function __construct(){
+        $this->dir_cache = dirname(substr(plugin_dir_path( __FILE__ ), 0, -1)) . '/cache/';
+        $this->file_cache = $this->dir_cache . 'route.cache.php';
+        $this->cache = is_file($this->file_cache) ? (array)include $this->file_cache : [];
+        echo($this->file_cache);
+    }
+    
+	/**
+	 * Saves the route cache
+	 *
+	 * @return	bool
+	 */
+	public function saveCache()
+	{
+        if (!file_exists($this->file_cache)) mkdir($this->dir_cache);
+		file_put_contents($this->file_cache, '<?php return ' . var_export($this->cache, true) . ';')
+        or die('Cannot write the file:  '.$this->file_cache);
+	}
+
+	/**
+	 * Add a new route
+     *
+	 * @var $route
+     * @var $action
+	 * @return string
+	 */	
+	public function route($methods, $route, $action) 
+	{
+		$route = new Route($methods, $route, $action);
+        $this->registerRoute($route);
+		return $route;
+	}
+
     /**
-     * @param Autoloader $autoloader
-     */    
-	public function __construct()
+     * Register a new route into the route manager
+     *
+     * @param \Wormvc\Wormvc\Route $route The route instance
+     * @return \Wormvc\Wormvc\Manager\RouteManager
+     */
+    public function registerRoute($route)
     {
-        
-        
-        add_action( 'init', array($this,'addRewriteRulesAction'), 1);
-        add_filter( 'query_vars', function( $query_vars ) {
-            $query_vars[] = 'wormvc';
-            return $query_vars;
-        } );        
-        
-        add_action( 'template_redirect', array($this,'loadControllerAction'), 1);
-          
-        
-       
-        
+        if (count($this->routes)) $this->routes[] = $route;
+        else $this->routes[1] = $route;
+
+        if (!$this->filters_added) {
+            add_action( 'init', array($this,'addRewriteRulesAction'), 1);
+            add_filter( 'query_vars', function( $query_vars ) {
+                $query_vars[] = 'wormvc';
+                return $query_vars;
+            }); 
+            add_action( 'template_include', array($this,'loadControllerAction'), 10);
+            $this->filters_added = true;
+        }
+
+        if (!isset($this->cache[$route->regex])) {
+
+            if (!$this->rewrite_rules_flushed) {
+                add_action( 'init', array($this,'flushRewriteRules'), 1);
+                $this->rewrite_rules_flushed = true;
+            }
+            $this->cache[$route->regex] = key($this->routes);
+            $this->saveCache();
+        }
+
+        return $this;
     }
 
+    /**
+     * Flush rewrite rules
+     */
+    public function flushRewriteRules() {
+        flush_rewrite_rules(  true );
+       
+    }
 
-        public function loadControllerAction() {
-            $wormvc_var =  get_query_var( 'wormvc');
-            echo($wormvc_var."-----------------------------------------------------------------------<br>");
-            if ( $wormvc_var ) {
-                if(isset($this->routes[$wormvc_var])) {
-                    echo("----------------------------------XXXXXXXXXXXXX");
-                    $route = $this->routes[$wormvc_var];
-                    $callback = $route->getCallback();
-
-                    $this->wormvc->get($callback);					
-
-                }
-                else if($wormvc_var == 'x') {
-                    echo("----------------------------------OKOKOKOKOKOK");
-
-                    
-                    
-                    
-                }                
-                /*
-                wp_head();
-                get_header();
-                echo("--------------");
-                get_footer();
-                die;
-                */
-            }
-        }         
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     /**
      * Generate rewrite rules when fushed
+     *
+     * @return \Wormvc\Wormvc\Manager\RouteManager
      */
 	public function addRewriteRulesAction() 
 	{
         add_filter( 'generate_rewrite_rules', function ( $wp_rewrite ) {
-            
             $routes = array();
             foreach($this->routes as $key => $route) {
-                $routes[$route->regex]  = 'index.php?wormvc='.$key;
+                $routes[$route->regex] = 'index.php?wormvc='.$key;
             }
-            $cosa = 'my-custom-([0-9]{2})\/s\/?$';
-            $routes[$cosa] = 'index.php?wormvc=x';
-
             $wp_rewrite->rules = array_merge(
                 $routes,
                 $wp_rewrite->rules
             );
-
-            echo("<pre>"); print_r($wp_rewrite->rules); echo("</pre>");
-            //['my-custom-[0-9]{2}/s/?$' => 'index.php?wormvc=1'],
-        } );        
-
-
-
-	}
-
-	/**
-	 * Sets a route
-     *
-	 * @var $route
-     * @var $callback
-     * @var $priority
-	 * @return string
-	 */	
-	public function route($route, $callback, $name = false) 
-	{
-		$route = new Route($route, $callback, $name);
+        });
         
-        if($route->name()) {
-            $this->routes[$route->name()] = $route;
-        } else {
-            $this->routes[$this->index] = $route;
-            $this->index++;
-        }
-       
-		return $route;
+        return $this;
 	}
 
-    
-	/**---------------------------------------------------------------
-	 * Cleans a url
-	 * ---------------------------------------------------------------
-	 * @static
-	 * @return	string
-	 */
-	protected function getCleanUrl($url)
-	{
-		// Remove the script name from the file
-		$url = str_replace(dirname($_SERVER['SCRIPT_NAME']), '', $url);
-		
-		// Remove the query string
-		$query_string = strpos($url, '?');
-		if ($query_string !== false) $url = substr($url, 0, $query_string);
+    /**
+     * Load the action matching a route
+     */
+    public function loadControllerAction($template)
+    {
+        $wormvc_var = get_query_var( 'wormvc');
+        if ( $wormvc_var ) {
 
-		// If the URL looks like http://localhost/index.php/path/to/folder remove /index.php
-		if (substr($url, 1, strlen(basename($_SERVER['SCRIPT_NAME']))) == basename($_SERVER['SCRIPT_NAME'])) {
-		  $url = substr($url, strlen(basename($_SERVER['SCRIPT_NAME'])) + 1);
-		}
-		// Make sure the URI ends in a /
-
-		if (substr($url, -1) == '/') $url = substr($url, 0, -1);
-
-		// Replace multiple slashes in a url, such as /my//dir/url
-		$url = preg_replace('/\/+/', '/', $url);
-		return $url;
-	}    
-    
-    
-    
-	/**
-	 * Runs the router
-	 */		
-	public function run()
-	{
-		ksort($this->routes);
-		$this->segments = Url::segments();
-		$url = $this->getCleanUrl($_SERVER['REQUEST_URI']);
-		echo("<pre>"); print_r($this->routes);echo("</pre>"); 
-		foreach ($this->routes as $route) {
-            
-            
-			if (!preg_match($route->getPattern(), $url, $matches)) {
-
-                define('IS_AJAX', ( isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'));
-                        
-                //Ajax check
-                if(IS_AJAX && !$route->getAjax()) continue;
-                if (!IS_AJAX && $route->getAjax()) continue;
-
-                //Post check
-                if (empty($_POST) &&  $route->getPost() == 1) continue;
-                if (!empty($_POST) &&  $route->getPost() == 2) continue;							
-
-                        
-                $response = $route->getResponse();
-                        
-                if ($response == 'json' || IS_AJAX) { //Response::layout(false);
-                }else {} //Response::layout($route->getLayout());
-                        
-                $callback = $route->getCallback();
-
-                foreach ($matches as $key => $match) {
-                    if (is_string($key)) $this->params[] = $match;
-                }
-                    
-                ob_start();
-
-                if (is_string($callback)) {
-                            if (strpos($callback, ".")) {
-                                include ($callback); // Include a single file
-                            }
-                            else if ((substr($callback, 0, -1) == '/') && is_dir($callback)) {
-                                //Return a file using a recursive folder
-                                $file = fileByUrlSegments($callback);
-                                if ($file) include ($file);
-                            }
-                }
-                else {
-                    if (is_array($callback)) {
-                        if (class_exists($callback[0])) $callback[0] = $this->wormvc->get($callback[0]);
-                    }
-                    call_user_func_array($callback, array_values($this->params));						
-                }
+            if (isset($this->routes[$wormvc_var]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$wormvc_var]->getMethods())) {
                 
-                $result = ob_get_contents();
-                        
-                ob_end_clean();
-                        
-                //Response::setContent($result)->render();
-                    
-                ob_end_flush();
-                        
-                return $result;
-			}
-		}
-		return false;
-	}
+                $route = $this->routes[$wormvc_var];
+                $action = $route->getAction();
+                
+                $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+                if ($route->isAjax() !== $request_is_ajax) return $template;
+
+
+                   ob_start();
+
+                if ($route->getContent() == 'json') {
+                    if (is_string($action) && strpos($action, ".") && file_exists($action)) $result = include ($action);
+                    else $result = $this->wormvc->get($action);
+                } else {
+                    if ($route->getLayout() && !$request_is_ajax) {
+                        wp_head();
+                        get_header();
+                    }
+                    if (is_string($action) && strpos($action, ".") && file_exists($action)) include ($action);
+                    else $this->wormvc->get($action);
+                    if ($route->getLayout() && !$request_is_ajax) get_footer();  
+                }
+            } else {
+                return $template;
+            }
+        } else {
+            return $template;
+        }
+    }
 }

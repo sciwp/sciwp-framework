@@ -37,11 +37,11 @@ class TemplateManager extends Manager
      * @param \Wormvc\Wormvc\Template $template The template identification name
      * @return \Wormvc\Wormvc\Manager\TemplateManager
      */
-	public function add($key_or_array, $template = false)
+	public function register($key_or_array, $template = false)
 	{
         if (is_array($key_or_array)) {
             foreach($key_or_array as $key => $template) {
-                $this->add($key, $template);
+                $this->register($key, $template);
             }
             return $this;
         }
@@ -66,7 +66,7 @@ class TemplateManager extends Manager
     public function template($key, $plugin_id, $array_or_path, $name = false, $post_types = false, $theme_path = false)
 	{
         $template = new Template($plugin_id, $array_or_path, $name, $post_types, $theme_path);
-        $this->add($key, $template);
+        $this->register($key, $template);
         return $template;
     }
 

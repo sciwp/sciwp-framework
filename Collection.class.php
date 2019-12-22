@@ -16,7 +16,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  */
 class Collection implements Interfaces\CollectionInterface
 {
-    use \Wormvc\Wormvc;
+    use \Wormvc\Wormvc\Traits\Wormvc;
 
 	/** @var array $elements Stores a list of the registered elements */	
 	private $elements = array();

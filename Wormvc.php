@@ -23,6 +23,8 @@ defined('WPINC') OR exit('No direct script access allowed');
 
 class Wormvc
 {
+    use \Wormvc\Wormvc\Traits\Singleton;
+
     /** @var Wormvc  $_instance The class instance. */  
     private static $_instance;
 
@@ -155,6 +157,12 @@ class Wormvc
     {
         return $this->route_manager;
     }    
+
+    public function routeManager()
+    {
+        return $this->route_manager;
+    }    
+
 
     /**
      * Bind a class name or alias to a class or instance

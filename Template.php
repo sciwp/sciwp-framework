@@ -71,10 +71,9 @@ class Template
     /**
      * Add the template to the template manager
      *
-     * @param string $key The id that the template will have in the template manager
      * @return \Wormvc\Wormvc\Template
      */
-    public function add($key) {
+    public function register($key) {
         if (!$this->name) $this->name = $key;
         $this->template_manager->add($key, $this);     
         return $this;

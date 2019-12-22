@@ -18,92 +18,183 @@ defined('WPINC') OR exit('No direct script access allowed');
  */
 class Route
 {
-	/** @var string $regex */
+    use \Wormvc\Wormvc\Traits\Wormvc;
+    
+    /** @var string $route */
+	private $route;
+    
+	/** @var Mixed $action */
+	private $action;
+    
+    /** @var string $regex */
 	public $regex;
     
 	/** @var array $params */
 	private $params = array();
+
+	/** @var array $methods Request methods */
+	private $methods;
     
-    
-	/** @var array $params */
-	private $route = array();        
-
-	/** @var string $name */
-	private $name;
-
-	/** @var Mixed $callback */
-	private $callback;
-
-	/**
-	 * Route request string (get/post)
-	 * @var	boolean
-	 */
-	private $is_post = 0;		
-
-    
-	/**
-	 * Layout
-	 * @var	string
-	 */
-	private $layout = true;
-	
-	/**
-	 * Request html/file/json)
-	 * @var	string
-	 */
-	private $response = 'html';	
-	
-	/**
-	 * Run only of it´s an ajax request
-	 * @var	boolean
-	 */
+    /** @var boolean $is_ajax Run only of it´s an ajax request */
 	private $is_ajax = false;
+
+	/** @var	string $layout Add wordpress layout */
+	private $add_layout = true;
 	
+	/** @var string $content If it´s html/file/json */
+	private $content = 'html';	
+
 	/**
 	 * Class constructor
      *
-	 * @var string $pattern
-     * @var mixed $callback
+	 * @var string $route
+     * @var mixed $action
 	 * @return \Wormvc\Wormvc\Route
 	 */
-	public function __construct($pattern, $callback, $name = false)
+	public function __construct($methods, $route, $action)
 	{
-        if($name) $this->name = $name;
-        // Remove trailing slashes
-        $pattern = trim($pattern, '/'); 
+        
+        $this->route_manager = \Wormvc\Wormvc\Wormvc::instance()->routeManager();
 
-        /*
-		$pattern = preg_replace('/\<\:(.*?)\|(.*?)\>/', '(?P<\1>\2)', $pattern); // Custom capture, format: <:var_name|regex>
-		$pattern = preg_replace('/\<\:(.*?)\>/', '(?P<\1>[A-Za-z0-9\-\_]+)', $pattern); // Alphanumeric capture (0-9A-Za-z-_), format: <:var_name>
-		$pattern = preg_replace('/\<\#(.*?)\>/', '(?P<\1>[0-9]+)', $pattern); // Numeric capture (0-9), format: <#var_name>
-		$pattern = preg_replace('/\<\!(.*?)\>/', '(?P<\1>[^\/]+)', $pattern); // Wildcard capture (Anything EXCLUDING directory separators), format: <!var_name>	
-		$pattern = preg_replace('/\<\*(.*?)\>/', '(?P<\1>.+)', $pattern); // Wildcard capture (Anything INCLUDING directory separators), format: <*var_name>
-		$pattern = '/^' . str_replace('/', '\/', $pattern) . '$/'; // Build regular expression syntax	
-        */
+        $this->methods = (array) $methods;
+        foreach($this->methods as $key => $value) {
+            $this->methods[$key] = strtoupper($value);
+        }
+      
+        // Remove trailing slashes
+        $route = trim($route, '/');
 
         // Get parameters
-        preg_match_all('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', rtrim($pattern, '/'), $matches);
+        preg_match_all('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', rtrim($route, '/'), $matches);
 
         if (is_array($matches) && isset($matches[1])) {
             foreach ((array) $matches[1] as $key => $match) {
                 $this->params[$match] = isset($matches[3][$key]) && $matches[3][$key] ? $matches[3][$key] : "[A-Za-z0-9\-\_]+";
-                
-                /**
-                NEW PARAM: add order, regex and name. Then, add to a request object, whcih will be linked to the current route
-                
-                Also change Wormvc trait route to kndcc\wormvc\traits\wormvc
-                */
+                /** NEW PARAM: add order, regex and name. Then, add to a request object, which will be linked to the current route */
             }           
         }
 
-        $pattern = preg_replace('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', '{$1}', $pattern); // Custom capture, format: <:var_name|regex>
-        $this->route = $pattern;   
+        $this->route = preg_replace('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
         $this->generateRegex();
 
-		$this->callback = $callback;
+		$this->action = $action;
         return $this;
 	}
 
+	/**
+	 * Add a new route answering to the get method
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function get($route, $action)
+    {
+        $route = new self('get', $route, $action);
+        $route->register();
+        return $route;
+    }
+    
+	/**
+	 * Add a new route answering to the post method
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function post($route, $action)
+    {
+        $route = new self('post', $route, $action);
+        $route->register();
+        return $route;
+    }
+
+	/**
+	 * Add a new route answering to the put method
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function put($route, $action)
+    {
+       $route = new self('put', $route, $action);
+       $route->register();
+       return $route;
+    }
+
+	/**
+	 * Add a new route answering to the patch method
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function patch($route, $action)
+    {
+        $route = new self('patch', $route, $action);
+        $route->register();
+        return $route;
+    }
+
+	/**
+	 * Add a new route answering to the delete method
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function delete($route, $action)
+    {
+        $route = new self('delete', $route, $action);
+        $route->register();
+        return $route;
+    }
+
+	/**
+	 * Add a new route answering all methods
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function any($route, $action)
+    {
+        $route = new self(['get', 'post', 'put', 'patch', 'delete'], $route, $action);
+        $route->register();
+        return $route;
+    }
+
+	/**
+	 * Add a new route answering the selected methods
+	 *
+	 * @param string $route
+	 * @param mixed $action
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public static function match($methods, $route, $action)
+    {
+        $route = new self($methods, $route, $action);
+        $route->register();
+        return $route;
+    }    
+
+
+	/**
+	 * Add the route to the route manager
+	 *
+	 * @return \Wormvc\Wormvc\Route
+	 */
+    public function register() {
+        $this->routeManager()->registerRoute($this);
+        return $this;
+    }
+
+	/**
+	 * Add parameter description
+	 *
+	 * @return \Wormvc\Wormvc\Route
+	 */		
     public function where(...$args)
     {
 		if (!is_array($args[0])) $args = array($args[0] => $args[1]);	
@@ -115,10 +206,43 @@ class Route
 		return $this;
     }
 
-	/**---------------------------------------------------------------
-	 * Get the route name
-	 * ---------------------------------------------------------------
-	 * @return	string
+	/**
+	 * Set the request to accept async calls
+	 *
+	 * @return \Wormvc\Wormvc\Route
+	 */		
+    public function ajax($value = true)
+    {
+        $this->is_ajax = $value;
+		return $this;
+    }
+
+    /**
+	 * Set the response type
+	 *
+	 * @return \Wormvc\Wormvc\Route
+	 */		
+    public function content($value = 'html')
+    {
+        $this->content = $value;
+		return $this;
+    }
+
+    /**
+	 * Sets if the response will contain WordPress layout
+	 *
+	 * @return \Wormvc\Wormvc\Route
+	 */		
+    public function layout($value = false)
+    {
+        $this->add_layout = $value;
+		return $this;
+    }
+
+	/**
+	 * Generate regular expression
+	 *
+	 * @return \Wormvc\Wormvc\Route
 	 */		
 	public function generateRegex()
 	{
@@ -126,117 +250,57 @@ class Route
         //$this->regex = '/^' .$this->route. '$/'
         foreach ($this->params as $key => $regex) {
             $this->regex = preg_replace("/(\{".$key."\})/", '('.$regex.')', $this->regex);
-        }        
-        return $this->regex;
+        }
+        return $this;
 	}
 
-	/**---------------------------------------------------------------
-	 * Get the route callback
-	 * ---------------------------------------------------------------
-	 * @return	Mixed
+	/**
+	 * Get the route action
+	 *
+	 * @return string|array
 	 */		
-	public function getCallback()
+	public function getAction()
 	{
-		return $this->callback;
+		return $this->action;
+	}
+    
+    /**
+	 * Get the request methods
+	 *
+	 * @return array
+	 */		
+	public function getMethods()
+	{
+		return $this->methods;
 	}
 
-	/**---------------------------------------------------------------
+	/**
 	 * Get if it´s an async route
-	 * ---------------------------------------------------------------
+	 *
 	 * @return	Boolean
 	 */		
-	public function getAjax()
+	public function isAjax()
 	{
 		return $this->is_ajax;
 	}
 	
-	/**---------------------------------------------------------------
-	 * Get if there should be post vars
-	 * ---------------------------------------------------------------
-	 * @return	Boolean
+	/**
+	 * Get the content type of the response
+	 *
+	 * @return string
 	 */		
-	public function getPost()
+	public function getContent()
 	{
-		return $this->is_post;
-	}	
-	
-	/**---------------------------------------------------------------
-	 * Get the response type
-	 * ---------------------------------------------------------------
-	 * @return	string
-	 */		
-	public function getResponse()
-	{
-		return $this->response;
+		return $this->content;
 	}
-	
-	/**---------------------------------------------------------------
-	 * Get the layout
-	 * ---------------------------------------------------------------
-	 * @return	string
+
+	/**
+	 * Get if the response has WordPress layout
+	 *
+	 * @return boolean
 	 */		
 	public function getLayout()
 	{
-		return $this->layout;
+		return $this->add_layout;
 	}
-
-	/**---------------------------------------------------------------
-	 * Sets/Gets the route name
-	 * ---------------------------------------------------------------
-	 * @return	Route
-	 */		
-	public function name($name = null)
-	{
-		if ($name === null) return $this->name ? $this->name : '';
-		else $this->name = $name;
-		return $this;
-	}
-	/**---------------------------------------------------------------
-	 * Sets if it´s an async request
-	 * ---------------------------------------------------------------
-	 * @return	Route
-	 */
-
-	public function ajax($value)
-	{
-		if($value) $this->is_ajax= true;
-		return $this;
-	}
-
-	/**---------------------------------------------------------------
-	 * Sets if it´s an async request
-	 * ---------------------------------------------------------------
-	 * @return	Route
-	 */
-	 
-	public function post($value)
-	{
-		if($value) $this->is_post= 1;
-		else $this->is_post= 2;
-		return $this;
-	}
-	
-	/**---------------------------------------------------------------
-	 * Sets the layout
-	 * ---------------------------------------------------------------
-	 * @return	Route
-	 */
-	 
-	public function layout($value)
-	{
-		$this->layout = $value;
-		return $this;
-	}		
-	
-	/**---------------------------------------------------------------
-	 * Sets the response type paramenter
-	 * ---------------------------------------------------------------
-	 * @return	Route
-	 */
-	 
-	public function response($value)
-	{
-		$this->response = $value;
-		return $this;
-	}	
 }
