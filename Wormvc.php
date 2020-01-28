@@ -153,7 +153,7 @@ class Wormvc
      *
      * @return RouteManager
      */    
-    public function routes()
+    public function router()
     {
         return $this->route_manager;
     }    
@@ -233,12 +233,19 @@ class Wormvc
 			$class_name   = $class_name[0];
 		} 
 
-        if(is_string($class_name) && strpos($class_name, '@') !== false) {
-            $arr = explode('@',$class_name);
-			$class_name   = $arr[0];
-            $class_method_name = $arr[1];
-            $instance = $this->get($class_name);
-            return call_user_func_array(array($instance, $class_method_name), $params);
+        if(is_string($class_name)) {
+            if (strpos($class_name, '@') !== false) {
+                $arr = explode('@',$class_name);
+                $class_name   = $arr[0];
+                $class_method_name = $arr[1];
+                $instance = $this->get($class_name);
+                return call_user_func_array(array($instance, $class_method_name), $params);
+            } else if (strpos($class_name, '::') !== false) {
+                $arr = explode('::',$class_name);
+                $class_name   = $arr[0];
+                $class_method_name = $arr[1];
+                return call_user_func_array(array($class_name, $class_method_name), $params); 
+            }
         }
 
         if (is_string($class_name) && isset($this->aliases[$class_name])) {
@@ -297,7 +304,6 @@ class Wormvc
 		else {
             if ($constructor) {
                 $instances = array();
-
                 foreach ($constructor->getParameters() as $key => $parameter) {
                     if ($parameter->getClass()) {
                         if (isset($params[$key]) && is_array($params[$key])) {

@@ -53,7 +53,6 @@ class Route
 	 */
 	public function __construct($methods, $route, $action)
 	{
-        
         $this->route_manager = \Wormvc\Wormvc\Wormvc::instance()->routeManager();
 
         $this->methods = (array) $methods;
@@ -65,16 +64,24 @@ class Route
         $route = trim($route, '/');
 
         // Get parameters
-        preg_match_all('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', rtrim($route, '/'), $matches);
+        preg_match_all('/\{(.*?)(\?)?(\|((.*?)({.*})?)?)?\}/', rtrim($route, '/'), $matches);
 
         if (is_array($matches) && isset($matches[1])) {
             foreach ((array) $matches[1] as $key => $match) {
-                $this->params[$match] = isset($matches[3][$key]) && $matches[3][$key] ? $matches[3][$key] : "[A-Za-z0-9\-\_]+";
+                $this->params[$match] = isset($matches[4][$key]) && $matches[4][$key] ? '('.$matches[4][$key].')' : "([A-Za-z0-9\-\_]+)";
+                if($matches[2][$key] == '?') {
+                    $this->params[$match] = '?' . $this->params[$match] . '?';
+                }
                 /** NEW PARAM: add order, regex and name. Then, add to a request object, which will be linked to the current route */
             }           
         }
 
-        $this->route = preg_replace('/\{(.*?)(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
+        $this->route = preg_replace('/\{(.*?)(\?)?(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
+        
+        echo("<pre>");
+print_r($this->params);
+echo($this->route);
+echo("</pre>");
         $this->generateRegex();
 
 		$this->action = $action;
@@ -200,7 +207,12 @@ class Route
 		if (!is_array($args[0])) $args = array($args[0] => $args[1]);	
         else $args = $args[0];
 		foreach ($args as $key => $arg) {
-            $this->params[$key] = $arg;                          
+            $optionalCharacter = false;
+            if (substr($this->params[$key], -1) == '?') {
+                $this->params[$key] = '?(' . $arg . ')?'; 
+            } else {
+                $this->params[$key] = '?(' . $arg . ')';
+            }                
 		}
         $this->generateRegex();
 		return $this;
@@ -249,8 +261,9 @@ class Route
         $this->regex = str_replace('/', '\/', $this->route) . '\/?$';
         //$this->regex = '/^' .$this->route. '$/'
         foreach ($this->params as $key => $regex) {
-            $this->regex = preg_replace("/(\{".$key."\})/", '('.$regex.')', $this->regex);
+            $this->regex = preg_replace("/(\{".$key."\})/", $regex, $this->regex);
         }
+        echo($this->regex);echo("<br/>");
         return $this;
 	}
 
@@ -302,5 +315,25 @@ class Route
 	public function getLayout()
 	{
 		return $this->add_layout;
+	}
+    
+	/**
+	 * Get the regular expression
+	 *
+	 * @return string
+	 */		
+	public function getRegex()
+	{
+		return $this->regex;
+	}
+
+    /**
+	 * Get the parameters
+	 *
+	 * @return arrays
+	 */		
+	public function getParams()
+	{
+		return $this->params;
 	}
 }

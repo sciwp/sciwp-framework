@@ -52,7 +52,6 @@ class RouteManager extends Manager
         $this->dir_cache = dirname(substr(plugin_dir_path( __FILE__ ), 0, -1)) . '/cache/';
         $this->file_cache = $this->dir_cache . 'route.cache.php';
         $this->cache = is_file($this->file_cache) ? (array)include $this->file_cache : [];
-        echo($this->file_cache);
     }
     
 	/**
@@ -119,7 +118,7 @@ class RouteManager extends Manager
      * Flush rewrite rules
      */
     public function flushRewriteRules() {
-        flush_rewrite_rules(  true );
+        flush_rewrite_rules(true);
        
     }
 
@@ -153,28 +152,57 @@ class RouteManager extends Manager
         if ( $wormvc_var ) {
 
             if (isset($this->routes[$wormvc_var]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$wormvc_var]->getMethods())) {
-                
+                global $wp;
                 $route = $this->routes[$wormvc_var];
                 $action = $route->getAction();
-                
-                $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-                if ($route->isAjax() !== $request_is_ajax) return $template;
 
+                preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
 
-                   ob_start();
-
-                if ($route->getContent() == 'json') {
-                    if (is_string($action) && strpos($action, ".") && file_exists($action)) $result = include ($action);
-                    else $result = $this->wormvc->get($action);
-                } else {
-                    if ($route->getLayout() && !$request_is_ajax) {
-                        wp_head();
-                        get_header();
+                if (is_array($matches) && isset($matches[1])) {
+                    $count = 0;
+                    $paramNamesArr = array_keys($route->getParams());
+                    echo("<br/>");
+                    print_R($matches);
+                    foreach($matches as $key => $match) {
+                        if ($key > 0) {
+                            $this->params[$paramNamesArr[$count]] = $match[0];
+                            $count++;
+                        }
                     }
-                    if (is_string($action) && strpos($action, ".") && file_exists($action)) include ($action);
-                    else $this->wormvc->get($action);
-                    if ($route->getLayout() && !$request_is_ajax) get_footer();  
                 }
+
+                $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+                if ($route->isAjax() !== $request_is_ajax) {
+                    return $template;
+                }
+
+                $includeLayout = $route->getContent() != 'json' && $route->getLayout() && !$request_is_ajax;
+                if ($includeLayout) {
+                    wp_head();
+                    get_header();
+                }
+                
+                if (is_string($action) && strpos($action, ".") && file_exists($action)) {
+                    include ($action);
+                } else if (is_callable( $action ) && !strpos($action, '::')){
+                        
+                    $f = new \ReflectionFunction($action);
+                    $params = array();
+                    foreach ($f->getParameters() as $param) {
+                        if (array_key_exists($param->name, $this->params)) {
+                            $params[$param->name] = $this->params[$param->name];
+                        }
+                    }
+
+                    return call_user_func_array($action, $params);
+                }                      
+                else if (!empty($this->params)) {
+                   $this->wormvc->get($action, $this->params); 
+                } else {
+                    $this->wormvc->get($action);
+                }
+                if ($includeLayout) get_footer(); 
+
             } else {
                 return $template;
             }
