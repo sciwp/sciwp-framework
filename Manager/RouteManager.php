@@ -39,6 +39,9 @@ class RouteManager extends Manager
     /** @var array $cache Stores de cached rewrite rules */
 	public $cache = array();
     
+    /** @var string $dir_cache Stores de cache file fir path */
+	private $dir_cache;
+    
     /** @var string $file_cache Stores de cache file path */
 	private $file_cache;
     
@@ -49,7 +52,7 @@ class RouteManager extends Manager
 	 * Class constructor
 	 */
 	private function __construct(){
-        $this->dir_cache = dirname(substr(plugin_dir_path( __FILE__ ), 0, -1)) . '/cache/';
+        $this->dir_cache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
         $this->file_cache = $this->dir_cache . 'route.cache.php';
         $this->cache = is_file($this->file_cache) ? (array)include $this->file_cache : [];
     }
@@ -61,7 +64,7 @@ class RouteManager extends Manager
 	 */
 	public function saveCache()
 	{
-        if (!file_exists($this->file_cache)) mkdir($this->dir_cache);
+        if (!file_exists($this->dir_cache)) mkdir($this->dir_cache);
 		file_put_contents($this->file_cache, '<?php return ' . var_export($this->cache, true) . ';')
         or die('Cannot write the file:  '.$this->file_cache);
 	}
