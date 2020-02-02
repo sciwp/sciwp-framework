@@ -1,4 +1,4 @@
-# wormvc
+# SCIWP
 A MVC Framework for WordPress.
 
 # Funtionalities
