@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @link		https://www.wormvc.com 
  * @since		Version 1.0.0 
  */
-class Deactivation
+class DeactivationService
 {    
 	/** @var string $plugin The plugin this service belongs to. */
 	private $plugin;

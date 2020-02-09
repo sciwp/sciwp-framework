@@ -3,7 +3,6 @@ namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Traits\Singleton;
 use \Wormvc\Wormvc\Manager;
 use \Wormvc\Wormvc\Template;
 use \Exception;
@@ -22,13 +21,42 @@ use \Exception;
 
 class TemplateManager extends Manager
 {
-    use Singleton;
-
 	/** @var array $templates The array of templates that the plugins include. */
 	private $templates = array();
 
 	/** @var boolean $filters_added If the WP filters have been added or not. */
 	private $filters_added = false;
+
+    /**
+     * Create a new template and add it to the template manager
+     *
+     * @param string $key The template key
+     * @param string|array $array_or_path Template path or array with the template data
+     * @param string $name The template name
+     * @param array $postTypes Array with the post types of the template
+     * @param string $themePath The plugin template path
+     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     */
+    public function template($key, $template, $name = false, $postTypes = false, $themePath = false)
+	{
+        $template = new Template($key, $template, $name, $postTypes, $themePath);
+        $this->register($key, $template);
+        return $template;
+    }
+
+    /**
+     * Create a new template and add it to the template manager
+     *
+     * @param array $templatesArray An array of template definitions
+     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     */
+    public function templates($templatesArray)
+	{
+        foreach($templatesArray as $key => $templateData) {
+            $this->template($key, $templateData);
+        }
+        return $this;
+    }
 
     /**
      * Add a new template to the template manager
@@ -37,51 +65,26 @@ class TemplateManager extends Manager
      * @param \Wormvc\Wormvc\Template $template The template identification name
      * @return \Wormvc\Wormvc\Manager\TemplateManager
      */
-	public function register($key_or_array, $template = false)
+	public function register($template)
 	{
-        if (is_array($key_or_array)) {
-            foreach($key_or_array as $key => $template) {
-                $this->register($key, $template);
+        if (is_array($template)) {
+            foreach($template as $key => $templateVal) {
+                $this->register($key, $templateVal);
             }
             return $this;
         }
-        if (!is_object($template) || !($template instanceof \Wormvc\Wormvc\Template)) throw new Exception('Only instances of the Template class are accepted.');
-        $this->templates[$key_or_array] = $template;
-        if (!$this->filters_added) $this->addFilters();
-        $this->filters_added = true;
-        return $this;
-    }
 
-    /**
-     * Create a new template and add it to the template manager
-     *
-     * @param string $key The template key
-     * @param string $plugin_id The plugin id
-     * @param string|array $array_or_path Template path or array with the template data
-     * @param string $name The template name
-     * @param array $post_types Array with the post types of the template
-     * @param string $theme_path The plugin template path
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
-     */
-    public function template($key, $plugin_id, $array_or_path, $name = false, $post_types = false, $theme_path = false)
-	{
-        $template = new Template($plugin_id, $array_or_path, $name, $post_types, $theme_path);
-        $this->register($key, $template);
-        return $template;
-    }
-
-    /**
-     * Create a new template and add it to the template manager
-     *
-     * @param string $key The template key
-     * @param array $templates_array An array of template definitions
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
-     */
-    public function templates($plugin_id, $templates_array)
-	{
-        foreach($templates_array as $key => $template_array) {
-            $this->template($key, $plugin_id, $template_array);
+        if (!is_object($template) || !($template instanceof \Wormvc\Wormvc\Template)) {
+            throw new Exception('Only instances of the Template class are accepted.');
         }
+
+        $this->templates[$template->getKey()] = $template;
+
+        if (!$this->filters_added) {
+            $this->addFilters();
+            $this->filters_added = true;
+        }
+
         return $this;
     }
 
@@ -124,6 +127,7 @@ class TemplateManager extends Manager
 				$post_templates[$key] = $template->getName();
 			}
         }
+
         return $post_templates;
 	}
 
@@ -174,7 +178,6 @@ class TemplateManager extends Manager
 
 		$selected_template = get_post_meta($post->ID, '_wp_page_template', true);
 
-
 		$templates = array();
         foreach ($this->templates as $key => $tpl) {
             if (in_array(get_post_type(), $tpl->getPostTypes())) {
@@ -183,8 +186,11 @@ class TemplateManager extends Manager
         }
 
 		if (!isset( $templates[$selected_template])) return $template_path;
-		else if (file_exists($templates[$selected_template]->getThemePath())) return $templates[$selected_template]->getThemePath();        
-        else if (file_exists( $templates[$selected_template]->getPath() )) return $templates[$selected_template]->getPath();
-		else return $template_path;
+
+		if (file_exists($templates[$selected_template]->getThemePath())) return $templates[$selected_template]->getThemePath();
+        
+        if (file_exists( $templates[$selected_template]->getPath() )) return $templates[$selected_template]->getPath();
+
+		return $template_path;
 	}
 }

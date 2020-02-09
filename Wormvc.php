@@ -111,24 +111,6 @@ class Wormvc
     }
 
     /**
-     * Get the template manager
-     *
-     * @return TemplateManager
-     */
-     /*
-    public function templateManager($plugin_id = false)
-    {
-        if ($plugin_id) {
-            $this->plugin_manager->get($plugin_id);
-            
-            //return $this->get(TemplateManager::class);
-        } else {
-            return $this->template_manager;
-        }
-    }
-    */
-
-    /**
      * Get the provider manager
      *
      * @return PRoviderManager
@@ -152,17 +134,21 @@ class Wormvc
      * Get the route manager
      *
      * @return RouteManager
-     */    
+     */
     public function router()
     {
         return $this->route_manager;
-    }    
+    }
 
+    /**
+     * Get the route manager
+     *
+     * @return RouteManager
+     */
     public function routeManager()
     {
         return $this->route_manager;
-    }    
-
+    }
 
     /**
      * Bind a class name or alias to a class or instance
@@ -214,8 +200,19 @@ class Wormvc
      */
     public function __call($name, $arguments)
     {
-        if ($name === 'get') return self::get($arguments);
-    }    
+        if ($name === 'get') return self::make(...$arguments);
+    }
+
+    /**
+     * This magic method allows to use the get method both statically and within an instance
+     * 
+     * @param string $name The function name
+     * @param array $arguments The function a arguments
+     */
+    public static function __callStatic($name, $arguments)
+    {
+        if ($name === 'get') return self::make(...$arguments);
+    }
 
     /**
      * Allows to get an instace of any class, injecting the dependences when possible
@@ -223,8 +220,10 @@ class Wormvc
      * @param \Object $class_name The classto instantiate
      * @param array $params The array with the arguments
      */    
-    public function get($class_name, $params = array())
+    public static function make($class_name, $params = array())
     {
+        $wormvc = self::instance();
+        
 		$class_method_name = false;
 		$class_method = false;
 
@@ -233,12 +232,12 @@ class Wormvc
 			$class_name   = $class_name[0];
 		} 
 
-        if(is_string($class_name)) {
+        if (is_string($class_name)) {
             if (strpos($class_name, '@') !== false) {
                 $arr = explode('@',$class_name);
                 $class_name   = $arr[0];
                 $class_method_name = $arr[1];
-                $instance = $this->get($class_name);
+                $instance = $wormvc->get($class_name);
                 return call_user_func_array(array($instance, $class_method_name), $params);
             } else if (strpos($class_name, '::') !== false) {
                 $arr = explode('::',$class_name);
@@ -248,11 +247,11 @@ class Wormvc
             }
         }
 
-        if (is_string($class_name) && isset($this->aliases[$class_name])) {
-            $class_name = $this->aliases[$class_name];
+        if (is_string($class_name) && isset($wormvc->aliases[$class_name])) {
+            $class_name = $wormvc->aliases[$class_name];
         }
-        else if (is_string($class_name) && isset($this->bindings[$class_name])) {
-            $class_name = $this->bindings[$class_name];
+        else if (is_string($class_name) && isset($wormvc->bindings[$class_name])) {
+            $class_name = $wormvc->bindings[$class_name];
         }
         
         if(is_object($class_name)) {
@@ -325,8 +324,8 @@ class Wormvc
             
             // Check creation functions
             $class_name_index = ltrim($class_name, "\\");
-            if (isset($this->created[$class_name_index])) {
-                foreach ($this->created[$class_name_index] as $function) {
+            if (isset($wormvc->created[$class_name_index])) {
+                foreach ($wormvc->created[$class_name_index] as $function) {
                     if (is_callable($function) ) {
                         
                         if (is_array($function)) {

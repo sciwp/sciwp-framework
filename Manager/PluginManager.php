@@ -7,7 +7,6 @@ use \Wormvc\Wormvc\Plugin as Plugin;
 use \Wormvc\Wormvc\Manager;
 use \Wormvc\Wormvc\Autoloader;
 use \Wormvc\Wormvc\Services\Activation as ActivationService;
-use \Wormvc\Wormvc\Traits\Singleton;
 
 /**
  * Plugin Manager
@@ -23,8 +22,6 @@ use \Wormvc\Wormvc\Traits\Singleton;
  
 class PluginManager extends Manager
 {
-    use Singleton;
-
     /** @var array $plugins Stores a list of the registered plugins */
     private $plugins = array();
 
@@ -43,7 +40,7 @@ class PluginManager extends Manager
      * @param string|bool $plugin_id The plugin id
      * @return Plugin
      */
-    public function add($plugin_file, $plugin_id)
+    public function register($plugin_file, $plugin_id)
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
         $this->plugins[$plugin_id] = $this->wormvc->get(Plugin::class, [$plugin_file, $plugin_id]);
@@ -68,7 +65,7 @@ class PluginManager extends Manager
 
         // Add the providers to the provider manager
         if (isset($config['providers'])) {
-            $this->wormvc->providers()->add((Array) $config['providers']);
+            $this->wormvc->providers()->register((Array) $config['providers']);
         }
         
         return $this->plugins[$plugin_id];

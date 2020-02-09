@@ -6,6 +6,7 @@ use Wormvc\Wormvc\Services\Activation as ActivationService;
 use Wormvc\Wormvc\Services\Deactivation as DeactivationService;
 use Wormvc\Wormvc\Template as Template;
 use Wormvc\Wormvc\Collection;
+use Wormvc\Wormvc\Wormvc;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -65,16 +66,9 @@ class Plugin
     private $autoloader_cache;       
 
     /** @var Collection $services Collection to store the services */
-    private $services_collection;
+    private $extensions;
     
-    public function __construct(
-        $plugin_file,
-        $plugin_id,
-        Collection $services_collection,
-        ActivationService $activation_service,
-        DeactivationService $deactivation_service,
-        TemplateService $template_service
-    )
+    public function __construct($plugin_file, $plugin_id, Collection $extensions)
     {
         $this->file = $plugin_file;
         $this->dir = rtrim( dirname( $this->file ), '/' );
@@ -151,39 +145,35 @@ class Plugin
         // Autoloader Cache
         $this->autoloader_cache  = isset($this->config['autoloader']['cache']) && $this->config['autoloader']['cache'] ? true : false;
 
-        // Service collection
-        $this->services_collection = $services_collection;
-        
-        // Services
-        $activation_service->init($this);
-        $deactivation_service->init($this);
-        $template_service->init($this);
-        
-        $this->services_collection->add('activation', $activation_service);
-        $this->services_collection->add('deactivation', $deactivation_service);
-        $this->services_collection->add('template', $template_service);
-    }
-
-    
-
-    /**
-     * Get the services collection
-     * 
-     * @return Collection The services collection
-     */
-    public function services ()
-    {
-        return $this->services_collection;
+        // Extensions
+        $this->extensions = $extensions;
+        if (isset($this->config()['extensions'])) {
+            foreach ($this->config()['extensions'] as $key => $extension) {
+                $instance = Wormvc::make($extension);
+                $instance->init($this);
+                $this->extensions->add($key, $instance);
+            }
+        }
     }
 
     /**
-     * Get a single service
+     * Get the extensions collection
      * 
-     * @return mixed The requested service
+     * @return Collection The extensions collection
      */
-    public function service($service_id)
+    public function extensions ()
     {
-        return $this->services_collection->get($service_id);
+        return $this->extensions;
+    }
+
+    /**
+     * Get a single extension
+     * 
+     * @return mixed The requested extension
+     */
+    public function extension($extensionId)
+    {
+        return $this->extensions->get($extensionId);
     }    
 
     /**

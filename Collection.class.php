@@ -18,18 +18,60 @@ class Collection implements Interfaces\CollectionInterface
 {
     use \Wormvc\Wormvc\Traits\Wormvc;
 
-	/** @var array $elements Stores a list of the registered elements */	
-	private $elements = array();
-	
+	/** @var array $items Stores a list of the registered items */	
+	private $items = []);
+
+    /**
+	 * Add a new collection
+	 *
+     * @param mixed $items
+	 * @return \Wormvc\Wormvc\Collection
+	 */
+    public static function create($items = [])
+    {
+        return new self((array) $items);
+    }
+
+    /**
+     * Create a new collection
+     *
+     * @param mixed $items
+     * @return void
+     */
+    public function __construct($items = [])
+    {
+        $this->items = (array) $items;
+    }
+
+    /**
+     * Determine if an item exists in the collection
+     *
+     * @param  mixed  $key
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @return bool
+     */
+    public function contains($value, $operator = null, $comparedValue = null)
+    {
+        if (func_num_args() === 1) return in_array($value, $this->items);
+
+        $key = array_search($value, $this->items);
+        if ($key === false) return false;
+
+
+        return $this->contains($this->operatorForWhere(...func_get_args()));
+    }
+
+
 	/**
-	 * Get all the elements
+	 * Get all the items
 	 *
 	 * @since 1.0.0
 	 * @return array
 	 */
 	public function all()
 	{
-		return $this->elements;
+		return $this->items;
 	}
 	
 	/**
@@ -39,27 +81,27 @@ class Collection implements Interfaces\CollectionInterface
 	 * @since 1.0.0
 	 * @return object|static
 	 */
-	public function get($element_id)
+	public function get($key)
 	{
-		return isset($this->elements[$element_id]) ? $this->elements[$element_id] : false;
+		return isset($this->items[$key]) ? $this->items[$key] : false;
 	}	
 
 	/**
 	 * Add an element
 	 *
-	 * @param string|array $element_id
-	 * @param mixed $element
+	 * @param string|array $itemId
+	 * @param mixed $item
 	 * @since 1.0.0
 	 * @return $this
 	 */		
-	public function add($element_id, $element = null)
+	public function add($key, $item = null)
 	{
-		if (is_array($element_id)) {
-			foreach ($element_id as $key => $elem) {
-                $this->elements[$key] = $elem;
+		if (is_array($key)) {
+			foreach ($key as $key => $item) {
+                $this->elements[$key] = $item;
 			}
 		} else {
-            $this->elements[$element_id] = $element;
+            $this->elements[$key] = $element;
 		}
 		return $this;
 	}
@@ -70,14 +112,14 @@ class Collection implements Interfaces\CollectionInterface
 	 * @param string|array $element_id
 	 * @return $this
 	 */
- 	public function remove($element_id)
+ 	public function remove($key)
 	{
-		if (is_array($element_id)) {
-			foreach ($element_id as $elem_id) {
-                unset($this->elements[$elem_id]);
+		if (is_array($key)) {
+			foreach ($k as $key) {
+                unset($this->elements[$k]);
 			}
 		} else {
-            unset($this->elements[$element_id]);
+            unset($this->elements[$key]);
         }
         return $this;
 	}

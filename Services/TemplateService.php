@@ -26,19 +26,19 @@ class TemplateService
 	/** @var string $plugin The plugin this servuice belongs to. */
 	private $plugin;
 
-	/** @var TemplateManager $template_manager The instance of the template manager. */
-	private $template_manager;
+	/** @var TemplateManager $templateManager The instance of the template manager. */
+	private $templateManager;
 
-    public function __construct(TemplateManager $template_manager)
+    public function __construct(TemplateManager $templateManager)
     {
-        $this->template_manager = $template_manager;
+        $this->templateManager = $templateManager;
     }
 
-    public function template($key, $array_or_path, $name = false, $post_types = false, $theme_path = false)
+    public function template($key, $template, $name = false, $post_types = false, $theme_path = false)
     {
-        $template = new Template($this->plugin, $array_or_path, $name, $post_types, $theme_path);
-        $this->template_manager->register($key, $template);
-        return $template;
+        $templateInstance = Template::create($key, $template, $name, $post_types, $theme_path);
+        $this->templateManager->register($templateInstance);
+        return $templateInstance;
     }
     
     public function templates($tempate_data_arr)
@@ -52,8 +52,19 @@ class TemplateService
 	public function init($plugin_id)
 	{
         $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->plugin($plugin_id);
+
         if (!isset($this->plugin->config()['templates'])) return;
-        $this->template_manager->templates($plugin_id, (array) $this->plugin->config()['templates']); 
+
+        foreach ((array)$this->plugin->config()['templates'] as $key => $template) {
+            
+            if (is_array($template)) {
+                $template['path'] = $this->plugin->getDir() . '/' . $template['path'];
+            } else {
+                $template = $this->plugin->getDir() . '/' . $template;
+            }
+            $this->template($key, $template); 
+        }
+
         return $this;
     }
 }
