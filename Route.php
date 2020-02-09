@@ -78,10 +78,6 @@ class Route
 
         $this->route = preg_replace('/\{(.*?)(\?)?(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
         
-        echo("<pre>");
-print_r($this->params);
-echo($this->route);
-echo("</pre>");
         $this->generateRegex();
 
 		$this->action = $action;
@@ -193,7 +189,7 @@ echo("</pre>");
 	 * @return \Wormvc\Wormvc\Route
 	 */
     public function register() {
-        $this->routeManager()->registerRoute($this);
+        $this->routeManager()->register($this);
         return $this;
     }
 

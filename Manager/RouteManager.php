@@ -3,7 +3,6 @@ namespace Wormvc\Wormvc\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Traits\Singleton;
 use \Wormvc\Wormvc\Manager;
 use \Wormvc\Wormvc\Route;
 use \Wormvc\Wormvc\Helpers\Url;
@@ -22,8 +21,6 @@ use \Wormvc\Wormvc\Helpers\Url;
 
 class RouteManager extends Manager
 {
-    use Singleton;
-
     /** @var array $routes Stores a list of the registered routes */
     private $routes = array();
 
@@ -51,7 +48,7 @@ class RouteManager extends Manager
 	/**
 	 * Class constructor
 	 */
-	private function __construct(){
+	protected function __construct(){
         $this->dir_cache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
         $this->file_cache = $this->dir_cache . 'route.cache.php';
         $this->cache = is_file($this->file_cache) ? (array)include $this->file_cache : [];
@@ -79,7 +76,7 @@ class RouteManager extends Manager
 	public function route($methods, $route, $action) 
 	{
 		$route = new Route($methods, $route, $action);
-        $this->registerRoute($route);
+        $this->register($route);
 		return $route;
 	}
 
@@ -89,7 +86,7 @@ class RouteManager extends Manager
      * @param \Wormvc\Wormvc\Route $route The route instance
      * @return \Wormvc\Wormvc\Manager\RouteManager
      */
-    public function registerRoute($route)
+    public function register($route)
     {
         if (count($this->routes)) $this->routes[] = $route;
         else $this->routes[1] = $route;

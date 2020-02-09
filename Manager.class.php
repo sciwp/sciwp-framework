@@ -3,6 +3,8 @@ namespace Wormvc\Wormvc;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use \Wormvc\Wormvc\Traits\Singleton;
+
 /**
  * Manager Base class
  *
@@ -17,4 +19,5 @@ defined('WPINC') OR exit('No direct script access allowed');
 
 class Manager
 {
+    use Singleton;
 }

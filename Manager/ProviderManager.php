@@ -4,7 +4,6 @@ namespace Wormvc\Wormvc\Manager;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use \Wormvc\Wormvc\Manager;
-use \Wormvc\Wormvc\Traits\Singleton;
 
 /**
  * Provider Manager
@@ -20,53 +19,46 @@ use \Wormvc\Wormvc\Traits\Singleton;
  
 class ProviderManager extends Manager
 {
-    use Singleton;
-
     /** @var array $providers Stores a list of the registered providers */
     private $providers = array();
 	
     /**
      * @param Autoloader $autoloader
      */    
-	private function __construct()
+	protected function __construct()
     {
-        add_action( 'plugins_loaded', array($this, 'runProvidersBoot'), 1 );
+        add_action( 'plugins_loaded', array($this, 'boot'), 1 );
     }
 
     /**
-     * Load a provider to the provider manager
+     * Register Provider into the Provider Manager
      * 
-     * @param string $plugin_file The plugin file path
-     * @param string|bool $plugin_id The plugin id
-     * @return Plugin
+     * @param object|array $providers The plugin file path
+     * @return \Wormvc\Wormvc\Manager\ProviderManager
      */
-    public function add( $provider_classes )
+    public function register($providers)
     {
-        foreach ( (array)$provider_classes as $provider_class) {
-            $provider = $this->wormvc->get($provider_class);
-            if ( method_exists ( $provider , 'register' ) ) {
-                $provider->register();
-            }               
+        foreach ((array)$providers as $provider) {
+            
+            if(!is_object($provider)) {
+                $provider = $this->wormvc->get($provider);
+            }
+
+            if (!is_subclass_of($provider, '\Wormvc\Wormvc\Provider')) {
+                throw new Exception('Only child classes or instances of the Provider class are accepted.');
+            }
+
             $this->providers[] = $provider;
+            $provider->register();
         }
     }
 
-    /**
-     * Get all providers
-     * 
-     * @return Plugin
-     */
-    public function all()
-    {
-        return $this->providers;
-    }
-    
     /**
      * Calls the boot method for all the providers
      * 
      * @return Plugin
      */
-    public function runProvidersBoot()
+    public function boot()
     {
         foreach ($this->providers as $provider) {
             if ( method_exists ( $provider , 'boot' ) ) {

@@ -20,52 +20,83 @@ use \Wormvc\Wormvc\Manager\TemplateManager;
  
 class Template
 {
-    /** @var \Wormvc\Wormvc\Manager\TemplateManager $template_manager The wormvc template manager */
-     protected $template_manager;
+    /** @var \Wormvc\Wormvc\Manager\TemplateManager $templateManager The wormvc template manager */
+    protected $templateManager;
     
-	/** @var string $plugin The plugin where the template is located */
-	protected $plugin;
+	/** @var string $key The template key */
+	protected $key;
 
 	/** @var string $path The template path relative to the plugin base folder */
 	protected $path;
 
-	/** @var string $theme_path The path relative to the theme where the plugin should also look for */
-	protected $theme_path;
+	/** @var string $themePath The path relative to the theme where the plugin should also look for */
+	protected $themePath;
 
 	/** @var string $name The name to display in WordPress for the template */
 	protected $name;
 
-	/** @var string $post_types The post type to add the template to */
-	protected $post_types;
+	/** @var string $postTypes The post type to add the template to */
+	protected $postTypes;
 
     /**
      * Create a new template
      *
-     * @param string|\Wormvc\Wormvc\Plugin $plugin_id The plugin id
-     * @param string|array $template Plugin array data or the template path relative to the plugin base folder
+     * @param string|array $key The template key
+     * @param string $template The template file or array with the other fields
      * @param string $name The name to display in WordPress for the template
-     * @param string|array $post_types The post type or post types to add to the template
-     * @param string $theme_path The path relative to the theme where the plugin should also look for
+     * @param string|array $postTypes The post type or post types to add to the template
+     * @param string $themePath The path relative to the theme where the plugin should also look for
      */
-    public function __construct($plugin_id, $template, $name = false, $post_types = false, $theme_path = false)
+    public function __construct($key, $template = false, $name = false, $postTypes = false, $themePath = false)
     {
-        $this->template_manager = TemplateManager::instance();
-        $this->plugin = $plugin_id instanceof Plugin ? $plugin_id : $this->wormvc->plugin($plugin_id);
-        
+        $this->templateManager = TemplateManager::instance();
+
         if (is_array($template)) {
-            if (!isset($template['path']) || !$template['path']) throw new Exception('A template path is required.');
+
+            if (!isset($template['path']) || !$template['path']) {
+                throw new Exception('A template path is required.');
+            }
+
             $path = $template['path'];
-            if (!$name && isset($template['name'])) $name = $template['name'];
-            if (!$post_types && isset($template['post_types'])) $post_types = $template['post_types'];
-            if (!$theme_path && isset($template['theme_path'])) $theme_path = $template['theme_path'];
+
+            if (!$name && isset($template['name'])) {
+                $name = $template['name'];
+            }
+
+            if (!$postTypes && isset($template['postTypes'])) {
+                $postTypes = $template['postTypes'];
+            }
+
+            if (!$themePath && isset($template['themePath'])) {
+                $themePath = $template['themePath'];
+            }
+
         } else {
             $path = $template;
         }
 
+        $this->key = $key;
         $this->path = $path;
         $this->name = $name;
-        $this->post_types = $post_types ? (array) $post_types : [];
-        if ($theme_path) $this->theme_path = $theme_path;
+        $this->postTypes = $postTypes ? (array) $postTypes : [];
+
+        if ($themePath) $this->themePath = $themePath;
+    }
+
+	/**
+	 * Add a new template
+	 *
+     * @param string|array $key Plugin array data or the template key
+     * @param string $name The name to display in WordPress for the template
+     * @param string|array $postTypes The post type or post types to add to the template
+     * @param string $themePath The path relative to the theme where the plugin should also look for
+	 * @return \Wormvc\Wormvc\Template
+	 */
+    public static function create($key, $template = false, $name = false, $postTypes = false, $themePath = false)
+    {
+        $template = new self($key, $template, $name, $postTypes, $themePath);
+        $template->register();
+        return $template;
     }
 
     /**
@@ -73,19 +104,9 @@ class Template
      *
      * @return \Wormvc\Wormvc\Template
      */
-    public function register($key) {
-        if (!$this->name) $this->name = $key;
-        $this->template_manager->add($key, $this);     
+    public function register() {
+        $this->templateManager->register($this);     
         return $this;
-    }
-
-    /**
-     * Returns the plugin
-     *
-     * @return string
-     */
-    public function getPlugin() {
-        return $this->plugin;
     }
 
     /**
@@ -94,7 +115,7 @@ class Template
      * @return string
      */
     public function getPath() {
-        return $this->plugin->getDir() . '/' . $this->path;
+        return $this->path;
     }
 
     /**
@@ -103,7 +124,7 @@ class Template
      * @return string
      */
     public function getThemePath() {
-        return get_theme_root() . '/'. get_stylesheet() . '/' . ltrim($this->theme_path, '/');
+        return get_theme_root() . '/'. get_stylesheet() . '/' . ltrim($this->themePath, '/');
     }
 
     /**
@@ -116,12 +137,21 @@ class Template
     }
 
     /**
+     * Returns the key
+     *
+     * @return string
+     */
+    public function getKey() {
+        return $this->key;  
+    }
+
+    /**
      * Returns the post types
      *
      * @return array
      */
     public function getPostTypes() {
-        return $this->post_types;
+        return $this->postTypes;
     }
 
     /**
@@ -154,9 +184,9 @@ class Template
      * @param string $path The path of the template file in the theme
      * @return \Wormvc\Wormvc\Template
      */
-    public function setThemePath($theme_path)
+    public function setThemePath($themePath)
     {     
-        $this->theme_path = $theme_path;
+        $this->themePath = $themePath;
         
         return $this;
     }
@@ -164,7 +194,7 @@ class Template
     /**
      * Se the template name
      *
-     * @param array|string $post_types The name to display in WordPress
+     * @param array|string $postTypes The name to display in WordPress
      * @return \Wormvc\Wormvc\Template
      */
     public function setName($name)
@@ -176,12 +206,12 @@ class Template
     /**
      * Set the post types array
      *
-     * @param array|string $post_types A post type or an array of post types
+     * @param array|string $postTypes A post type or an array of post types
      * @return \Wormvc\Wormvc\Template
      */
-    public function setPostTypes($post_types)
+    public function setPostTypes($postTypes)
     {
-        $this->post_types = (array) $post_types;
+        $this->postTypes = (array) $postTypes;
         return $this;
     }
 }
