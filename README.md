@@ -15,4 +15,4 @@ A MVC Framework for WordPress.
 * Activation and deactivation actions and checks
 * Asset manager for JS scripts and CSS files
 
-NOTE: For instructions of how to use this framework, please check the wiki here https://github.com/Sci/Sci/wiki
+NOTE: For instructions of how to use this framework, please check the wiki here https://github.com/sciwp/sciwp/wiki
