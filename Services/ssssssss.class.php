@@ -7,18 +7,18 @@
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
-namespace  Wormvc\Wormvc\Service;
+namespace  Sci\Sci\Service;
 
-use \Wormvc\Wormvc\Plugin;
+use \Sci\Sci\Plugin;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 class Options {
 
-	use \Wormvc\Wormvc\Traits\StaticClass;
+	use \Sci\Sci\Traits\StaticClass;
 
 	const SELF = __class__;
 	

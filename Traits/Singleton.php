@@ -1,7 +1,7 @@
 <?php
-namespace Wormvc\Wormvc\Traits;
+namespace Sci\Sci\Traits;
 
-use \Wormvc\Wormvc\Wormvc;
+use \Sci\Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -16,7 +16,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @copyright   2018 Kenodo LTD
  * @license     http://opensource.org/licenses/MIT  MIT License
  * @version     1.0.0
- * @link        https://www.wormvc.com 
+ * @link        https://www.Sci.com 
  * @since       Version 1.0.0 
  */
 trait Singleton
@@ -67,9 +67,9 @@ trait Singleton
                 foreach ($constructor->getParameters() as $key => $parameter) {
                     if ($parameter->getClass()) {
                         if (isset($args[$key]) && is_array($args[$key])) {
-                            $inst_args[] = Wormvc::get($parameter->getClass()->name, $args[$key]);
+                            $inst_args[] = Sci::get($parameter->getClass()->name, $args[$key]);
                         } else {
-                            $inst_args[] = Wormvc::get($parameter->getClass()->name);
+                            $inst_args[] = Sci::get($parameter->getClass()->name);
                         }
                     } else {
                         $inst_args[] = isset($args[$key]) ? $args[$key] : null;
@@ -82,7 +82,7 @@ trait Singleton
                 self::$_instances[$called_class] = new $called_class ( ...$args );
             } 
         }
-        self::$_instances[$called_class]->wormvc = Wormvc::instance();
+        self::$_instances[$called_class]->Sci = Sci::instance();
         return self::$_instances[$called_class];
     }
 }

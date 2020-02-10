@@ -1,12 +1,13 @@
 <?php
-namespace Wormvc\Wormvc\Manager;
+namespace Sci\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Plugin as Plugin;
-use \Wormvc\Wormvc\Manager;
-use \Wormvc\Wormvc\Autoloader;
-use \Wormvc\Wormvc\Services\Activation as ActivationService;
+use \Sci\Sci\Sci;
+use \Sci\Sci\Plugin;
+use \Sci\Sci\Manager;
+use \Sci\Sci\Autoloader;
+use \Sci\Sci\Services\Activation as ActivationService;
 
 /**
  * Plugin Manager
@@ -16,7 +17,7 @@ use \Wormvc\Wormvc\Services\Activation as ActivationService;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
  
@@ -40,32 +41,37 @@ class PluginManager extends Manager
      * @param string|bool $plugin_id The plugin id
      * @return Plugin
      */
-    public function register($plugin_file, $plugin_id)
+    public function register($plugin)
     {
-        if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
-        $this->plugins[$plugin_id] = $this->wormvc->get(Plugin::class, [$plugin_file, $plugin_id]);
+        $plugin_id = $plugin->getId();
+
+        if (isset($this->plugins[$plugin_id])) {
+            throw new Exception('The plugin with id ' . $plugin_id . ' is already registered.');
+        }
+        
+        $this->plugins[$plugin_id] = $plugin;
 
         $autoload = isset($this->plugins[$plugin_id]->config()['autoload']) ? $this->plugins[$plugin_id]->config()['autoload'] : [];
         // Add the plugin to the Autoloader
         $this->autoloader::addPlugin(
             $plugin_id,
             [
-                'namespace' => $this->plugins[$plugin_id]->getNamespace(),
-                'main_namespace' =>  $this->plugins[$plugin_id]->getMainNamespace(),
-                'dir' => $this->plugins[$plugin_id]->getDir(),
-                'main_dir' =>  $this->plugins[$plugin_id]->getMainDir(),
-                'module_dir' =>  $this->plugins[$plugin_id]->getModuleDir(),                
-                'cache_enabled' => $this->plugins[$plugin_id]->getAutoloaderCacheEnabled(),
-                'reflexive' =>  $this->plugins[$plugin_id]->config()['autoloader']['reflexive'],
+                'namespace' => $plugin->getNamespace(),
+                'main_namespace' =>  $plugin->getMainNamespace(),
+                'dir' => $plugin->getDir(),
+                'main_dir' =>  $plugin->getMainDir(),
+                'module_dir' =>  $plugin->getModuleDir(),                
+                'cache_enabled' => $plugin->getAutoloaderCacheEnabled(),
+                'reflexive' =>  $plugin->config()['autoloader']['reflexive'],
                 'autoload' =>  $autoload,
             ]
         );
 
-        $config = $this->plugins[$plugin_id]->config();
+        $config = $plugin->config();
 
         // Add the providers to the provider manager
         if (isset($config['providers'])) {
-            $this->wormvc->providers()->register((Array) $config['providers']);
+            $this->Sci->providers()->register((Array) $config['providers']);
         }
         
         return $this->plugins[$plugin_id];

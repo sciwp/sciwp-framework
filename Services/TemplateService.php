@@ -1,11 +1,11 @@
 <?php
-namespace Wormvc\Wormvc\Services;
+namespace Sci\Sci\Services;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Template;
-use \Wormvc\Wormvc\Plugin;
-use \Wormvc\Wormvc\Manager\TemplateManager;
+use \Sci\Sci\Template;
+use \Sci\Sci\Plugin;
+use \Sci\Sci\Manager\TemplateManager;
 use \Exception;
 
 
@@ -17,7 +17,7 @@ use \Exception;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -51,7 +51,7 @@ class TemplateService
     
 	public function init($plugin_id)
 	{
-        $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->plugin($plugin_id);
+        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->plugin($plugin_id);
 
         if (!isset($this->plugin->config()['templates'])) return;
 

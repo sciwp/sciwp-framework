@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc\Services;
+namespace Sci\Sci\Services;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -11,7 +11,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class ActivationService
@@ -49,7 +49,7 @@ class ActivationService
 	 */	
 	public function init($plugin_id)
     {
-        $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->plugins()->get($plugin_id);
+        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->plugins()->get($plugin_id);
         
         $this->plugin_name = $this->plugin->getName();
         $this->plugin_file = $this->plugin->getFile();

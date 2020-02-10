@@ -1,9 +1,9 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use Wormvc\Wormvc\Query;
+use Sci\Sci\Query;
 
 /**
  * DB Class
@@ -13,7 +13,7 @@ use Wormvc\Wormvc\Query;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 abstract class DB
@@ -22,7 +22,7 @@ abstract class DB
      * Returns the table name
      *
      * @param string $table The table name
-     * @return \Wormvc\Wormvc\Query
+     * @return \Sci\Sci\Query
      */
     public static function table($tableName)
     {
@@ -33,7 +33,7 @@ abstract class DB
     /**
      * Start a query
      *
-     * @return \Wormvc\Wormvc\Query
+     * @return \Sci\Sci\Query
      */
     public static function query($params)
     {

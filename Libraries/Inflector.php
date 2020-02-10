@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc\Libraries;
+namespace Sci\Sci\Libraries;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

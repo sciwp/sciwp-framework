@@ -1,9 +1,9 @@
 <?php
-namespace Wormvc\Wormvc\Collection;
+namespace Sci\Sci\Collection;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
-use Wormvc\Wormvc as Wormvc;
+use Sci\Sci as Sci;
 
 /**
  * Services Collection class
@@ -13,9 +13,9 @@ use Wormvc\Wormvc as Wormvc;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
-class Services extends Wormvc\Collection {
+class Services extends Sci\Collection {
 }

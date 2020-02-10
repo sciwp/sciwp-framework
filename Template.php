@@ -1,10 +1,10 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Plugin;
-use \Wormvc\Wormvc\Manager\TemplateManager;
+use \Sci\Sci\Plugin;
+use \Sci\Sci\Manager\TemplateManager;
 
 /**
  * Template
@@ -14,13 +14,13 @@ use \Wormvc\Wormvc\Manager\TemplateManager;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
  
 class Template
 {
-    /** @var \Wormvc\Wormvc\Manager\TemplateManager $templateManager The wormvc template manager */
+    /** @var \Sci\Sci\Manager\TemplateManager $templateManager The Sci template manager */
     protected $templateManager;
     
 	/** @var string $key The template key */
@@ -90,7 +90,7 @@ class Template
      * @param string $name The name to display in WordPress for the template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
-	 * @return \Wormvc\Wormvc\Template
+	 * @return \Sci\Sci\Template
 	 */
     public static function create($key, $template = false, $name = false, $postTypes = false, $themePath = false)
     {
@@ -102,7 +102,7 @@ class Template
     /**
      * Add the template to the template manager
      *
-     * @return \Wormvc\Wormvc\Template
+     * @return \Sci\Sci\Template
      */
     public function register() {
         $this->templateManager->register($this);     
@@ -157,12 +157,12 @@ class Template
     /**
      * Set the plugin
      *
-     * @param string|\Wormvc\Wormvc\Plugin $plugin
-     * @return \Wormvc\Wormvc\Template
+     * @param string|\Sci\Sci\Plugin $plugin
+     * @return \Sci\Sci\Template
      */
     public function setPlugin($plugin_id)
     {
-        $this->plugin = $plugin instanceof \Wormvc\Wormvc\Plugin ? $plugin : $this->wormvc->plugin($plugin_id);
+        $this->plugin = $plugin instanceof \Sci\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin_id);
         return $this;
     }
 
@@ -170,7 +170,7 @@ class Template
      * Set the template path in the plugin
      *
      * @param string $path The path of the template
-     * @return \Wormvc\Wormvc\Template
+     * @return \Sci\Sci\Template
      */
     public function setPath($path)
     {
@@ -182,7 +182,7 @@ class Template
      * Set the template path in the theme
      *
      * @param string $path The path of the template file in the theme
-     * @return \Wormvc\Wormvc\Template
+     * @return \Sci\Sci\Template
      */
     public function setThemePath($themePath)
     {     
@@ -195,7 +195,7 @@ class Template
      * Se the template name
      *
      * @param array|string $postTypes The name to display in WordPress
-     * @return \Wormvc\Wormvc\Template
+     * @return \Sci\Sci\Template
      */
     public function setName($name)
     {
@@ -207,7 +207,7 @@ class Template
      * Set the post types array
      *
      * @param array|string $postTypes A post type or an array of post types
-     * @return \Wormvc\Wormvc\Template
+     * @return \Sci\Sci\Template
      */
     public function setPostTypes($postTypes)
     {

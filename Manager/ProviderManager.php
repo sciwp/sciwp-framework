@@ -1,9 +1,9 @@
 <?php
-namespace Wormvc\Wormvc\Manager;
+namespace Sci\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Manager;
+use \Sci\Sci\Manager;
 
 /**
  * Provider Manager
@@ -13,7 +13,7 @@ use \Wormvc\Wormvc\Manager;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
  
@@ -34,17 +34,17 @@ class ProviderManager extends Manager
      * Register Provider into the Provider Manager
      * 
      * @param object|array $providers The plugin file path
-     * @return \Wormvc\Wormvc\Manager\ProviderManager
+     * @return \Sci\Sci\Manager\ProviderManager
      */
     public function register($providers)
     {
         foreach ((array)$providers as $provider) {
             
             if(!is_object($provider)) {
-                $provider = $this->wormvc->get($provider);
+                $provider = $this->Sci->get($provider);
             }
 
-            if (!is_subclass_of($provider, '\Wormvc\Wormvc\Provider')) {
+            if (!is_subclass_of($provider, '\Sci\Sci\Provider')) {
                 throw new Exception('Only child classes or instances of the Provider class are accepted.');
             }
 

@@ -1,5 +1,5 @@
 <?php
-namespace  Wormvc\Wormvc;
+namespace  Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -11,7 +11,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 abstract class Controller

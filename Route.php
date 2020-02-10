@@ -1,7 +1,7 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
-use \Wormvc\Wormvc\Wormvc;
+use \Sci\Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -13,12 +13,12 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class Route
 {
-    use \Wormvc\Wormvc\Traits\Wormvc;
+    use \Sci\Sci\Traits\Sci;
     
     /** @var string $route */
 	private $route;
@@ -49,11 +49,11 @@ class Route
      *
 	 * @var string $route
      * @var mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
 	public function __construct($methods, $route, $action)
 	{
-        $this->route_manager = \Wormvc\Wormvc\Wormvc::instance()->routeManager();
+        $this->route_manager = \Sci\Sci\Sci::instance()->routeManager();
 
         $this->methods = (array) $methods;
         foreach($this->methods as $key => $value) {
@@ -89,7 +89,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function get($route, $action)
     {
@@ -103,7 +103,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function post($route, $action)
     {
@@ -117,7 +117,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function put($route, $action)
     {
@@ -131,7 +131,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function patch($route, $action)
     {
@@ -145,7 +145,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function delete($route, $action)
     {
@@ -159,7 +159,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function any($route, $action)
     {
@@ -173,7 +173,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public static function match($methods, $route, $action)
     {
@@ -186,17 +186,17 @@ class Route
 	/**
 	 * Add the route to the route manager
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */
     public function register() {
-        $this->routeManager()->register($this);
+        $this->route_manager->register($this);
         return $this;
     }
 
 	/**
 	 * Add parameter description
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */		
     public function where(...$args)
     {
@@ -217,7 +217,7 @@ class Route
 	/**
 	 * Set the request to accept async calls
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */		
     public function ajax($value = true)
     {
@@ -228,7 +228,7 @@ class Route
     /**
 	 * Set the response type
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */		
     public function content($value = 'html')
     {
@@ -239,7 +239,7 @@ class Route
     /**
 	 * Sets if the response will contain WordPress layout
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */		
     public function layout($value = false)
     {
@@ -250,7 +250,7 @@ class Route
 	/**
 	 * Generate regular expression
 	 *
-	 * @return \Wormvc\Wormvc\Route
+	 * @return \Sci\Sci\Route
 	 */		
 	public function generateRegex()
 	{

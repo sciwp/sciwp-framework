@@ -9,7 +9,7 @@
 		});
 	});
 	
-	jQuery(document).on('click', '.wormvc_img_select', function(e) {
+	jQuery(document).on('click', '.Sci_img_select', function(e) {
 		var clickimagen=event.target;
 		cs__image_frame = wp.media.frames.cs__image_frame = wp.media({
 			title: $(clickimagen).attr("data-title"),               
@@ -18,17 +18,17 @@
 		cs__image_frame.on( 'select', function() {
 			image_data = cs__image_frame.state().get( 'selection' ).first().toJSON();
 			if(image_data['id'] && image_data['url']){
-				$(clickimagen).parent('div').find('.wormvc_img_id').val(image_data['id']);
+				$(clickimagen).parent('div').find('.Sci_img_id').val(image_data['id']);
                 //console.log($(clickimagen).parent('div').find('.cs__imgid').val());
-				$(clickimagen).parent('div').find('.wormvc_img_img').html("<img src='"+image_data['url']+"' style='max-width:360px; max-height:200px;' >");
-				$(clickimagen).parent('div').find('.wormvc_img_del').css('display', 'inline-block');
+				$(clickimagen).parent('div').find('.Sci_img_img').html("<img src='"+image_data['url']+"' style='max-width:360px; max-height:200px;' >");
+				$(clickimagen).parent('div').find('.Sci_img_del').css('display', 'inline-block');
 			}
 		});					
 		cs__image_frame.open();		
 	});
 	
-	jQuery(document).on('click', '.wormvc_img_del', function(e) {
-		$(this).parent('div').find('.wormvc_img_img').empty();
+	jQuery(document).on('click', '.Sci_img_del', function(e) {
+		$(this).parent('div').find('.Sci_img_img').empty();
 		$(this).parent('div').find('input[type=text]').val('');
 		$(this).css('display', 'none');
 	});
@@ -36,9 +36,9 @@
 
 jQuery( document ).ready( function( $ ) {
 	tinymce.init( {
-		selector: '.wormvc_mce',
+		selector: '.Sci_mce',
 		mode : "specific_textareas",
-		editor_selector : ".wormvc_mce",
+		editor_selector : ".Sci_mce",
 		elements : 'pre-details',
 		height : "320px",
 		theme: "modern",
@@ -54,5 +54,5 @@ jQuery( document ).ready( function( $ ) {
 } );
 
 jQuery(document).ready(function($){
-    jQuery('.wormvc_color_picker').wpColorPicker();
+    jQuery('.Sci_color_picker').wpColorPicker();
 });
