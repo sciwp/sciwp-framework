@@ -3,7 +3,7 @@
  * Class View
  */
 
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

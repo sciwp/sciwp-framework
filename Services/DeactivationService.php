@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc\Services;
+namespace Sci\Sci\Services;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class DeactivationService
@@ -35,7 +35,7 @@ class DeactivationService
 	 */
 	public function init($plugin_id)
     {
-        $this->plugin = $plugin_id instanceof \Wormvc\Wormvc\Plugin ? $plugin_id : $this->wormvc->pluginManager()->get($plugin_id);
+        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->pluginManager()->get($plugin_id);
 		register_deactivation_hook($this->plugin->getFile(), array($this,'run'));
 		return $this;
 	}

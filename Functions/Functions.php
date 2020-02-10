@@ -1,24 +1,24 @@
 <?php
-namespace Wormvc;
+namespace Sci;
 
 /**
- * Returns the Wormvc instance
+ * Returns the Sci instance
  * 
- * @return Wormvc
+ * @return Sci
  */
-function wormvc ()
+function Sci ()
 {
-    return \Wormvc\Wormvc\Wormvc::instance ();
+    return \Sci\Sci\Sci::instance ();
 }
 
 /**
  * Returns an array with all the plugins
  * 
- * @return \Wormvc\Wormvc\Manager\PluginManager
+ * @return \Sci\Sci\Manager\PluginManager
  */
 function plugins()
 {
-	return wormvc()->plugins();
+	return Sci()->plugins();
 }
 
 /**

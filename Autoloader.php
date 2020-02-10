@@ -1,10 +1,7 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-use \Wormvc\Wormvc\Plugin;
-use \Wormvc\Wormvc\Manager\PluginManager;
 
 /**
  * Autoloader Class
@@ -14,7 +11,7 @@ use \Wormvc\Wormvc\Manager\PluginManager;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -26,7 +23,7 @@ class Autoloader
 	/** @var string $namespace Stores de framework namespace */
 	private static $namespace;
 	
-	/** @var string $plugins Stores the list of plugins using Wormvc */	
+	/** @var string $plugins Stores the list of plugins using Sci */	
 	private static $plugins = array();
 
 	/** @var array $cache Stores de cached classes */
@@ -209,21 +206,21 @@ class Autoloader
         $class = trim($class);
 		$class_arr = explode('\\', $class);
 
-		if (count ($class_arr) < 2) return false; // Not a valid Wormvc namespace, as it should contain the base namespace and the class
+		if (count ($class_arr) < 2) return false; // Not a valid Sci namespace, as it should contain the base namespace and the class
 
-		// Wormvc files
+		// Sci files
         if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
 
             // Autoload Get trait
             if (!isset($class_arr[2])) {
-                require_once self::$folder . '/Traits/Wormvc.php';
+                require_once self::$folder . '/Traits/Sci.php';
                 return true;
             }
-            // Autoload regular Wormvc files
+            // Autoload regular Sci files
             else {
                 $relative_class = trim(substr($class, strlen($class_arr[0])), '\\'); // Remove base namespace from the class name
                 array_shift ($class_arr); // Remove base namespace from the array
-                array_shift ($class_arr); // Remove Wormvc namespace from the array
+                array_shift ($class_arr); // Remove Sci namespace from the array
        
                 $class_file = self::$folder;
                 $count_class_arr = count($class_arr);

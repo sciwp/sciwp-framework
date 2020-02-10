@@ -3,14 +3,14 @@
 defined('WPINC') OR exit('No direct script access allowed');
 
 /**
- * Wormvc run script
+ * Sci run script
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -27,7 +27,7 @@ $dirname_plugin  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 )))
  * {Dynamic}ReplaceStringFunction
  * 
  * Replace a string in all files of a folder, dynamic function name to avoid collisions and improve
- * compatibility with bundled wormvc plugins
+ * compatibility with bundled Sci plugins
  *
  * @param $replaceStringFunction The function to process the string
  * @param $folder The folder to search for files
@@ -49,28 +49,32 @@ ${$dirname_plugin.'ReplaceStringFunction'} = function($replaceStringFunction, $f
 /**
  * {Dynamic}ReplaceCoreNamespaceFunction
  * 
- * Replaces the old namespace with the new one inside all the Wormvc files, dynamic function name to avoid
- * collisions and improve compatibility with bundled wormvc plugins
+ * Replaces the old namespace with the new one inside all the Sci files, dynamic function name to avoid
+ * collisions and improve compatibility with bundled Sci plugins
  *
  * @param $replaceStringFunction The function to process the string
  * @param $new_namespace The replacement namespace
  */
 ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
-    $new_core_namespace = $new_namespace . '\Wormvc';
+    $new_core_namespace = $new_namespace . '\Sci';
     $old_core_namespace = NULL;
     $old_namespace = NULL;
-    $file_path = plugin_dir_path( __FILE__ ) . 'Traits/Wormvc.php';
-    $handle = fopen($file_path, "r") or die('The old namespace in the Wormvc Trait was not found');
+    $file_path = plugin_dir_path( __FILE__ ) . 'Traits/Sci.php';
+    $handle = fopen($file_path, "r") or die('The old namespace in the Sci Trait was not found');
+
     if (!$handle) return;
+
     while (($line = fgets($handle)) !== false) {
         if (strpos($line, 'namespace') === 0) {
             $parts = preg_split('/\s+/', $line);
             $old_namespace = rtrim(trim($parts[1]), ';');
-            $old_core_namespace = $old_namespace . '\Wormvc';
+            $old_core_namespace = $old_namespace . '\Sci';
             break;
         }
     }
+
     fclose($handle);
+
     $replaceStringFunction($replaceStringFunction, dirname(__FILE__), $old_core_namespace, $new_core_namespace);
 
     $file_content = file_get_contents($file_path);   
@@ -83,6 +87,7 @@ ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunct
 
 // Load config file
 if (!file_exists($file_config)) die('Cannot open the config file:  ' . $file_config);
+
 $config = include $file_config;
 
 $config_cache = file_exists($file_config_cache) ? include $file_config_cache : ['namespace' => null, 'autoloader' => ['cache' => null]];
@@ -91,9 +96,11 @@ $rebuild = !isset($config['namespace']) || (isset($config['rebuild']) && $config
 
 if ($rebuild) {
     $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($dirname_plugin) {
+
         // Try to get the namespace from the main.php file
         $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r")
-                  or die('Cannot open the wormvc plugin main.php file');
+                  or die('Cannot open the Sci plugin main.php file');
+ 
         while (($line = fgets($handle)) !== false) {
             if (strpos($line, 'namespace') === 0) {
                 $parts = preg_split('/\s+/', $line);
@@ -111,9 +118,12 @@ if ($rebuild) {
 }
 
 if($rebuild || (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== $config_cache['autoloader']['cache'])) {
-    if(!file_exists($dir_cache)) mkdir($dir_cache);
+    
+    if (!file_exists($dir_cache)) mkdir($dir_cache);
+
     file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config, true) . ';')
     or die('Cannot write the file:  '.$file_config_cache);
+    
     file_put_contents ($file_autoload_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return array ();')
     or die('Cannot write the file:  '.$file_autoload_cache);
 }
@@ -123,15 +133,17 @@ $namespace = isset($config['namespace']) && $config['namespace'] ? $config['name
              : isset($config_cache['namespace']) && $config_cache['namespace'] ? $config_cache['namespace']
              : ucfirst($dirname_plugin);
 
-// Start the autoloader and Wormvc
+// Start the autoloader and Sci
 require plugin_dir_path( __FILE__ ) . 'Autoloader.php';
 
-if(class_exists('\\' . $namespace . '\Wormvc\Autoloader')) {
+if(class_exists('\\' . $namespace . '\Sci\Autoloader')) {
 
-    $autoloader_class = '\\' . $namespace . '\Wormvc\Autoloader';
+    $autoloader_class = '\\' . $namespace . '\Sci\Autoloader';
     $autoloader_class::start();
 
-    $wormvc_class = '\\'.$namespace.'\Wormvc\Wormvc';
-    return $wormvc_class::instance()->init(); 
+    $Sci_class = '\\'.$namespace.'\Sci\Sci';
+    return $Sci_class::instance()->init(); 
 
-} else throw new Exception('Please rebuild Wormvc.');
+}
+
+throw new Exception('Please rebuild SCIWP.');

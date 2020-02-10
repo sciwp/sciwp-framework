@@ -1,10 +1,10 @@
 <?php
-namespace Wormvc\Wormvc\Manager;
+namespace Sci\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Manager;
-use \Wormvc\Wormvc\Template;
+use \Sci\Sci\Manager;
+use \Sci\Sci\Template;
 use \Exception;
 
 /**
@@ -15,7 +15,7 @@ use \Exception;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -35,7 +35,7 @@ class TemplateManager extends Manager
      * @param string $name The template name
      * @param array $postTypes Array with the post types of the template
      * @param string $themePath The plugin template path
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     * @return \Sci\Sci\Manager\TemplateManager
      */
     public function template($key, $template, $name = false, $postTypes = false, $themePath = false)
 	{
@@ -48,7 +48,7 @@ class TemplateManager extends Manager
      * Create a new template and add it to the template manager
      *
      * @param array $templatesArray An array of template definitions
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     * @return \Sci\Sci\Manager\TemplateManager
      */
     public function templates($templatesArray)
 	{
@@ -62,8 +62,8 @@ class TemplateManager extends Manager
      * Add a new template to the template manager
      *
      * @param string|arrat $key_or_array Array of tempaltes or template key
-     * @param \Wormvc\Wormvc\Template $template The template identification name
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     * @param \Sci\Sci\Template $template The template identification name
+     * @return \Sci\Sci\Manager\TemplateManager
      */
 	public function register($template)
 	{
@@ -74,7 +74,7 @@ class TemplateManager extends Manager
             return $this;
         }
 
-        if (!is_object($template) || !($template instanceof \Wormvc\Wormvc\Template)) {
+        if (!is_object($template) || !($template instanceof \Sci\Sci\Template)) {
             throw new Exception('Only instances of the Template class are accepted.');
         }
 
@@ -91,7 +91,7 @@ class TemplateManager extends Manager
     /**
      * Add filters to WordPress so the templates are processed
      *
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     * @return \Sci\Sci\Manager\TemplateManager
      */
 	public function addFilters()
 	{

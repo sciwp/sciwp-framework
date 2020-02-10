@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 /**
  * Autoloader Class
@@ -9,7 +9,7 @@ namespace Wormvc\Wormvc;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class Options
 {
-	use Wormvc;
+	use Sci;
 
 	/**
 	 * Returns an option in the array of options stored as a single WP option
@@ -28,11 +28,11 @@ class Options
 	{
 		if ( is_array($option) && count($option) > 1 ) {
 			$name = $option[0];
-			$option_val = get_option( self::wormvc()::$config['id'] . '_' . $option[1] );
+			$option_val = get_option( self::Sci()::$config['id'] . '_' . $option[1] );
 		}
 		else {
 			$name = $option;
-			$option_val = get_option( self::wormvc()::$config['id'] );
+			$option_val = get_option( self::Sci()::$config['id'] );
 		}
 		if ( false === $option_val ) return $default;
 		return isset($option_val[$name]) ? $option_val[$name] : $default;
@@ -48,12 +48,12 @@ class Options
 	{
 		if ( is_array($option) && count($option) > 1 ) {
 			$name = $option[0];
-			$option = self::wormvc()::$config['id'] . '_' . $option[1];
+			$option = self::Sci()::$config['id'] . '_' . $option[1];
 			
 		}
 		else {
 			$name = $option;
-			$option = self::wormvc()::$config['id'];
+			$option = self::Sci()::$config['id'];
 		}
 		$option_val = get_option( $option );
 		$option_val = ( false === $option_val ) ? array() : (array) $option_val;
@@ -70,11 +70,11 @@ class Options
 	{
 		if ( is_array($option) && count($option) > 1 ) {
 			$name = $option[0];
-			$option_val = get_option( self::wormvc()::$config['id'] . '_' . $option[1] );
+			$option_val = get_option( self::Sci()::$config['id'] . '_' . $option[1] );
 		}
 		else {
 			$name = $option;
-			$option_val = get_option( self::wormvc()::$config['id'] );
+			$option_val = get_option( self::Sci()::$config['id'] );
 		}
 		if ( false === $option_val ) return false;
 		
@@ -94,10 +94,10 @@ class Options
 	public static function getSet( $name = null )
 	{
 		if ( is_numeric($name) || (is_string($name) && strlen($name)) ) {
-			return get_option( self::wormvc()::$config['id'] . '_' . $name );
+			return get_option( self::Sci()::$config['id'] . '_' . $name );
 		}
 		else if( $name === null || $name == true ) {
-			return get_option( self::wormvc()::$config['id'] );
+			return get_option( self::Sci()::$config['id'] );
 		}
 		return false;
 	}
@@ -110,10 +110,10 @@ class Options
 	public static function updateSet( $name = null, $value )
 	{
 		if ( is_numeric($name) || (is_string($name) && strlen($name)) ) {
-			return update_option( self::wormvc()::$config['id'] . '_' . $name, $value );
+			return update_option( self::Sci()::$config['id'] . '_' . $name, $value );
 		}
 		else if( $name === null || $name == true ) {
-			return update_option( self::wormvc()::$config['id'], $value );
+			return update_option( self::Sci()::$config['id'], $value );
 		}
 		return false;
 	}
@@ -126,10 +126,10 @@ class Options
 	public static function removeSet( $name = null )
 	{
 		if ( is_numeric($name) || (is_string($name) && strlen($name)) ) {
-			return delete_option( self::wormvc()::$config['id'] . '_' . $name );
+			return delete_option( self::Sci()::$config['id'] . '_' . $name );
 		}
 		else if( $name === null || $name == true ) {
-			return delete_option( self::wormvc()::$config['id'] );
+			return delete_option( self::Sci()::$config['id'] );
 		}
 		return false;
 	}	

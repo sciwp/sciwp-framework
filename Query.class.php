@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 use \Exception;
 use \Closure;
 /**
@@ -10,7 +10,7 @@ use \Closure;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
  
@@ -155,7 +155,7 @@ class Query
     /**
      * Set the table which the query is targeting.
      *
-     * @param  \Wormvc\Wormvc\Query|string  $table
+     * @param  \Sci\Sci\Query|string  $table
      * @param  string|null  $as
      * @return $this
      */

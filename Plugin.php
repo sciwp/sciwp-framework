@@ -1,12 +1,10 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
-use Wormvc\Wormvc\Services\TemplateService;
-use Wormvc\Wormvc\Services\Activation as ActivationService;
-use Wormvc\Wormvc\Services\Deactivation as DeactivationService;
-use Wormvc\Wormvc\Template as Template;
-use Wormvc\Wormvc\Collection;
-use Wormvc\Wormvc\Wormvc;
+use \Sci\Sci\Manager\PluginManager;
+use Sci\Sci\Template as Template;
+use Sci\Sci\Collection;
+use Sci\Sci\Sci;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -18,7 +16,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class Plugin
@@ -68,8 +66,15 @@ class Plugin
     /** @var Collection $services Collection to store the services */
     private $extensions;
     
-    public function __construct($plugin_file, $plugin_id, Collection $extensions)
-    {
+    /** @var \Sci\Sci\Manager\PluginManager $pluginManager The Sci plugin manager */
+    protected $pluginManager;
+    
+    public function __construct($plugin_file, $plugin_id = false, Collection $extensions)
+    {        
+        if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
+        
+        $this->pluginManager = PluginManager::instance();
+        
         $this->file = $plugin_file;
         $this->dir = rtrim( dirname( $this->file ), '/' );
         $this->url = plugin_dir_url( dirname( $this->file ) );
@@ -149,11 +154,37 @@ class Plugin
         $this->extensions = $extensions;
         if (isset($this->config()['extensions'])) {
             foreach ($this->config()['extensions'] as $key => $extension) {
-                $instance = Wormvc::make($extension);
+                $instance = Sci::make($extension);
                 $instance->init($this);
                 $this->extensions->add($key, $instance);
             }
         }
+    }
+
+	/**
+	 * Add a new plugin
+	 *
+     * @param string $plugin_file The plugin file path
+     * @param string|bool $plugin_id The plugin id
+     * @return Plugin
+	 * @return \Sci\Sci\Plugin
+	 */
+    public static function create($plugin_file, $plugin_id = false)
+    {
+        if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
+        $plugin = Sci::make(\Sci\Sci\Plugin::class, [$plugin_file, $plugin_id]);
+        $plugin->register();
+        return $plugin;
+    }
+
+	/**
+	 * Add the plugin to the plugin manager
+	 *
+	 * @return \Sci\Sci\Plugin
+	 */
+    public function register() {
+        $this->pluginManager->register($this);
+        return $this;
     }
 
     /**
@@ -183,14 +214,14 @@ class Plugin
      */
     public function templateManager()
     {
-        if (!$this->template_manager) $this->template_manager = $this->wormvc->get(TemplateManager::class, [$this->dir]);
+        if (!$this->template_manager) $this->template_manager = $this->Sci->get(TemplateManager::class, [$this->dir]);
         return $this->template_manager;
     }   
 
 
     public function getId ()
     {
-        return $this->id;
+        return $this->config['id'];
     }
 
     public function getName ()
@@ -330,7 +361,7 @@ class Plugin
 		// Register activation and deactivation hooks
 
 		
-		$collectionManager = self::get('\Wormvc\Wormvc\Manager\CollectionManager');
+		$collectionManager = self::get('\Sci\Sci\Manager\CollectionManager');
 		
 		
 		if ( isset($this->plugin::config['collections']) && is_array($this->plugin::config['collections']) ) {
@@ -340,10 +371,10 @@ class Plugin
 					
 					
 					if (isset($collection['container'])) $container = $collection['container'];
-					else $container = '\Wormvc\Wormvc\Collection';
+					else $container = '\Sci\Sci\Collection';
 					if (isset($collection['shortcut'])) $shortcut = $collection['shortcut'];
 					else $shortcut = $key;
-					$this->collections[$shortcut] = $this->wormvc::get($container);
+					$this->collections[$shortcut] = $this->Sci::get($container);
 					
 					$collectionManager->add($key, $collection_class);
 					
@@ -395,8 +426,8 @@ class Plugin
 		
 		
 		$collectionManager->boot();
-		if(isset($this->wormvc::config['collections']) ){
-			$collectionManager->init($this->wormvc::config['collections']);
+		if(isset($this->Sci::config['collections']) ){
+			$collectionManager->init($this->Sci::config['collections']);
 		}
 		
 		
@@ -413,13 +444,13 @@ class Plugin
 		
 		
 
-		self::$collections = new \Wormvc\Wormvc\Collection();
+		self::$collections = new \Sci\Sci\Collection();
 		self::addStaticMethod('collections', function () {
 			return self::$collections;
 		});
 		
 
-		self::$services =  new \Wormvc\Wormvc\Collection();
+		self::$services =  new \Sci\Sci\Collection();
 		self::addStaticMethod('services', function () {
 			return self::$collections['services'];
 		});		
@@ -455,7 +486,7 @@ class Plugin
 
 /*
 // Init the Plugin
-return call_user_func('\\'.$namespace.'\Wormvc\Plugin::init', $config);
+return call_user_func('\\'.$namespace.'\Sci\Plugin::init', $config);
 */
 
 }

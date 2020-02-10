@@ -1,31 +1,31 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
-use \Wormvc\Wormvc\Manager\PluginManager;
-use \Wormvc\Wormvc\Manager\TemplateManager;
-use \Wormvc\Wormvc\Manager\ProviderManager;
-use \Wormvc\Wormvc\Manager\RouteManager;
-use \Wormvc\Wormvc\Traits\Singleton;
+use \Sci\Sci\Manager\PluginManager;
+use \Sci\Sci\Manager\TemplateManager;
+use \Sci\Sci\Manager\ProviderManager;
+use \Sci\Sci\Manager\RouteManager;
+use \Sci\Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 /**
- * Main Wormvc class
+ * Main Sci class
  *
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
-class Wormvc
+class Sci
 {
-    use \Wormvc\Wormvc\Traits\Singleton;
+    use \Sci\Sci\Traits\Singleton;
 
-    /** @var Wormvc  $_instance The class instance. */  
+    /** @var Sci  $_instance The class instance. */  
     private static $_instance;
 
     /** @var PluginManager $plugin_manager Stores a reference to the plugin manager. */
@@ -62,7 +62,7 @@ class Wormvc
     public static function instance ()
     {
         if (!isset( self::$_instance)) {
-            self::$_instance = new Wormvc;
+            self::$_instance = new Sci;
         }
         return self::$_instance;
     }
@@ -123,7 +123,7 @@ class Wormvc
     /**
      * Get the template manager
      *
-     * @return \Wormvc\Wormvc\Manager\TemplateManager
+     * @return \Sci\Sci\Manager\TemplateManager
      */    
     public function templateManager()
     {
@@ -222,7 +222,7 @@ class Wormvc
      */    
     public static function make($class_name, $params = array())
     {
-        $wormvc = self::instance();
+        $Sci = self::instance();
         
 		$class_method_name = false;
 		$class_method = false;
@@ -237,7 +237,7 @@ class Wormvc
                 $arr = explode('@',$class_name);
                 $class_name   = $arr[0];
                 $class_method_name = $arr[1];
-                $instance = $wormvc->get($class_name);
+                $instance = $Sci->get($class_name);
                 return call_user_func_array(array($instance, $class_method_name), $params);
             } else if (strpos($class_name, '::') !== false) {
                 $arr = explode('::',$class_name);
@@ -247,15 +247,15 @@ class Wormvc
             }
         }
 
-        if (is_string($class_name) && isset($wormvc->aliases[$class_name])) {
-            $class_name = $wormvc->aliases[$class_name];
+        if (is_string($class_name) && isset($Sci->aliases[$class_name])) {
+            $class_name = $Sci->aliases[$class_name];
         }
-        else if (is_string($class_name) && isset($wormvc->bindings[$class_name])) {
-            $class_name = $wormvc->bindings[$class_name];
+        else if (is_string($class_name) && isset($Sci->bindings[$class_name])) {
+            $class_name = $Sci->bindings[$class_name];
         }
         
         if(is_object($class_name)) {
-            $class_name->wormvc = self::instance();
+            $class_name->Sci = self::instance();
             return $class_name;
         }
 
@@ -320,12 +320,12 @@ class Wormvc
             } else {
                 $instance = $reflector->newInstance();
             }
-            $instance->wormvc = self::instance();
+            $instance->Sci = self::instance();
             
             // Check creation functions
             $class_name_index = ltrim($class_name, "\\");
-            if (isset($wormvc->created[$class_name_index])) {
-                foreach ($wormvc->created[$class_name_index] as $function) {
+            if (isset($Sci->created[$class_name_index])) {
+                foreach ($Sci->created[$class_name_index] as $function) {
                     if (is_callable($function) ) {
                         
                         if (is_array($function)) {

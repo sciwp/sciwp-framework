@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc;
+namespace Sci\Sci;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -11,21 +11,21 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class Collection implements Interfaces\CollectionInterface
 {
-    use \Wormvc\Wormvc\Traits\Wormvc;
+    use \Sci\Sci\Traits\Sci;
 
 	/** @var array $items Stores a list of the registered items */	
-	private $items = []);
+	private $items = [];
 
     /**
 	 * Add a new collection
 	 *
      * @param mixed $items
-	 * @return \Wormvc\Wormvc\Collection
+	 * @return \Sci\Sci\Collection
 	 */
     public static function create($items = [])
     {
@@ -59,7 +59,7 @@ class Collection implements Interfaces\CollectionInterface
         if ($key === false) return false;
 
 
-        return $this->contains($this->operatorForWhere(...func_get_args()));
+        $this->contains($this->operatorForWhere(...func_get_args()));
     }
 
 
@@ -87,7 +87,7 @@ class Collection implements Interfaces\CollectionInterface
 	}	
 
 	/**
-	 * Add an element
+	 * Add an item
 	 *
 	 * @param string|array $itemId
 	 * @param mixed $item
@@ -98,16 +98,16 @@ class Collection implements Interfaces\CollectionInterface
 	{
 		if (is_array($key)) {
 			foreach ($key as $key => $item) {
-                $this->elements[$key] = $item;
+                $this->item[$key] = $item;
 			}
 		} else {
-            $this->elements[$key] = $element;
+            $this->item[$key] = $item;
 		}
 		return $this;
 	}
 
 	/**
-	 * Remove an element
+	 * Remove an item
 	 *
 	 * @param string|array $element_id
 	 * @return $this
@@ -116,10 +116,10 @@ class Collection implements Interfaces\CollectionInterface
 	{
 		if (is_array($key)) {
 			foreach ($k as $key) {
-                unset($this->elements[$k]);
+                unset($this->item[$k]);
 			}
 		} else {
-            unset($this->elements[$key]);
+            unset($this->item[$key]);
         }
         return $this;
 	}

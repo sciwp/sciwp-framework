@@ -1,5 +1,5 @@
 <?php
-namespace Wormvc\Wormvc\Helpers;
+namespace Sci\Sci\Helpers;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -11,19 +11,19 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 class Scripts extends Helper
 {
 	/**
-	 * Include wormvc admin scripts
+	 * Include Sci admin scripts
      */
 	public static function includeAdmin()
 	{
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'wp-color-picker' );
         wp_enqueue_media();
-		wp_enqueue_script('wormvc_scripts', plugins_url('wormvc/Resources/js/admin_scripts.js', __FILE__ ), false, '0.1', true);
+		wp_enqueue_script('Sci_scripts', plugins_url('Sci/Resources/js/admin_scripts.js', __FILE__ ), false, '0.1', true);
 	}
 }

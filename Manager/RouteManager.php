@@ -1,11 +1,11 @@
 <?php
-namespace Wormvc\Wormvc\Manager;
+namespace Sci\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Wormvc\Wormvc\Manager;
-use \Wormvc\Wormvc\Route;
-use \Wormvc\Wormvc\Helpers\Url;
+use \Sci\Sci\Manager;
+use \Sci\Sci\Route;
+use \Sci\Sci\Helpers\Url;
 
 /**
  * Route Manager
@@ -15,7 +15,7 @@ use \Wormvc\Wormvc\Helpers\Url;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.wormvc.com 
+ * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
 
@@ -83,8 +83,8 @@ class RouteManager extends Manager
     /**
      * Register a new route into the route manager
      *
-     * @param \Wormvc\Wormvc\Route $route The route instance
-     * @return \Wormvc\Wormvc\Manager\RouteManager
+     * @param \Sci\Sci\Route $route The route instance
+     * @return \Sci\Sci\Manager\RouteManager
      */
     public function register($route)
     {
@@ -94,7 +94,7 @@ class RouteManager extends Manager
         if (!$this->filters_added) {
             add_action( 'init', array($this,'addRewriteRulesAction'), 1);
             add_filter( 'query_vars', function( $query_vars ) {
-                $query_vars[] = 'wormvc';
+                $query_vars[] = 'Sci';
                 return $query_vars;
             }); 
             add_action( 'template_include', array($this,'loadControllerAction'), 10);
@@ -125,14 +125,14 @@ class RouteManager extends Manager
     /**
      * Generate rewrite rules when fushed
      *
-     * @return \Wormvc\Wormvc\Manager\RouteManager
+     * @return \Sci\Sci\Manager\RouteManager
      */
 	public function addRewriteRulesAction() 
 	{
         add_filter( 'generate_rewrite_rules', function ( $wp_rewrite ) {
             $routes = array();
             foreach($this->routes as $key => $route) {
-                $routes[$route->regex] = 'index.php?wormvc='.$key;
+                $routes[$route->regex] = 'index.php?Sci='.$key;
             }
             $wp_rewrite->rules = array_merge(
                 $routes,
@@ -148,12 +148,12 @@ class RouteManager extends Manager
      */
     public function loadControllerAction($template)
     {
-        $wormvc_var = get_query_var( 'wormvc');
-        if ( $wormvc_var ) {
+        $Sci_var = get_query_var( 'Sci');
+        if ( $Sci_var ) {
 
-            if (isset($this->routes[$wormvc_var]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$wormvc_var]->getMethods())) {
+            if (isset($this->routes[$Sci_var]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$Sci_var]->getMethods())) {
                 global $wp;
-                $route = $this->routes[$wormvc_var];
+                $route = $this->routes[$Sci_var];
                 $action = $route->getAction();
 
                 preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
@@ -197,9 +197,9 @@ class RouteManager extends Manager
                     return call_user_func_array($action, $params);
                 }                      
                 else if (!empty($this->params)) {
-                   $this->wormvc->get($action, $this->params); 
+                   $this->Sci->get($action, $this->params); 
                 } else {
-                    $this->wormvc->get($action);
+                    $this->Sci->get($action);
                 }
                 if ($includeLayout) get_footer(); 
 

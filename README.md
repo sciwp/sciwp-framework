@@ -1,4 +1,4 @@
-# wormvc
+# Sci
 A MVC Framework for WordPress.
 
 # Funtionalities
@@ -14,4 +14,4 @@ A MVC Framework for WordPress.
 * Activation and deactivation actions and checks
 * Asset manager for JS scripts and CSS files
 
-NOTE: For instructions of how to use this framework, please check the wiki here https://github.com/wormvc/wormvc/wiki
+NOTE: For instructions of how to use this framework, please check the wiki here https://github.com/Sci/Sci/wiki
