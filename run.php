@@ -42,7 +42,6 @@ ${$parsedPluginFolder.'ReplaceStringFunction'} = function($replaceStringFunction
     }
     $dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
     foreach($dirs as $dir) {
-        echo($dir . " ". $old_string . " - ". $new_string);
         $replaceStringFunction($replaceStringFunction, $dir, $old_string, $new_string);
     }
 };
