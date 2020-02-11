@@ -1,4 +1,5 @@
 <?php
+namespace MyPlugin;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -15,13 +16,13 @@ defined('WPINC') OR exit('No direct script access allowed');
  */
 
 // Files and vars used in this script
+$pluginFolder = basename(plugin_dir_path(dirname( __FILE__ , 1 )));
+$parsedPluginFolder = preg_replace("/[^a-z0-9]/", '', strtolower($pluginFolder));
+
 $configFile = plugin_dir_path(dirname(__FILE__)) . 'config.php';
 
 $cacheDir = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
 $configCacheFile = $cacheDir . 'config.cache.php';
-
-$pluginFolder = basename(plugin_dir_path(dirname( __FILE__ , 1 )));
-$parsedPluginFolder = preg_replace("/[^a-z0-9]/", '', strtolower($pluginFolder));
 
 /**
  * {Dynamic}ReplaceStringFunction
@@ -31,63 +32,55 @@ $parsedPluginFolder = preg_replace("/[^a-z0-9]/", '', strtolower($pluginFolder))
  *
  * @param $replaceStringFunction The function to process the string
  * @param $folder The folder to search for files
- * @param $old_string The string to be replaced
- * @param $new_string The replacement string
+ * @param $oldString The string to be replaced
+ * @param $newString The replacement string
  */
-${$parsedPluginFolder.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $old_string, $new_string)
+${$parsedPluginFolder.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $oldString, $newString)
 {
     foreach (glob($folder."/*.php") as $filename) {
         $file_content = file_get_contents($filename);
-        file_put_contents($filename, strtr($file_content, [$old_string => $new_string]));
+        file_put_contents($filename, strtr($file_content, [$oldString => $newString]));
     }
     $dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
     foreach($dirs as $dir) {
-        $replaceStringFunction($replaceStringFunction, $dir, $old_string, $new_string);
+        $replaceStringFunction($replaceStringFunction, $dir, $oldString, $newString);
     }
 };
 
 /**
- * {Dynamic}ReplaceCoreNamespaceFunction
+ * {Dynamic}ReplacePatternFunction
  * 
- * Replaces the old namespace with the new one inside all the Sci files, dynamic function name to avoid
- * collisions and improve compatibility with bundled Sci plugins
+ * Replace a string in all files of a folder, dynamic function name to avoid collisions and improve
+ * compatibility with bundled Sci plugins
  *
- * @param $replaceStringFunction The function to process the string
- * @param $new_namespace The replacement namespace
+ * @param $replacePatternFunction The function to process the string
+ * @param $folder The folder to search for files
+ * @param $oldString The string to be replaced
+ * @param $newString The replacement string
  */
-${$parsedPluginFolder.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
-    $new_core_namespace = $new_namespace . '\Sci';
-    $old_core_namespace = NULL;
-    $old_namespace = NULL;
-    $file_path = plugin_dir_path( __FILE__ ) . 'Sci.php';
-    $handle = fopen($file_path, "r") or die('The old namespace in the Sci Trait was not found');
+${$parsedPluginFolder.'ReplacePatternFunction'} = function($replacePatternFunction, $folder, $oldString, $newString)
+{
+    foreach (glob($folder."/*.php") as $filename) {
+        $fileContent = file_get_contents($filename);
+        
+        $fileContent = preg_replace(
+            "/(namespace +\\\?)(" . $oldString . ")((?:\\\[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]+)*[ \n]*;)/",
+            "$1{$newString}$3",
+            $fileContent,
+            1
+        );
 
-    if (!$handle) return;
+        $fileContent = preg_replace(
+            "/".$oldString."(\\\[a-zA-Z0-9_\x7f-\xff]+)/",
+            "{$newString}$1",
+            $fileContent
+        );
 
-    while (($line = fgets($handle)) !== false) {
-        if (strpos($line, 'namespace') === 0) {
-            $parts = preg_split('/\s+/', $line);
-            $old_core_namespace = rtrim(trim($parts[1]), ';');
-            $old_namespace = preg_split('/\\\+/', $old_core_namespace)[0];
-            break;
-        }
+        file_put_contents($filename, $fileContent);
     }
-
-    fclose($handle);
-
-    if ($old_core_namespace !== $new_core_namespace) {
-        // Update SCIWP Framework namespaces
-        $replaceStringFunction($replaceStringFunction, dirname(__DIR__, 1), $old_core_namespace, $new_core_namespace);
-
-        // Update caller file namespaces (usually main.php)
-        $backtrace =  debug_backtrace();
-        $mainFilePath = $backtrace[1]['file']; echo( $mainFilePath);
-        $fileContent = file_get_contents($mainFilePath);
-        file_put_contents($mainFilePath, strtr($fileContent, [$old_core_namespace => $new_core_namespace]));
-
-        // Update config file namespace
-        $fileContent = file_get_contents($configFile);
-        file_put_contents($configFile, strtr($fileContent, [$old_core_namespace => $new_core_namespace]));
+    $dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
+    foreach($dirs as $dir) {
+        $replacePatternFunction($replacePatternFunction, $dir, $oldString, $newString);
     }
 };
 
@@ -101,6 +94,7 @@ $configCache = file_exists($configCacheFile) ? include $configCacheFile : ['name
 $rebuildNamespace =  !isset($configCache['namespace'])
             || !isset($configCache['parsed_plugin_folder'])
             || (isset($config['rebuild']) && $config['rebuild'] === true)
+            || (isset($config['rebuild_plugin']) && $config['rebuild_plugin'] === true)
             || (isset($config['namespace']) && $config['namespace'] !== $configCache['namespace'])
             || ucfirst($configCache['parsed_plugin_folder']) !== ucfirst($parsedPluginFolder);
 
@@ -132,8 +126,50 @@ if ($rebuildNamespace) {
 
     if (!isset($configCache['namespace']) || $namespace !== $configCache['namespace']) {
 
-        // Rebuild SCIWP files
-        ${ $parsedPluginFolder . 'ReplaceCoreNamespaceFunction' }(${$parsedPluginFolder.'ReplaceStringFunction'}, $namespace);
+        $newCoreNamespace = $namespace . '\Sci';
+        $oldCoreNamespace = NULL;
+        $oldNamespace = NULL;
+        $sciFile = plugin_dir_path( __FILE__ ) . 'Sci.php';
+        $handle = fopen($sciFile, "r") or die('The old namespace in the Sci Trait was not found');
+    
+        if (!$handle) return;
+    
+        while (($line = fgets($handle)) !== false) {
+            if (strpos($line, 'namespace') === 0) {
+                $parts = preg_split('/\s+/', $line);
+                $oldCoreNamespace = rtrim(trim($parts[1]), ';');
+                $oldNamespace = preg_split('/\\\+/', $oldCoreNamespace)[0];
+                break;
+            }
+        }
+    
+        fclose($handle);
+    
+        if ($oldCoreNamespace !== $newCoreNamespace) {
+    
+            if (!isset($config['rebuild_plugin']) || $config['rebuild_plugin'] !== true) { 
+                // Update SCIWP Framework namespaces
+                //$replaceStringFunction($replaceStringFunction, dirname(__FILE__), $oldCoreNamespace, $newCoreNamespace);
+
+                ${$parsedPluginFolder . 'ReplaceStringFunction'}(
+                    ${$parsedPluginFolder . 'ReplaceStringFunction'},
+                    dirname(__FILE__),
+                    $oldCoreNamespace,
+                    $newCoreNamespace
+                );
+
+            } else {
+                // Update both code and SCIWP Framework namespaces
+               //$replacePatternFunction($replacePatternFunction, dirname(__DIR__, 1), $oldNamespace, $namespace);
+
+                ${$parsedPluginFolder . 'ReplacePatternFunction'}(
+                    ${$parsedPluginFolder . 'ReplacePatternFunction'},
+                    dirname(__DIR__, 1),
+                    $oldNamespace,
+                    $namespace
+                );
+            }
+        }
 
         $configCache['namespace'] = $namespace;
         $configCache['plugin_folder'] = $pluginFolder;
@@ -142,6 +178,9 @@ if ($rebuildNamespace) {
         if (!file_exists($cacheDir)) mkdir($cacheDir);
         file_put_contents ($configCacheFile, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $configCache, true) . ';')
         or die('Cannot write the file:  '.$configCacheFile);
+
+        header("Refresh:0");
+        die("Please wait, gnome engineers are updating plugin namespace...");
     }
 }
 
