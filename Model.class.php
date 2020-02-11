@@ -1,10 +1,10 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use Sci\Sci\Helpers\Str;
-use Sci\Sci\Query;
+use MyPlugin\Sci\Helpers\Str;
+use MyPlugin\Sci\Query;
 
 /**
  * Class Model

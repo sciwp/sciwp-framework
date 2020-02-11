@@ -1,7 +1,7 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
-use \Sci\Sci\Sci;
+use \MyPlugin\Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -18,7 +18,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  */
 class Route
 {
-    use \Sci\Sci\Traits\Sci;
+    use \MyPlugin\Sci\Traits\Sci;
     
     /** @var string $route */
 	private $route;
@@ -49,11 +49,11 @@ class Route
      *
 	 * @var string $route
      * @var mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
 	public function __construct($methods, $route, $action)
 	{
-        $this->route_manager = \Sci\Sci\Sci::instance()->routeManager();
+        $this->route_manager = \MyPlugin\Sci\Sci::instance()->routeManager();
 
         $this->methods = (array) $methods;
         foreach($this->methods as $key => $value) {
@@ -89,7 +89,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function get($route, $action)
     {
@@ -103,7 +103,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function post($route, $action)
     {
@@ -117,7 +117,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function put($route, $action)
     {
@@ -131,7 +131,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function patch($route, $action)
     {
@@ -145,7 +145,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function delete($route, $action)
     {
@@ -159,7 +159,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function any($route, $action)
     {
@@ -173,7 +173,7 @@ class Route
 	 *
 	 * @param string $route
 	 * @param mixed $action
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public static function match($methods, $route, $action)
     {
@@ -186,7 +186,7 @@ class Route
 	/**
 	 * Add the route to the route manager
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */
     public function register() {
         $this->route_manager->register($this);
@@ -196,7 +196,7 @@ class Route
 	/**
 	 * Add parameter description
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */		
     public function where(...$args)
     {
@@ -217,7 +217,7 @@ class Route
 	/**
 	 * Set the request to accept async calls
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */		
     public function ajax($value = true)
     {
@@ -228,7 +228,7 @@ class Route
     /**
 	 * Set the response type
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */		
     public function content($value = 'html')
     {
@@ -239,7 +239,7 @@ class Route
     /**
 	 * Sets if the response will contain WordPress layout
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */		
     public function layout($value = false)
     {
@@ -250,7 +250,7 @@ class Route
 	/**
 	 * Generate regular expression
 	 *
-	 * @return \Sci\Sci\Route
+	 * @return \MyPlugin\Sci\Route
 	 */		
 	public function generateRegex()
 	{

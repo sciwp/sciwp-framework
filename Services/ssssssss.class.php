@@ -10,15 +10,15 @@
  * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
-namespace  Sci\Sci\Service;
+namespace  MyPlugin\Sci\Service;
 
-use \Sci\Sci\Plugin;
+use \MyPlugin\Sci\Plugin;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 class Options {
 
-	use \Sci\Sci\Traits\StaticClass;
+	use \MyPlugin\Sci\Traits\StaticClass;
 
 	const SELF = __class__;
 	

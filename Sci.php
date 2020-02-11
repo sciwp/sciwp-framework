@@ -1,11 +1,11 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
-use \Sci\Sci\Manager\PluginManager;
-use \Sci\Sci\Manager\TemplateManager;
-use \Sci\Sci\Manager\ProviderManager;
-use \Sci\Sci\Manager\RouteManager;
-use \Sci\Sci\Traits\Singleton;
+use \MyPlugin\Sci\Manager\PluginManager;
+use \MyPlugin\Sci\Manager\TemplateManager;
+use \MyPlugin\Sci\Manager\ProviderManager;
+use \MyPlugin\Sci\Manager\RouteManager;
+use \MyPlugin\Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -23,7 +23,7 @@ defined('WPINC') OR exit('No direct script access allowed');
 
 class Sci
 {
-    use \Sci\Sci\Traits\Singleton;
+    use \MyPlugin\Sci\Traits\Singleton;
 
     /** @var Sci  $_instance The class instance. */  
     private static $_instance;
@@ -123,7 +123,7 @@ class Sci
     /**
      * Get the template manager
      *
-     * @return \Sci\Sci\Manager\TemplateManager
+     * @return \MyPlugin\Sci\Manager\TemplateManager
      */    
     public function templateManager()
     {

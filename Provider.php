@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 

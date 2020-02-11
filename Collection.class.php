@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -16,7 +16,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  */
 class Collection implements Interfaces\CollectionInterface
 {
-    use \Sci\Sci\Traits\Sci;
+    use \MyPlugin\Sci\Traits\Sci;
 
 	/** @var array $items Stores a list of the registered items */	
 	private $items = [];
@@ -25,7 +25,7 @@ class Collection implements Interfaces\CollectionInterface
 	 * Add a new collection
 	 *
      * @param mixed $items
-	 * @return \Sci\Sci\Collection
+	 * @return \MyPlugin\Sci\Collection
 	 */
     public static function create($items = [])
     {

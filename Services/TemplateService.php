@@ -1,11 +1,11 @@
 <?php
-namespace Sci\Sci\Services;
+namespace MyPlugin\Sci\Services;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Template;
-use \Sci\Sci\Plugin;
-use \Sci\Sci\Manager\TemplateManager;
+use \MyPlugin\Sci\Template;
+use \MyPlugin\Sci\Plugin;
+use \MyPlugin\Sci\Manager\TemplateManager;
 use \Exception;
 
 
@@ -51,7 +51,7 @@ class TemplateService
     
 	public function init($plugin_id)
 	{
-        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->plugin($plugin_id);
+        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->plugin($plugin_id);
 
         if (!isset($this->plugin->config()['templates'])) return;
 

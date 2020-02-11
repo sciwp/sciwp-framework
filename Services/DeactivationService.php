@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci\Services;
+namespace MyPlugin\Sci\Services;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -35,7 +35,7 @@ class DeactivationService
 	 */
 	public function init($plugin_id)
     {
-        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->pluginManager()->get($plugin_id);
+        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->pluginManager()->get($plugin_id);
 		register_deactivation_hook($this->plugin->getFile(), array($this,'run'));
 		return $this;
 	}

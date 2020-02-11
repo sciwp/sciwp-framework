@@ -1,7 +1,7 @@
 <?php
-namespace Sci\Sci\Traits;
+namespace MyPlugin\Sci\Traits;
 
-use \Sci\Sci\Sci;
+use \MyPlugin\Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

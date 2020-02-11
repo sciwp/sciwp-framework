@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 

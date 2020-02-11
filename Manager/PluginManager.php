@@ -1,13 +1,13 @@
 <?php
-namespace Sci\Sci\Manager;
+namespace MyPlugin\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Sci;
-use \Sci\Sci\Plugin;
-use \Sci\Sci\Manager;
-use \Sci\Sci\Autoloader;
-use \Sci\Sci\Services\Activation as ActivationService;
+use \MyPlugin\Sci\Sci;
+use \MyPlugin\Sci\Plugin;
+use \MyPlugin\Sci\Manager;
+use \MyPlugin\Sci\Autoloader;
+use \MyPlugin\Sci\Services\Activation as ActivationService;
 
 /**
  * Plugin Manager

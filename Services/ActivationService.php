@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci\Services;
+namespace MyPlugin\Sci\Services;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -49,7 +49,7 @@ class ActivationService
 	 */	
 	public function init($plugin_id)
     {
-        $this->plugin = $plugin_id instanceof \Sci\Sci\Plugin ? $plugin_id : $this->Sci->plugins()->get($plugin_id);
+        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->plugins()->get($plugin_id);
         
         $this->plugin_name = $this->plugin->getName();
         $this->plugin_file = $this->plugin->getFile();

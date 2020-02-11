@@ -7,21 +7,21 @@ defined('WPINC') OR exit('No direct script access allowed');
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
+ * @copyright	Eduardo Lázaro Rodríguez
  * @license		http://opensource.org/licenses/MIT MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com 
  * @since		Version 1.0.0 
  */
 
-include plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
-
 // Files and vars used in this script
-$file_config = plugin_dir_path(dirname(__FILE__)) . 'config.php';
-$dir_cache = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
-$file_config_cache = $dir_cache . 'config.cache.php';
-$file_autoload_cache = $dir_cache . 'autoload.cache.php';
-$dirname_plugin  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 ))));
+$configFile = plugin_dir_path(dirname(__FILE__)) . 'config.php';
+
+$cacheDir = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
+$configCacheFile = $cacheDir . 'config.cache.php';
+
+$pluginFolder = basename(plugin_dir_path(dirname( __FILE__ , 1 )));
+$parsedPluginFolder = preg_replace("/[^a-z0-9]/", '', strtolower($pluginFolder));
 
 /**
  * {Dynamic}ReplaceStringFunction
@@ -34,7 +34,7 @@ $dirname_plugin  = strtolower(basename(plugin_dir_path(dirname( __FILE__ , 1 )))
  * @param $old_string The string to be replaced
  * @param $new_string The replacement string
  */
-${$dirname_plugin.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $old_string, $new_string)
+${$parsedPluginFolder.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $old_string, $new_string)
 {
     foreach (glob($folder."/*.php") as $filename) {
         $file_content = file_get_contents($filename);
@@ -42,6 +42,7 @@ ${$dirname_plugin.'ReplaceStringFunction'} = function($replaceStringFunction, $f
     }
     $dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
     foreach($dirs as $dir) {
+        echo($dir . " ". $old_string . " - ". $new_string);
         $replaceStringFunction($replaceStringFunction, $dir, $old_string, $new_string);
     }
 };
@@ -55,11 +56,11 @@ ${$dirname_plugin.'ReplaceStringFunction'} = function($replaceStringFunction, $f
  * @param $replaceStringFunction The function to process the string
  * @param $new_namespace The replacement namespace
  */
-${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
+${$parsedPluginFolder.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunction, $new_namespace) {
     $new_core_namespace = $new_namespace . '\Sci';
     $old_core_namespace = NULL;
     $old_namespace = NULL;
-    $file_path = plugin_dir_path( __FILE__ ) . 'Traits/Sci.php';
+    $file_path = plugin_dir_path( __FILE__ ) . 'Sci.php';
     $handle = fopen($file_path, "r") or die('The old namespace in the Sci Trait was not found');
 
     if (!$handle) return;
@@ -67,83 +68,110 @@ ${$dirname_plugin.'ReplaceCoreNamespaceFunction'} = function($replaceStringFunct
     while (($line = fgets($handle)) !== false) {
         if (strpos($line, 'namespace') === 0) {
             $parts = preg_split('/\s+/', $line);
-            $old_namespace = rtrim(trim($parts[1]), ';');
-            $old_core_namespace = $old_namespace . '\Sci';
+            $old_core_namespace = rtrim(trim($parts[1]), ';');
+            $old_namespace = preg_split('/\\\+/', $old_core_namespace)[0];
             break;
         }
     }
 
     fclose($handle);
 
-    $replaceStringFunction($replaceStringFunction, dirname(__FILE__), $old_core_namespace, $new_core_namespace);
+    if ($old_core_namespace !== $new_core_namespace) {
+        // Update SCIWP Framework namespaces
+        $replaceStringFunction($replaceStringFunction, dirname(__DIR__, 1), $old_core_namespace, $new_core_namespace);
 
-    $file_content = file_get_contents($file_path);   
-    file_put_contents($file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
+        // Update caller file namespaces (usually main.php)
+        $backtrace =  debug_backtrace();
+        $mainFilePath = $backtrace[1]['file']; echo( $mainFilePath);
+        $fileContent = file_get_contents($mainFilePath);
+        file_put_contents($mainFilePath, strtr($fileContent, [$old_core_namespace => $new_core_namespace]));
 
-    $functions_file_path = plugin_dir_path( __FILE__ ) . 'Functions/Functions.php';
-    $file_content = file_get_contents($functions_file_path);
-    file_put_contents($functions_file_path, strtr($file_content, ['namespace '.$old_namespace.';' => 'namespace '.$new_namespace.';']));
+        // Update config file namespace
+        $fileContent = file_get_contents($configFile);
+        file_put_contents($configFile, strtr($fileContent, [$old_core_namespace => $new_core_namespace]));
+    }
 };
 
 // Load config file
-if (!file_exists($file_config)) die('Cannot open the config file:  ' . $file_config);
+if (!file_exists($configFile)) die('Cannot open the config file:  ' . $configFile);
 
-$config = include $file_config;
+$config = file_exists($configFile) ? include $configFile : [];
 
-$config_cache = file_exists($file_config_cache) ? include $file_config_cache : ['namespace' => null, 'autoloader' => ['cache' => null]];
+$configCache = file_exists($configCacheFile) ? include $configCacheFile : ['namespace' => null, 'autoloader' => ['cache' => null]];
 
-$rebuild = !isset($config['namespace']) || (isset($config['rebuild']) && $config['rebuild'] === true) || $config['namespace'] !== $config_cache['namespace'] ? true : false;
+$rebuildNamespace =  !isset($configCache['namespace'])
+            || !isset($configCache['parsed_plugin_folder'])
+            || (isset($config['rebuild']) && $config['rebuild'] === true)
+            || (isset($config['namespace']) && $config['namespace'] !== $configCache['namespace'])
+            || ucfirst($configCache['parsed_plugin_folder']) !== ucfirst($parsedPluginFolder);
 
-if ($rebuild) {
-    $namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : call_user_func(function() use($dirname_plugin) {
+if ($rebuildNamespace) {
+    if (isset($config['namespace']) && $config['namespace']) {
+        $namespace = $config['namespace'];
+    } else {
+        $namespace = call_user_func( function() use ($parsedPluginFolder) {
 
-        // Try to get the namespace from the main.php file
-        $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r")
-                  or die('Cannot open the Sci plugin main.php file');
- 
-        while (($line = fgets($handle)) !== false) {
-            if (strpos($line, 'namespace') === 0) {
-                $parts = preg_split('/\s+/', $line);
-                $namespace = rtrim(trim($parts[1]), ';');
-                break;
+            // Try to get the namespace from the main.php file
+            $handle = fopen(plugin_dir_path( dirname(__FILE__) ) . '/main.php', "r");
+        
+            if ($handle) {
+                while (($line = fgets($handle)) !== false) {
+                    if (strpos($line, 'namespace') === 0) {
+                        $parts = preg_split('/\s+/', $line);
+                        if (isset($parts[1])) {
+                            return rtrim(trim($parts[1]), ';');
+                        }                        
+                    }
+                }
+                fclose($handle);
             }
-        }
-        fclose($handle);
-        // Fallback to the plugin folder name
-        return isset($namespace) ? $namespace : ucfirst($dirname_plugin);
-    });
 
-    ${$dirname_plugin.'ReplaceCoreNamespaceFunction'}(${$dirname_plugin.'ReplaceStringFunction'}, $namespace);
-    $config_cache['namespace'] = $namespace;
+            // Fallback to the plugin folder name
+            return ucfirst($parsedPluginFolder);
+        });
+    }
+
+    if (!isset($configCache['namespace']) || $namespace !== $configCache['namespace']) {
+
+        // Rebuild SCIWP files
+        ${ $parsedPluginFolder . 'ReplaceCoreNamespaceFunction' }(${$parsedPluginFolder.'ReplaceStringFunction'}, $namespace);
+
+        $configCache['namespace'] = $namespace;
+        $configCache['plugin_folder'] = $pluginFolder;
+        $configCache['parsed_plugin_folder'] = $parsedPluginFolder;
+
+        if (!file_exists($cacheDir)) mkdir($cacheDir);
+        file_put_contents ($configCacheFile, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $configCache, true) . ';')
+        or die('Cannot write the file:  '.$configCacheFile);
+    }
 }
 
-if($rebuild || (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== $config_cache['autoloader']['cache'])) {
-    
-    if (!file_exists($dir_cache)) mkdir($dir_cache);
+if (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== $configCache['autoloader']['cache']) {
 
-    file_put_contents ($file_config_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $config, true) . ';')
-    or die('Cannot write the file:  '.$file_config_cache);
+    $configCache['autoloader']['cache'] = $config['autoloader']['cache'];
     
-    file_put_contents ($file_autoload_cache, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return array ();')
-    or die('Cannot write the file:  '.$file_autoload_cache);
+    if (!file_exists($cacheDir)) mkdir($cacheDir);
+    file_put_contents ($configCacheFile, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $configCache, true) . ';')
+    or die('Cannot write the file:  '.$configCacheFile);
+
+    $autoloadCacheFile = $cacheDir . 'autoload.cache.php';
+    file_put_contents ($autoloadCacheFile, "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return array ();')
+    or die('Cannot write the file:  '.$autoloadCacheFile);
 }
 
 // Require the Autoloader
-$namespace = isset($config['namespace']) && $config['namespace'] ? $config['namespace']
-             : isset($config_cache['namespace']) && $config_cache['namespace'] ? $config_cache['namespace']
-             : ucfirst($dirname_plugin);
+$namespace = isset($configCache['namespace']) && $configCache['namespace'] ? $configCache['namespace'] :
+             (isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : ucfirst($parsedPluginFolder));
 
 // Start the autoloader and Sci
 require plugin_dir_path( __FILE__ ) . 'Autoloader.php';
 
 if(class_exists('\\' . $namespace . '\Sci\Autoloader')) {
+    $autoloaderClass = '\\' . $namespace . '\Sci\Autoloader';
+    $autoloaderClass::start();
+    $sciClass = '\\'.$namespace.'\Sci\Sci';
 
-    $autoloader_class = '\\' . $namespace . '\Sci\Autoloader';
-    $autoloader_class::start();
-
-    $Sci_class = '\\'.$namespace.'\Sci\Sci';
-    return $Sci_class::instance()->init(); 
-
+    return $sciClass::instance()->init();
 }
 
-throw new Exception('Please rebuild SCIWP.');
+die('Please rebuild SCIWP.');

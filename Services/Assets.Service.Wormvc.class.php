@@ -3,16 +3,16 @@
  * Class Page
  */
 
-namespace  Sci\Sci\Service;
+namespace  MyPlugin\Sci\Service;
 
-use \Sci\Sci\Plugin;
-use \Sci\Sci\Helper as Helper;
+use \MyPlugin\Sci\Plugin;
+use \MyPlugin\Sci\Helper as Helper;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 class Assets {
 
-	use \Sci\Sci\Traits\StaticClass;
+	use \MyPlugin\Sci\Traits\StaticClass;
 
 	const SELF = __class__;
 	

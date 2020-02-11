@@ -1,9 +1,9 @@
 <?php
-namespace Sci\Sci\Manager;
+namespace MyPlugin\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Manager;
+use \MyPlugin\Sci\Manager;
 
 /**
  * Provider Manager
@@ -34,7 +34,7 @@ class ProviderManager extends Manager
      * Register Provider into the Provider Manager
      * 
      * @param object|array $providers The plugin file path
-     * @return \Sci\Sci\Manager\ProviderManager
+     * @return \MyPlugin\Sci\Manager\ProviderManager
      */
     public function register($providers)
     {
@@ -44,7 +44,7 @@ class ProviderManager extends Manager
                 $provider = $this->Sci->get($provider);
             }
 
-            if (!is_subclass_of($provider, '\Sci\Sci\Provider')) {
+            if (!is_subclass_of($provider, '\MyPlugin\Sci\Provider')) {
                 throw new Exception('Only child classes or instances of the Provider class are accepted.');
             }
 

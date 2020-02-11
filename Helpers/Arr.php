@@ -1,8 +1,8 @@
 <?php
-namespace Sci\Sci\Helpers;
+namespace MyPlugin\Sci\Helpers;
 
-use Sci\Sci\Helper;
-use Sci\Sci\Collection;
+use MyPlugin\Sci\Helper;
+use MyPlugin\Sci\Collection;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

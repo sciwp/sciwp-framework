@@ -1,10 +1,10 @@
 <?php
-namespace Sci\Sci\Helpers;
+namespace MyPlugin\Sci\Helpers;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Helper;
-use \Sci\Sci\Libraries\Inflector;
+use \MyPlugin\Sci\Helper;
+use \MyPlugin\Sci\Libraries\Inflector;
 
 /**
  * Str Helper class

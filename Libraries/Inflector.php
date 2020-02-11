@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci\Libraries;
+namespace MyPlugin\Sci\Libraries;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

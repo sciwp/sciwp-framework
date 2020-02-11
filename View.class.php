@@ -3,7 +3,7 @@
  * Class View
  */
 
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

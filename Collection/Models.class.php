@@ -1,9 +1,9 @@
 <?php
-namespace Sci\Sci\Collection;
+namespace MyPlugin\Sci\Collection;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
-use Sci\Sci as Sci;
+use MyPlugin\Sci as Sci;
 
 /**
  * Models Collection class

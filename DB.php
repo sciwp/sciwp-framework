@@ -1,9 +1,9 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use Sci\Sci\Query;
+use MyPlugin\Sci\Query;
 
 /**
  * DB Class
@@ -22,7 +22,7 @@ abstract class DB
      * Returns the table name
      *
      * @param string $table The table name
-     * @return \Sci\Sci\Query
+     * @return \MyPlugin\Sci\Query
      */
     public static function table($tableName)
     {
@@ -33,7 +33,7 @@ abstract class DB
     /**
      * Start a query
      *
-     * @return \Sci\Sci\Query
+     * @return \MyPlugin\Sci\Query
      */
     public static function query($params)
     {

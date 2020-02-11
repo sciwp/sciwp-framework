@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 use \Exception;
 use \Closure;
 /**
@@ -155,7 +155,7 @@ class Query
     /**
      * Set the table which the query is targeting.
      *
-     * @param  \Sci\Sci\Query|string  $table
+     * @param  \MyPlugin\Sci\Query|string  $table
      * @param  string|null  $as
      * @return $this
      */

@@ -1,11 +1,11 @@
 <?php
-namespace Sci\Sci\Manager;
+namespace MyPlugin\Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Manager;
-use \Sci\Sci\Route;
-use \Sci\Sci\Helpers\Url;
+use \MyPlugin\Sci\Manager;
+use \MyPlugin\Sci\Route;
+use \MyPlugin\Sci\Helpers\Url;
 
 /**
  * Route Manager
@@ -83,8 +83,8 @@ class RouteManager extends Manager
     /**
      * Register a new route into the route manager
      *
-     * @param \Sci\Sci\Route $route The route instance
-     * @return \Sci\Sci\Manager\RouteManager
+     * @param \MyPlugin\Sci\Route $route The route instance
+     * @return \MyPlugin\Sci\Manager\RouteManager
      */
     public function register($route)
     {
@@ -125,7 +125,7 @@ class RouteManager extends Manager
     /**
      * Generate rewrite rules when fushed
      *
-     * @return \Sci\Sci\Manager\RouteManager
+     * @return \MyPlugin\Sci\Manager\RouteManager
      */
 	public function addRewriteRulesAction() 
 	{

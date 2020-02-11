@@ -1,10 +1,10 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \Sci\Sci\Plugin;
-use \Sci\Sci\Manager\TemplateManager;
+use \MyPlugin\Sci\Plugin;
+use \MyPlugin\Sci\Manager\TemplateManager;
 
 /**
  * Template
@@ -20,7 +20,7 @@ use \Sci\Sci\Manager\TemplateManager;
  
 class Template
 {
-    /** @var \Sci\Sci\Manager\TemplateManager $templateManager The Sci template manager */
+    /** @var \MyPlugin\Sci\Manager\TemplateManager $templateManager The Sci template manager */
     protected $templateManager;
     
 	/** @var string $key The template key */
@@ -90,7 +90,7 @@ class Template
      * @param string $name The name to display in WordPress for the template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
-	 * @return \Sci\Sci\Template
+	 * @return \MyPlugin\Sci\Template
 	 */
     public static function create($key, $template = false, $name = false, $postTypes = false, $themePath = false)
     {
@@ -102,7 +102,7 @@ class Template
     /**
      * Add the template to the template manager
      *
-     * @return \Sci\Sci\Template
+     * @return \MyPlugin\Sci\Template
      */
     public function register() {
         $this->templateManager->register($this);     
@@ -157,12 +157,12 @@ class Template
     /**
      * Set the plugin
      *
-     * @param string|\Sci\Sci\Plugin $plugin
-     * @return \Sci\Sci\Template
+     * @param string|\MyPlugin\Sci\Plugin $plugin
+     * @return \MyPlugin\Sci\Template
      */
     public function setPlugin($plugin_id)
     {
-        $this->plugin = $plugin instanceof \Sci\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin_id);
+        $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin_id);
         return $this;
     }
 
@@ -170,7 +170,7 @@ class Template
      * Set the template path in the plugin
      *
      * @param string $path The path of the template
-     * @return \Sci\Sci\Template
+     * @return \MyPlugin\Sci\Template
      */
     public function setPath($path)
     {
@@ -182,7 +182,7 @@ class Template
      * Set the template path in the theme
      *
      * @param string $path The path of the template file in the theme
-     * @return \Sci\Sci\Template
+     * @return \MyPlugin\Sci\Template
      */
     public function setThemePath($themePath)
     {     
@@ -195,7 +195,7 @@ class Template
      * Se the template name
      *
      * @param array|string $postTypes The name to display in WordPress
-     * @return \Sci\Sci\Template
+     * @return \MyPlugin\Sci\Template
      */
     public function setName($name)
     {
@@ -207,7 +207,7 @@ class Template
      * Set the post types array
      *
      * @param array|string $postTypes A post type or an array of post types
-     * @return \Sci\Sci\Template
+     * @return \MyPlugin\Sci\Template
      */
     public function setPostTypes($postTypes)
     {

@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
 /**
  * Autoloader Class

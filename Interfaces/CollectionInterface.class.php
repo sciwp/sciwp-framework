@@ -1,5 +1,5 @@
 <?php
-namespace Sci\Sci\Interfaces;
+namespace MyPlugin\Sci\Interfaces;
 
 /**
  * Collection interface

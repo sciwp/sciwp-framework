@@ -1,10 +1,10 @@
 <?php
-namespace Sci\Sci;
+namespace MyPlugin\Sci;
 
-use \Sci\Sci\Manager\PluginManager;
-use Sci\Sci\Template as Template;
-use Sci\Sci\Collection;
-use Sci\Sci\Sci;
+use \MyPlugin\Sci\Manager\PluginManager;
+use MyPlugin\Sci\Template as Template;
+use MyPlugin\Sci\Collection;
+use MyPlugin\Sci\Sci;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -66,7 +66,7 @@ class Plugin
     /** @var Collection $services Collection to store the services */
     private $extensions;
     
-    /** @var \Sci\Sci\Manager\PluginManager $pluginManager The Sci plugin manager */
+    /** @var \MyPlugin\Sci\Manager\PluginManager $pluginManager The Sci plugin manager */
     protected $pluginManager;
     
     public function __construct($plugin_file, $plugin_id = false, Collection $extensions)
@@ -167,12 +167,12 @@ class Plugin
      * @param string $plugin_file The plugin file path
      * @param string|bool $plugin_id The plugin id
      * @return Plugin
-	 * @return \Sci\Sci\Plugin
+	 * @return \MyPlugin\Sci\Plugin
 	 */
     public static function create($plugin_file, $plugin_id = false)
     {
         if (!$plugin_id) $plugin_id = strtolower(basename(plugin_dir_path($plugin_file)));
-        $plugin = Sci::make(\Sci\Sci\Plugin::class, [$plugin_file, $plugin_id]);
+        $plugin = Sci::make(\MyPlugin\Sci\Plugin::class, [$plugin_file, $plugin_id]);
         $plugin->register();
         return $plugin;
     }
@@ -180,7 +180,7 @@ class Plugin
 	/**
 	 * Add the plugin to the plugin manager
 	 *
-	 * @return \Sci\Sci\Plugin
+	 * @return \MyPlugin\Sci\Plugin
 	 */
     public function register() {
         $this->pluginManager->register($this);
@@ -361,7 +361,7 @@ class Plugin
 		// Register activation and deactivation hooks
 
 		
-		$collectionManager = self::get('\Sci\Sci\Manager\CollectionManager');
+		$collectionManager = self::get('\MyPlugin\Sci\Manager\CollectionManager');
 		
 		
 		if ( isset($this->plugin::config['collections']) && is_array($this->plugin::config['collections']) ) {
@@ -371,7 +371,7 @@ class Plugin
 					
 					
 					if (isset($collection['container'])) $container = $collection['container'];
-					else $container = '\Sci\Sci\Collection';
+					else $container = '\MyPlugin\Sci\Collection';
 					if (isset($collection['shortcut'])) $shortcut = $collection['shortcut'];
 					else $shortcut = $key;
 					$this->collections[$shortcut] = $this->Sci::get($container);
@@ -444,13 +444,13 @@ class Plugin
 		
 		
 
-		self::$collections = new \Sci\Sci\Collection();
+		self::$collections = new \MyPlugin\Sci\Collection();
 		self::addStaticMethod('collections', function () {
 			return self::$collections;
 		});
 		
 
-		self::$services =  new \Sci\Sci\Collection();
+		self::$services =  new \MyPlugin\Sci\Collection();
 		self::addStaticMethod('services', function () {
 			return self::$collections['services'];
 		});		
