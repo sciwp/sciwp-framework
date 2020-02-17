@@ -18,15 +18,6 @@ class ActivationService
 {
 	/** @var string $plugin The plugin this service belongs to. */
 	private $plugin;
-    
-    /** @var string $plugin_name The plugin name */
-    private $plugin_name;    
-    
-    /** @var string $plugin_file The main plugin file. */
-    private $plugin_file;
-
-	/** @var string $checks Stores a list of the activation checks */	
-	private $config;
 
     /** @var string $checks Stores a list of the activation checks */
 	public $checks = array();
@@ -42,20 +33,15 @@ class ActivationService
 	/**
 	 * Initializes the class
 	 *
-     * @param string $plugin_id The plugin ID
-     * @param string $plugin_file The main plugin file
-     * @param array $config The plugin activation config array
-	 * @return	object
+     * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
+	 * @return self
 	 */	
-	public function init($plugin_id)
+	public function init($plugin)
     {
-        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->plugins()->get($plugin_id);
+		$this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugins()->get($plugin);
         
-        $this->plugin_name = $this->plugin->getName();
-        $this->plugin_file = $this->plugin->getFile();
-        $this->config = $this->plugin->getConfig();
-        
-		register_activation_hook($this->plugin_file, array($this,'run'));
+		register_activation_hook($this->plugin->getFile(), array($this,'run'));
+
 		return $this;
 	}
 
@@ -65,7 +51,7 @@ class ActivationService
 	 * @param string $name The condition name
      * @param string $callback The callback function     
      * @param array $params The function parameters     
-	 * @return	object
+	 * @return self
 	 */	
 	public function addCheck($name, $callback, $params = false) 
 	{
@@ -83,7 +69,7 @@ class ActivationService
 	 * @param string $name The action name
      * @param mixed $name The action function
      * @param array $params The function parameters
-	 * @return	object
+	 * @return self
 	 */	
 	public function addAction($name, $callback, $params = false) 
 	{
@@ -97,59 +83,62 @@ class ActivationService
 
 	/**
 	 * Plugin activation
+	 * 
+	 * @return void
 	 */ 
 	public function run()
 	{
 		global $wp_version;
-		$requirements=true;
-		$message="";
-		if (isset($this->config['php'])) {
-			if (!is_array($this->config['php']) && $this->config['php']) {
-				if ( version_compare( PHP_VERSION, $this->config['php'], '<' ) ) {
+
+		$config = $this->plugin->config()->get('activation');
+		$requirements = true;
+		$message = "";
+
+		if (isset($config['php'])) {
+			if (!is_array($config['php']) && $config['php']) {
+				if ( version_compare( PHP_VERSION, $config['php'], '<' ) ) {
 					$requirements = false;
-					$message .= '<p>'.sprintf('The %1$s plugin requires PHP version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['php']).'</p>';
+					$message .= '<p>'.sprintf('The %1$s plugin requires PHP version %2$s or greater.', '<strong>' . $this->plugin->getName() . '</strong>', $config['php']).'</p>';
 				}
-			}
-			else if (isset($this->config['php']['enabled']) && $this->config['php']['enabled']) {
-				if ( version_compare( PHP_VERSION, $this->config['php']['version'], '<' ) ) {
+			} else if (isset($config['php']['enabled']) && $config['php']['enabled']) {
+				if ( version_compare( PHP_VERSION, $config['php']['version'], '<' ) ) {
 					$requirements = false;
-					if (isset($this->config['php']['message'])) {
-						$error = $this->config['php']['message'];
-					}
-					else {
+					if (isset($config['php']['message'])) {
+						$error = $config['php']['message'];
+					} else {
 						$error = 'The %1$s plugin requires the PHP version %2$s or greater. Please make sure it is installed and try again.';
 					}					
-					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['php']['version']).'</p>';
+					$message .= '<p>'.sprintf($error, '<strong>' . $this->plugin->getName() . '</strong>', $config['php']['version']).'</p>';
 				}
 			}
 		}
-		if (isset($this->config['wordpress'])) {
-			if (!is_array($this->config['wordpress']) && $this->config['wordpress']) {
-				if (version_compare($wp_version, $this->config['wordpress'], '<' )) {
+
+		if (isset($config['wordpress'])) {
+			if (!is_array($config['wordpress']) && $config['wordpress']) {
+				if (version_compare($wp_version, $config['wordpress'], '<' )) {
 					$requirements = false;
-					$message .= '<p>'.sprintf('The %1$s plugin requires WordPress version %2$s or greater.', '<strong>'. $this->plugin_name.'</strong>', $this->config['wordpress']).'</p>';
+					$message .= '<p>'.sprintf('The %1$s plugin requires WordPress version %2$s or greater.', '<strong>' . $this->plugin->getName() . '</strong>', $config['wordpress']).'</p>';
 				}
-			}
-			else if (isset($this->config['wordpress']['enabled']) && $this->config['wordpress']['enabled']) {
-				if (version_compare($wp_version, $this->config['wordpress']['version'], '<' )) {
+			} else if (isset($config['wordpress']['enabled']) && $config['wordpress']['enabled']) {
+				if (version_compare($wp_version, $config['wordpress']['version'], '<' )) {
 					$requirements = false;
-					if (isset($this->config['wordpress']['message'])) {
-						$error = $this->config['wordpress']['message'];
-					}
-					else {
+					if (isset($config['wordpress']['message'])) {
+						$error = $config['wordpress']['message'];
+					} else {
 						$error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and try again.';
 					}
-					$message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', $this->config['wordpress']['version']).'</p>';
+					$message .= '<p>'.sprintf($error, '<strong>' . $this->plugin->getName() .'</strong>', $config['wordpress']['version']).'</p>';
 				}
 			}
 		}
-		if (isset($this->config['plugins'])) {
+
+		if (isset($config['plugins'])) {
             
-            if (!is_array($this->config['plugins'])) {
-                $this->config['plugins'] = [$this->config['plugins']];
+            if (!is_array($config['plugins'])) {
+                $config['plugins'] = [$config['plugins']];
             }
             
-            if (is_array($this->config['plugins']) && count($this->config['plugins'])) {
+            if (is_array($config['plugins']) && count($config['plugins'])) {
             
                 $active_plugins = get_option('active_plugins');
                 foreach($active_plugins  as $key => $plugin) {
@@ -157,13 +146,13 @@ class ActivationService
                     $active_plugins[$key] = is_array($plugin_arr) ? $plugin_arr[0] : trim($plugin);
                 }
 
-                foreach ((array) $this->config['plugins'] as $key => $requiredPlugin) {
+                foreach ((array) $config['plugins'] as $key => $requiredPlugin) {
 
                     if (!is_array($requiredPlugin)) {
                         if (!in_array($requiredPlugin, $active_plugins)) {
-                                $requirements = false;
-                                $error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
-                                $message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$requiredPlugin.'</strong>').'</p>';
+                            $requirements = false;
+                            $error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
+                            $message .= '<p>'.sprintf($error, '<strong>'. $this->plugin->getName() .'</strong>', '<strong>'.$requiredPlugin.'</strong>').'</p>';
                         }
                     } else {
                         if (!in_array($key, $active_plugins)) {
@@ -174,7 +163,7 @@ class ActivationService
                                 $error = 'The %1$s plugin requires the plugin %2$s. Please make sure it is installed and enabled and try again.';
                             }					
                             $name = isset($requiredPlugin['name']) ? $requiredPlugin['name'] : $key;
-                            $message .= '<p>'.sprintf($error, '<strong>'. $this->plugin_name.'</strong>', '<strong>'.$name.'</strong>').'</p>';
+                            $message .= '<p>'.sprintf($error, '<strong>' . $this->plugin->getName() . '</strong>', '<strong>'.$name.'</strong>').'</p>';
                         }
                     }
                 }
@@ -183,36 +172,31 @@ class ActivationService
 
 		foreach ($this->checks as $check) {
 			$callback = $check['callback'];
-
-            // File inclusion
 			if (is_string($callback) && strpos($callback, ".") !== false) {
+				// File inclusion
 				$result = include ($callback);
-			} 
-			else {
-				// Instance
+			} else {
 				if (is_array($callback)) {
+					// Instance
 					if (is_object($callback[0]) && is_string($callback[1])) {
-						// Instance with parameters
 						if ( isset($check['params']) ) {
+							// Instance with parameters
 							$result = call_user_func_array($callback, $check['params']);
-						}
-						// Instance without parameters
-						else {
+						} else {
+							// Instance without parameters
 							$result = call_user_func($callback);
 						}
 					}
 					else {
-						 trigger_error("Invalid instance or instance function for the activation check" . $check['name']. ".", E_USER_ERROR);
+						trigger_error("Invalid instance or instance function for the activation check" . $check['name']. ".", E_USER_ERROR);
 					}
-				}
-				// Functions and static methods
-				else {
-					// Instance with parameters
+				} else {
+					// Functions and static methods
 					if ( isset($check['params']) ) {
+						// Instance with parameters
 						$result = call_user_func_array($callback, $check['params']);
-					}
-					// Instance without parameters
-					else {
+					} else {
+						// Instance without parameters
 						$result = call_user_func($callback);
 					}
 				}
@@ -223,43 +207,38 @@ class ActivationService
 			}
 		}
 
-		if(!$requirements) {
+		if (!$requirements) {
 			deactivate_plugins( plugin_basename( __FILE__ ) ) ;
 			wp_die($message,'Plugin Activation Error',  array( 'response'=>200, 'back_link'=>TRUE ) );
 		}
 
 		foreach ($this->actions as $action) {
-            
 			$callback = $action['callback'];
 			// File inclusion
 			if (is_string($callback) && strpos($callback, ".") !== false) {
 				include ($callback);
-			} 
-			else {
+			} else {
 				// Instance
 				if (is_array($callback)) {
 					if (is_object($callback[0]) && is_string($callback[1])) {
-						// Instance with parameters
 						if ( isset($action['params']) ) {
+							// Instance with parameters
 							call_user_func_array($callback, $action['params']);
-						}
-						// Instance without parameters
-						else {
+						} else {
+							// Instance without parameters
 							call_user_func($callback);
 						}
 					}
 					else {
 						trigger_error("Invalid instance or instance function for the activation action" . $action['name']. ".", E_USER_ERROR);
 					}
-				}
-				// Functions and static methods
-				else {
-					// Function with parameters
+				} else {
+					// Functions and static methods
 					if ( isset($action['params']) ) {
+						// Function with parameters
 						$result = call_user_func_array($callback, $action['params']);
-					}
-					// Function without parameters
-					else {
+					} else {
+						// Function without parameters
 						$result = call_user_func($callback);
 					}
 				}

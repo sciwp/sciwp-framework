@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @since		Version 1.0.0 
  */
 class DeactivationService
-{    
+{
 	/** @var string $plugin The plugin this service belongs to. */
 	private $plugin;
 
@@ -30,67 +30,71 @@ class DeactivationService
 	/**
 	 * Initializes the class
 	 *
-     * @param string $plugin_file The main plugin file
-	 * @return	object
+     * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
+	 * @return self
 	 */
-	public function init($plugin_id)
+	public function init($plugin)
     {
-        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->pluginManager()->get($plugin_id);
+        $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->pluginManager()->get($plugin);
 		register_deactivation_hook($this->plugin->getFile(), array($this,'run'));
 		return $this;
 	}
 
 	/**
-	 * Ads a condition for the plugin activation
-	 *
-	 * @return	object
+	 * Ads an action to execute on the plugin deactivation
+	 * 
+	 * @param string $name The action name
+     * @param mixed $name The action function
+     * @param array $params The function parameters
+	 * @return self
 	 */	
 	public function addAction($name, $callback, $params = false) 
 	{
 		$action = array('name' => $name, 'callback' => $callback);
-		if ($params) {
-            $action['params'] = (array) $params;
-        }
+
+		if ($params) $action['params'] = (array) $params;
 		$this->actions[] = $action;
+
 		return $this;
 	}
 
 	/**
 	 * Plugin deactivation
+	 * 
+	 * @return void
 	 */ 
 	public function run()
 	{
 		if (!current_user_can( 'activate_plugins' )) return;
+
 		foreach ($this->actions as $action) {
 
 			$callback = $action['callback'];
-			// File inclusion
+
 			if (is_string($callback) && strpos($callback, ".") !== false) {
+				// File inclusion
 				include ($callback);
 			} else {
 				// Instance
 				if (is_array($callback)) {
 					if (is_object($callback[0]) && is_string($callback[1])) {
-						// Instance with parameters
 						if ( isset($action['params']) ) {
+							// Instance with parameters
 							call_user_func_array($callback, $action['params']);
-						}
-						// Instance without parameters
-						else {
+						} else {
+							// Instance without parameters
 							call_user_func($callback);
 						}
 					} else {
 						 trigger_error("Invalid instance or instance function for the activation action" . $action['name']. ".", E_USER_ERROR);
 					}
-				}
-				// Functions and static methods
-				else {
-					// Function with parameters
+				} else {
+					// Functions and static methods
 					if ( isset($action['params']) ) {
+						// Function with parameters
 						$result = call_user_func_array($callback, $action['params']);
-					}
-					// Function without parameters
-					else {
+					} else {
+						// Function without parameters
 						$result = call_user_func($callback);
 					}
 				}

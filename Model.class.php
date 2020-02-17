@@ -235,7 +235,7 @@ abstract class Model
      * @param int limit
      * @return array
      */
-    public static function all($skip = false, $limit = false)
+    public static function findAll($skip = false, $limit = false)
     {
         $query = new Query();
         $query->setModel(get_called_class());
@@ -302,7 +302,7 @@ abstract class Model
      * @param  string $value
      * @return false|self
      */
-    public static function one(...$queries)
+    public static function findOne(...$queries)
     {
         $queries = func_get_args();
         $query = new Query();

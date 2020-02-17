@@ -38,62 +38,60 @@ class PluginManager extends Manager
      * Load a plugin into the plugin manager
      * 
      * @param string $plugin_file The plugin file path
-     * @param string|bool $plugin_id The plugin id
+     * @param string|bool $pluginId The plugin id
      * @return Plugin
      */
-    public function register($plugin)
+    public function register($plugin, $pluginId = false)
     {
-        $plugin_id = $plugin->getId();
 
-        if (isset($this->plugins[$plugin_id])) {
-            throw new Exception('The plugin with id ' . $plugin_id . ' is already registered.');
+        if (!$pluginId) $pluginId = str_replace( ' ', '-', strtolower(basename($plugin->getDir())));
+
+        if (isset($this->plugins[$pluginId])) {
+            throw new Exception('The plugin with id ' . $pluginId . ' is already registered.');
         }
         
-        $this->plugins[$plugin_id] = $plugin;
+        $this->plugins[$pluginId] = $plugin;
 
-        $autoload = isset($this->plugins[$plugin_id]->config()['autoload']) ? $this->plugins[$plugin_id]->config()['autoload'] : [];
         // Add the plugin to the Autoloader
-        $this->autoloader::addPlugin(
-            $plugin_id,
-            [
-                'namespace' => $plugin->getNamespace(),
-                'main_namespace' =>  $plugin->getMainNamespace(),
-                'dir' => $plugin->getDir(),
-                'main_dir' =>  $plugin->getMainDir(),
-                'module_dir' =>  $plugin->getModuleDir(),                
-                'cache_enabled' => $plugin->getAutoloaderCacheEnabled(),
-                'reflexive' =>  $plugin->config()['autoloader']['reflexive'],
-                'autoload' =>  $autoload,
-            ]
-        );
+        $autoload = $plugin->config->get('autoloader/autoload');
+        $autoloadData = [
+            'namespace' => $plugin->getNamespace(),
+            'main_namespace' =>  $plugin->getMainNamespace(),
+            'dir' => $plugin->getDir(),
+            'main_dir' =>  $plugin->getMainDir(),
+            'module_dir' =>  $plugin->getModulesDir(),            
+            'cache_enabled' => $plugin->getAutoloaderCacheEnabled(),
+            'reflexive' =>  $plugin->config->get('autoloader/reflexive'),
+            'autoload' =>  $autoload ? $autoload : [],
+        ];
 
-        $config = $plugin->config();
+        $this->autoloader::addPlugin($pluginId, $autoloadData);
 
-        // Add the providers to the provider manager
-        if (isset($config['providers'])) {
-            $this->Sci->providers()->register((Array) $config['providers']);
+        if ($providers = $plugin->config->get('providers')) {
+            $this->Sci->providers()->register((Array) $providers);
         }
         
-        return $this->plugins[$plugin_id];
+        return $this->plugins[$pluginId];
     }
 
     /**
      * Get all plugins
      * 
-     * @return Plugin
+     * @return Plugin[]
      */
-    public function getPlugins()
+    public function all()
     {
         return $this->plugins;
     }
 
     /**
      * Get all loaded plugins
-     * @param string $plugin_id The plugin id
+     * @param string $id The plugin id
      * @return Plugin
      */	
-	public function get($id)
+	public function get($pluginId = false)
 	{
-		return isset($this->plugins[$id]) ? $this->plugins[$id] : false;
+        if (!$pluginId) return $this->all();
+		return isset($this->plugins[$pluginId]) ? $this->plugins[$pluginId] : false;
 	}
 }

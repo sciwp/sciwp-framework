@@ -48,14 +48,21 @@ class TemplateService
         }
         return $this;
     }
-    
-	public function init($plugin_id)
+
+	/**
+	 * Initializes the class
+	 *
+     * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
+	 * @return self
+	 */
+	public function init($plugin)
 	{
-        $this->plugin = $plugin_id instanceof \MyPlugin\Sci\Plugin ? $plugin_id : $this->Sci->plugin($plugin_id);
+        $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin);
 
-        if (!isset($this->plugin->config()['templates'])) return;
+        $templates = $this->plugin->config()->get('templates');
+        if (!$templates) return;
 
-        foreach ((array)$this->plugin->config()['templates'] as $key => $template) {
+        foreach ( (array) $templates as $key => $template) {
             
             if (is_array($template)) {
                 $template['path'] = $this->plugin->getDir() . '/' . $template['path'];

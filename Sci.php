@@ -5,6 +5,7 @@ use \MyPlugin\Sci\Manager\PluginManager;
 use \MyPlugin\Sci\Manager\TemplateManager;
 use \MyPlugin\Sci\Manager\ProviderManager;
 use \MyPlugin\Sci\Manager\RouteManager;
+use \MyPlugin\Sci\Manager\RestManager;
 use \MyPlugin\Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
@@ -76,6 +77,7 @@ class Sci
         $this->template_manager = self::get(TemplateManager::class);
         $this->provider_manager = self::get(ProviderManager::class);
         $this->route_manager = self::get(RouteManager::class);
+        $this->rest_manager = self::get(RestManager::class);
         return $this;
     }   
 
@@ -150,6 +152,15 @@ class Sci
         return $this->route_manager;
     }
 
+    /**
+     * Get the rest manager
+     *
+     * @return RestManager
+     */
+    public function restManager()
+    {
+        return $this->rest_manager;
+    }
     /**
      * Bind a class name or alias to a class or instance
      *

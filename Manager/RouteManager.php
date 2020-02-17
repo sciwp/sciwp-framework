@@ -15,7 +15,7 @@ use \MyPlugin\Sci\Helpers\Url;
  * @copyright	2018 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com 
  * @since		Version 1.0.0 
  */
 
@@ -24,11 +24,8 @@ class RouteManager extends Manager
     /** @var array $routes Stores a list of the registered routes */
     private $routes = array();
 
-	/** @var boolean $filters_added If the WP filters have been added or not. */
-	private $filters_added = false;
-
-	/** @var array $segments Segments in the url */
-	private $segments = array();    
+	/** @var boolean $filtersAadded If the WP filters have been added or not. */
+	private $filtersAadded = false;
 	
 	/** @var array $params Parameters to pass to the action function or method */
 	private $params = array();
@@ -36,22 +33,22 @@ class RouteManager extends Manager
     /** @var array $cache Stores de cached rewrite rules */
 	public $cache = array();
     
-    /** @var string $dir_cache Stores de cache file fir path */
-	private $dir_cache;
+    /** @var string $dirCache Stores de cache file fir path */
+	private $dirCache;
     
-    /** @var string $file_cache Stores de cache file path */
-	private $file_cache;
+    /** @var string $fileCache Stores de cache file path */
+	private $fileCache;
     
-    /** @var boolean $rewrite_rules_flushed Stores if the rules have been flushed */
-	private $rewrite_rules_flushed = false;
+    /** @var boolean $rewriteRulesFlushed Stores if the rules have been flushed */
+	private $rewriteRulesFlushed = false;
 
 	/**
 	 * Class constructor
 	 */
 	protected function __construct(){
-        $this->dir_cache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
-        $this->file_cache = $this->dir_cache . 'route.cache.php';
-        $this->cache = is_file($this->file_cache) ? (array)include $this->file_cache : [];
+        $this->dirCache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
+        $this->fileCache = $this->dirCache . 'route.cache.php';
+        $this->cache = is_file($this->fileCache) ? (array) include $this->fileCache : [];
     }
     
 	/**
@@ -61,9 +58,9 @@ class RouteManager extends Manager
 	 */
 	public function saveCache()
 	{
-        if (!file_exists($this->dir_cache)) mkdir($this->dir_cache);
-		file_put_contents($this->file_cache, '<?php return ' . var_export($this->cache, true) . ';')
-        or die('Cannot write the file:  '.$this->file_cache);
+        if (!file_exists($this->dirCache)) mkdir($this->dirCache);
+		file_put_contents($this->fileCache, '<?php return ' . var_export($this->cache, true) . ';')
+        or die('Cannot write the file:  '.$this->fileCache);
 	}
 
 	/**
@@ -86,31 +83,37 @@ class RouteManager extends Manager
      * @param \MyPlugin\Sci\Route $route The route instance
      * @return \MyPlugin\Sci\Manager\RouteManager
      */
-    public function register($route)
+    public function register($route, $name = false)
     {
-        if (count($this->routes)) $this->routes[] = $route;
-        else $this->routes[1] = $route;
 
-        if (!$this->filters_added) {
+        if (!$name) {
+            if (count($this->routes)) {
+                $name = max(array_filter(array_keys($this->routes), 'is_int')) + 1;
+            } else {
+                $name = 1;
+            }
+        }
+
+        $this->routes[$name] = $route;
+
+        if (!$this->filtersAadded) {
             add_action( 'init', array($this,'addRewriteRulesAction'), 1);
             add_filter( 'query_vars', function( $query_vars ) {
-                $query_vars[] = 'Sci';
+                $query_vars[] = 'sci';
                 return $query_vars;
             }); 
             add_action( 'template_include', array($this,'loadControllerAction'), 10);
-            $this->filters_added = true;
+            $this->filtersAadded = true;
         }
+        //echo($this->cache[$route->regex]."<br/>");
+        if (!isset($this->cache[$route->regex]) || $this->cache[$route->regex] !== $name) {
 
-        if (!isset($this->cache[$route->regex])) {
-
-            if (!$this->rewrite_rules_flushed) {
+            if (!$this->rewriteRulesFlushed) {
                 add_action( 'init', array($this,'flushRewriteRules'), 1);
-                $this->rewrite_rules_flushed = true;
+                $this->rewriteRulesFlushed = true;
             }
-            $this->cache[$route->regex] = key($this->routes);
-            $this->saveCache();
+            
         }
-
         return $this;
     }
 
@@ -118,6 +121,11 @@ class RouteManager extends Manager
      * Flush rewrite rules
      */
     public function flushRewriteRules() {
+        $this->cache = [];
+        foreach($this->routes as $key => $route) {
+            $this->cache[$route->regex] = $key;
+        }
+        $this->saveCache();
         flush_rewrite_rules(true);
        
     }
@@ -132,7 +140,7 @@ class RouteManager extends Manager
         add_filter( 'generate_rewrite_rules', function ( $wp_rewrite ) {
             $routes = array();
             foreach($this->routes as $key => $route) {
-                $routes[$route->regex] = 'index.php?Sci='.$key;
+                $routes[$route->regex] = 'index.php?sci='.$key;
             }
             $wp_rewrite->rules = array_merge(
                 $routes,
@@ -144,70 +152,74 @@ class RouteManager extends Manager
 	}
 
     /**
-     * Load the action matching a route
+     * Load the action matching the requested route
+     * 
+     * @param string $template The WordPress template to load
+     * @return mixed
      */
     public function loadControllerAction($template)
     {
-        $Sci_var = get_query_var( 'Sci');
-        if ( $Sci_var ) {
+        $sciVar = get_query_var( 'sci');
 
-            if (isset($this->routes[$Sci_var]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$Sci_var]->getMethods())) {
-                global $wp;
-                $route = $this->routes[$Sci_var];
-                $action = $route->getAction();
+        if (!$sciVar) return $template;
 
-                preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
+        print_r( $this->routes[$sciVar]->getMethods());
+        echo("<br/>" .  "<br/>");
 
-                if (is_array($matches) && isset($matches[1])) {
-                    $count = 0;
-                    $paramNamesArr = array_keys($route->getParams());
-                    echo("<br/>");
-                    print_R($matches);
-                    foreach($matches as $key => $match) {
-                        if ($key > 0) {
-                            $this->params[$paramNamesArr[$count]] = $match[0];
-                            $count++;
-                        }
-                    }
-                }
 
-                $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-                if ($route->isAjax() !== $request_is_ajax) {
-                    return $template;
-                }
-
-                $includeLayout = $route->getContent() != 'json' && $route->getLayout() && !$request_is_ajax;
-                if ($includeLayout) {
-                    wp_head();
-                    get_header();
-                }
+        if (isset($this->routes[$sciVar]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$sciVar]->getMethods())) {
                 
-                if (is_string($action) && strpos($action, ".") && file_exists($action)) {
-                    include ($action);
-                } else if (is_callable( $action ) && !strpos($action, '::')){
-                        
-                    $f = new \ReflectionFunction($action);
-                    $params = array();
-                    foreach ($f->getParameters() as $param) {
-                        if (array_key_exists($param->name, $this->params)) {
-                            $params[$param->name] = $this->params[$param->name];
-                        }
+            global $wp;
+            $route = $this->routes[$sciVar];
+            $action = $route->getAction();
+
+            preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
+
+            if (is_array($matches) && isset($matches[1])) {
+                $count = 0;
+                $paramNamesArr = array_keys($route->getParams());
+                echo("<br/>");
+                foreach($matches as $key => $match) {
+                     if ($key > 0) {
+                        $this->params[$paramNamesArr[$count]] = $match[0];
+                        $count++;
                     }
-
-                    return call_user_func_array($action, $params);
-                }                      
-                else if (!empty($this->params)) {
-                   $this->Sci->get($action, $this->params); 
-                } else {
-                    $this->Sci->get($action);
                 }
-                if ($includeLayout) get_footer(); 
+            }
 
-            } else {
+            $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+            if ($route->isAjax() !== $request_is_ajax) {
                 return $template;
             }
+
+            $includeLayout = $route->getContent() != 'json' && $route->getLayout() && !$request_is_ajax;
+            if ($includeLayout) {
+                wp_head();
+                get_header();
+            }
+            //&& !strpos($action, '::')
+            if (is_string($action) && strpos($action, ".") && file_exists($action)) {
+                include ($action);
+            } else if (is_callable( $action )){
+                $f = new \ReflectionFunction($action);
+                $params = array();
+                foreach ($f->getParameters() as $param) {
+                    if (array_key_exists($param->name, $this->params)) {
+                        $params[$param->name] = $this->params[$param->name];
+                    }
+                }
+
+                return call_user_func_array($action, $params);
+            }                      
+            else if (!empty($this->params)) {
+                $this->sci->get($action, $this->params); 
+            } else {
+                $this->sci->get($action);
+            }
+            if ($includeLayout) get_footer(); 
+
         } else {
-            return $template;
+             return $template;
         }
     }
 }

@@ -28,6 +28,9 @@ class Route
     
     /** @var string $regex */
 	public $regex;
+
+	/** @var boolean $rest */
+	private $rest = false;
     
 	/** @var array $params */
 	private $params = array();
@@ -35,11 +38,11 @@ class Route
 	/** @var array $methods Request methods */
 	private $methods;
     
-    /** @var boolean $is_ajax Run only of it´s an ajax request */
-	private $is_ajax = false;
+    /** @var boolean $isAjax Run only of it´s an ajax request */
+	private $isAjax = false;
 
 	/** @var	string $layout Add wordpress layout */
-	private $add_layout = true;
+	private $addLayout = true;
 	
 	/** @var string $content If it´s html/file/json */
 	private $content = 'html';	
@@ -53,7 +56,8 @@ class Route
 	 */
 	public function __construct($methods, $route, $action)
 	{
-        $this->route_manager = \MyPlugin\Sci\Sci::instance()->routeManager();
+		$this->routeManager = \MyPlugin\Sci\Sci::instance()->routeManager();
+		$this->restManager = \MyPlugin\Sci\Sci::instance()->restManager();
 
         $this->methods = (array) $methods;
         foreach($this->methods as $key => $value) {
@@ -68,7 +72,7 @@ class Route
 
         if (is_array($matches) && isset($matches[1])) {
             foreach ((array) $matches[1] as $key => $match) {
-                $this->params[$match] = isset($matches[4][$key]) && $matches[4][$key] ? '('.$matches[4][$key].')' : "([A-Za-z0-9\-\_]+)";
+                $this->params[$match] = isset($matches[4][$key]) && $matches[4][$key] ? '(?P<'.$match.'>'.$matches[4][$key].')' : '(?P<'.$match.'>[A-Za-z0-9\-\_]+)';
                 if($matches[2][$key] == '?') {
                     $this->params[$match] = '?' . $this->params[$match] . '?';
                 }
@@ -77,7 +81,7 @@ class Route
         }
 
         $this->route = preg_replace('/\{(.*?)(\?)?(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
-        
+
         $this->generateRegex();
 
 		$this->action = $action;
@@ -85,10 +89,39 @@ class Route
 	}
 
 	/**
+	 * Add a route
+	 *
+	 * @param string $method The route request method
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
+	 * @return \MyPlugin\Sci\Route
+	 */
+    public static function create($method, $route, $action)
+    {
+        $route = new self($method, $route, $action);
+        return $route;
+    }
+
+	/**
+	 * Create and register a route
+	 *
+	 * @param string $method The route request method
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
+	 * @return \MyPlugin\Sci\Route
+	 */
+    public static function commit($method, $route, $action)
+    {
+		$route = new self($method, $route, $action);
+		$route->register();
+        return $route;
+    }
+
+	/**
 	 * Add a new route answering to the get method
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function get($route, $action)
@@ -101,8 +134,8 @@ class Route
 	/**
 	 * Add a new route answering to the post method
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function post($route, $action)
@@ -115,8 +148,8 @@ class Route
 	/**
 	 * Add a new route answering to the put method
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function put($route, $action)
@@ -129,8 +162,8 @@ class Route
 	/**
 	 * Add a new route answering to the patch method
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function patch($route, $action)
@@ -143,8 +176,8 @@ class Route
 	/**
 	 * Add a new route answering to the delete method
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function delete($route, $action)
@@ -155,15 +188,29 @@ class Route
     }
 
 	/**
+	 * Add a new route answering to the options method
+	 *
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
+	 * @return \MyPlugin\Sci\Route
+	 */
+    public static function options($route, $action)
+    {
+        $route = new self('options', $route, $action);
+        $route->register();
+        return $route;
+    }
+
+	/**
 	 * Add a new route answering all methods
 	 *
-	 * @param string $route
-	 * @param mixed $action
+	 * @param string $route The route expression
+	 * @param mixed $action The action, file or function
 	 * @return \MyPlugin\Sci\Route
 	 */
     public static function any($route, $action)
     {
-        $route = new self(['get', 'post', 'put', 'patch', 'delete'], $route, $action);
+        $route = new self(['get', 'post', 'put', 'patch', 'delete', 'options'], $route, $action);
         $route->register();
         return $route;
     }
@@ -182,35 +229,55 @@ class Route
         return $route;
     }    
 
-
 	/**
 	 * Add the route to the route manager
 	 *
 	 * @return \MyPlugin\Sci\Route
 	 */
-    public function register() {
-        $this->route_manager->register($this);
+    public function register($name = false) {
+		if ($this->rest) {
+			if ($name) $this->restManager->register($this, $name);
+			else $this->restManager->register($this);
+		} else {
+			if ($name) $this->routeManager->register($this, $name);
+			else $this->routeManager->register($this);
+		}
+
         return $this;
     }
 
 	/**
-	 * Add parameter description
+	 * Add parameter restrictions
 	 *
 	 * @return \MyPlugin\Sci\Route
 	 */		
     public function where(...$args)
     {
-		if (!is_array($args[0])) $args = array($args[0] => $args[1]);	
-        else $args = $args[0];
+		if (!is_array($args[0])) {
+			$args = array($args[0] => $args[1]);
+		} else {
+			$args = $args[0];
+		}
 		foreach ($args as $key => $arg) {
             $optionalCharacter = false;
             if (substr($this->params[$key], -1) == '?') {
-                $this->params[$key] = '?(' . $arg . ')?'; 
+				$this->params[$key] = '?(' . $arg . ')?'; 
             } else {
                 $this->params[$key] = '?(' . $arg . ')';
             }                
 		}
         $this->generateRegex();
+		return $this;
+	}
+	
+	/**
+	 * Set if this is a rest request
+	 *
+	 * @param boolean $value
+	 * @return \MyPlugin\Sci\Route
+	 */
+    public function rest($value = false) {
+		$this->rest = $value;
 		return $this;
     }
 
@@ -221,7 +288,7 @@ class Route
 	 */		
     public function ajax($value = true)
     {
-        $this->is_ajax = $value;
+        $this->isAjax = $value;
 		return $this;
     }
 
@@ -243,8 +310,18 @@ class Route
 	 */		
     public function layout($value = false)
     {
-        $this->add_layout = $value;
+        $this->addLayout = $value;
 		return $this;
+	}
+	
+    /**
+	 * Return if this is a rest route
+	 *
+	 * @return boolean
+	 */		
+    public function getRest()
+    {
+		return $rest;
     }
 
 	/**
@@ -258,8 +335,7 @@ class Route
         //$this->regex = '/^' .$this->route. '$/'
         foreach ($this->params as $key => $regex) {
             $this->regex = preg_replace("/(\{".$key."\})/", $regex, $this->regex);
-        }
-        echo($this->regex);echo("<br/>");
+		}
         return $this;
 	}
 
@@ -286,11 +362,11 @@ class Route
 	/**
 	 * Get if it´s an async route
 	 *
-	 * @return	Boolean
+	 * @return boolean
 	 */		
 	public function isAjax()
 	{
-		return $this->is_ajax;
+		return $this->isAjax;
 	}
 	
 	/**
@@ -310,7 +386,7 @@ class Route
 	 */		
 	public function getLayout()
 	{
-		return $this->add_layout;
+		return $this->addLayout;
 	}
     
 	/**
@@ -326,7 +402,7 @@ class Route
     /**
 	 * Get the parameters
 	 *
-	 * @return arrays
+	 * @return array
 	 */		
 	public function getParams()
 	{

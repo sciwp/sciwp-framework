@@ -155,7 +155,7 @@ class Autoloader
             'cache_enabled' => isset($config['cache_enabled']) ? $config['cache_enabled'] : false,
             'reflexive' => isset($config['reflexive']) ? $config['reflexive'] : false,
             'autoload' => isset($config['autoload']) ? $config['autoload'] : [],
-        ];
+		];
 	}
 
 
@@ -206,7 +206,8 @@ class Autoloader
         $class = trim($class);
 		$class_arr = explode('\\', $class);
 
-		if (count ($class_arr) < 2) return false; // Not a valid Sci namespace, as it should contain the base namespace and the class
+		// Not a valid Sci namespace, as it should contain at least the base namespace and the class
+		if (count ($class_arr) < 2) return false;
 
 		// Sci files
         if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
@@ -244,13 +245,14 @@ class Autoloader
 				if ($p['namespace'] == $class_arr[0]) {
 					$plugin = $p;
 				}
-                
+
                 $classToCache = $p['cache_enabled'] ? $class : false;
 
                 // Configured custom namespaces
                 foreach ($p['autoload'] as $keyAutoload => $folder) {
 
-                    $base = trim($keyAutoload,'\\');
+					$base = trim($keyAutoload,'\\');
+
                     if (substr($class, 0, strlen($base)) === $base ) {
 
                         $class_file = $p['dir']. '/'. trim($folder,'\/');

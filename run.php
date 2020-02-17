@@ -25,29 +25,6 @@ $cacheDir = plugin_dir_path( dirname(__FILE__) ) . 'cache/';
 $configCacheFile = $cacheDir . 'config.cache.php';
 
 /**
- * {Dynamic}ReplaceStringFunction
- * 
- * Replace a string in all files of a folder, dynamic function name to avoid collisions and improve
- * compatibility with bundled Sci plugins
- *
- * @param $replaceStringFunction The function to process the string
- * @param $folder The folder to search for files
- * @param $oldString The string to be replaced
- * @param $newString The replacement string
- */
-${$parsedPluginFolder.'ReplaceStringFunction'} = function($replaceStringFunction, $folder, $oldString, $newString)
-{
-    foreach (glob($folder."/*.php") as $filename) {
-        $file_content = file_get_contents($filename);
-        file_put_contents($filename, strtr($file_content, [$oldString => $newString]));
-    }
-    $dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
-    foreach($dirs as $dir) {
-        $replaceStringFunction($replaceStringFunction, $dir, $oldString, $newString);
-    }
-};
-
-/**
  * {Dynamic}ReplacePatternFunction
  * 
  * Replace a string in all files of a folder, dynamic function name to avoid collisions and improve
@@ -91,14 +68,14 @@ $config = file_exists($configFile) ? include $configFile : [];
 
 $configCache = file_exists($configCacheFile) ? include $configCacheFile : ['namespace' => null, 'autoloader' => ['cache' => null]];
 
-$rebuildNamespace =  !isset($configCache['namespace'])
-            || !isset($configCache['parsed_plugin_folder'])
+$rebuildNamespace = !isset($configCache['parsed_plugin_folder'])
             || (isset($config['rebuild']) && $config['rebuild'] === true)
-            || (isset($config['rebuild_plugin']) && $config['rebuild_plugin'] === true)
-            || (isset($config['namespace']) && $config['namespace'] !== $configCache['namespace'])
+            || (isset($config['rebuild_code']) && $config['rebuild_code'] === true)
+            || (isset($config['namespace']) && $config['namespace'] !== __NAMESPACE__)
             || ucfirst($configCache['parsed_plugin_folder']) !== ucfirst($parsedPluginFolder);
 
 if ($rebuildNamespace) {
+
     if (isset($config['namespace']) && $config['namespace']) {
         $namespace = $config['namespace'];
     } else {
@@ -124,54 +101,18 @@ if ($rebuildNamespace) {
         });
     }
 
-    if (!isset($configCache['namespace']) || $namespace !== $configCache['namespace']) {
-
-        $newCoreNamespace = $namespace . '\Sci';
-        $oldCoreNamespace = NULL;
-        $oldNamespace = NULL;
-        $sciFile = plugin_dir_path( __FILE__ ) . 'Sci.php';
-        $handle = fopen($sciFile, "r") or die('The old namespace in the Sci Trait was not found');
+    if ($namespace !== __NAMESPACE__) {
     
-        if (!$handle) return;
-    
-        while (($line = fgets($handle)) !== false) {
-            if (strpos($line, 'namespace') === 0) {
-                $parts = preg_split('/\s+/', $line);
-                $oldCoreNamespace = rtrim(trim($parts[1]), ';');
-                $oldNamespace = preg_split('/\\\+/', $oldCoreNamespace)[0];
-                break;
-            }
-        }
-    
-        fclose($handle);
-    
-        if ($oldCoreNamespace !== $newCoreNamespace) {
-    
-            if (!isset($config['rebuild_plugin']) || $config['rebuild_plugin'] !== true) { 
-                // Update SCIWP Framework namespaces
-                //$replaceStringFunction($replaceStringFunction, dirname(__FILE__), $oldCoreNamespace, $newCoreNamespace);
+        // Update just SCIWP or both code and SCIWP Framework namespaces
+        $baseDir = !isset($config['rebuild_code']) || $config['rebuild_code'] !== true ? dirname(__FILE__) : dirname(__DIR__, 1);
 
-                ${$parsedPluginFolder . 'ReplaceStringFunction'}(
-                    ${$parsedPluginFolder . 'ReplaceStringFunction'},
-                    dirname(__FILE__),
-                    $oldCoreNamespace,
-                    $newCoreNamespace
-                );
+        ${$parsedPluginFolder . 'ReplacePatternFunction'}(
+            ${$parsedPluginFolder . 'ReplacePatternFunction'},
+            $baseDir,
+            __NAMESPACE__,
+             $namespace
+        );
 
-            } else {
-                // Update both code and SCIWP Framework namespaces
-               //$replacePatternFunction($replacePatternFunction, dirname(__DIR__, 1), $oldNamespace, $namespace);
-
-                ${$parsedPluginFolder . 'ReplacePatternFunction'}(
-                    ${$parsedPluginFolder . 'ReplacePatternFunction'},
-                    dirname(__DIR__, 1),
-                    $oldNamespace,
-                    $namespace
-                );
-            }
-        }
-
-        $configCache['namespace'] = $namespace;
         $configCache['plugin_folder'] = $pluginFolder;
         $configCache['parsed_plugin_folder'] = $parsedPluginFolder;
 
@@ -180,7 +121,7 @@ if ($rebuildNamespace) {
         or die('Cannot write the file:  '.$configCacheFile);
 
         header("Refresh:0");
-        die("Please wait, gnome engineers are updating plugin namespace...");
+        wp_die('Please wait, gnome engineers are updating plugin namespace...', 'SCIWP Framework');
     }
 }
 
@@ -197,17 +138,13 @@ if (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== 
     or die('Cannot write the file:  '.$autoloadCacheFile);
 }
 
-// Require the Autoloader
-$namespace = isset($configCache['namespace']) && $configCache['namespace'] ? $configCache['namespace'] :
-             (isset($config['namespace']) && $config['namespace'] ? $config['namespace'] : ucfirst($parsedPluginFolder));
-
 // Start the autoloader and Sci
 require plugin_dir_path( __FILE__ ) . 'Autoloader.php';
 
-if(class_exists('\\' . $namespace . '\Sci\Autoloader')) {
-    $autoloaderClass = '\\' . $namespace . '\Sci\Autoloader';
+if(class_exists('\\' . __NAMESPACE__ . '\Sci\Autoloader')) {
+    $autoloaderClass = '\\' . __NAMESPACE__ . '\Sci\Autoloader';
     $autoloaderClass::start();
-    $sciClass = '\\'.$namespace.'\Sci\Sci';
+    $sciClass = '\\'. __NAMESPACE__ .'\Sci\Sci';
 
     return $sciClass::instance()->init();
 }

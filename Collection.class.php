@@ -46,22 +46,17 @@ class Collection implements Interfaces\CollectionInterface
     /**
      * Determine if an item exists in the collection
      *
-     * @param  mixed  $key
-     * @param  mixed  $operator
      * @param  mixed  $value
      * @return bool
      */
-    public function contains($value, $operator = null, $comparedValue = null)
+    public function contains($value)
     {
         if (func_num_args() === 1) return in_array($value, $this->items);
 
         $key = array_search($value, $this->items);
         if ($key === false) return false;
-
-
-        $this->contains($this->operatorForWhere(...func_get_args()));
+        return true;
     }
-
 
 	/**
 	 * Get all the items
@@ -77,13 +72,83 @@ class Collection implements Interfaces\CollectionInterface
 	/**
 	 * Get an element
 	 *
-	 * @param string $id
+	 * @param string|number|null $key
+	 * @since 1.0.0
+	 * @return mixed
+	 */
+	public function get($key =  null)
+	{
+		if ($key == null) return $this->all();
+
+		if (isset($this->items[$key])) return $this->items[$key];
+
+		if (strpos($key, '/') === false) return false;
+
+		$itemsArr = $this->items;
+		$pathArr = explode("/",trim($key, '/'));
+
+		foreach ($pathArr as $subKey) {
+			if (!isset($itemsArr[$subKey])) {
+				return false;
+			} else {
+				$itemsArr = $itemsArr[$subKey];
+			}
+		}
+
+		return $itemsArr;
+	}
+
+	/**
+	 * Check an element
+	 *
+	 * @param string $key
+	 * @param string $value
 	 * @since 1.0.0
 	 * @return object|static
 	 */
-	public function get($key)
+	public function check($key, $value)
 	{
-		return isset($this->items[$key]) ? $this->items[$key] : false;
+		if (isset($this->items[$key]) && $this->items[$key] === $value) return true;
+		return false;
+	}
+
+	/**
+	 * Get the length of an element
+	 *
+	 * @param string $key
+	 * @param integer $length
+	 * @since 1.0.0
+	 * @return integer|boolean
+	 */
+	public function length($key, $length = null)
+	{
+		if (!isset($this->items[$key])) return false;
+
+		if (is_string($this->items[$key])) {
+			if($length === null) return strlen($this->items[$key]);
+			else return strlen($this->items[$key]) === $length;
+		}
+
+		if (is_array($this->items[$key])) {
+			if($length === null)  return count($this->items[$key]);
+			else return count($this->items[$key]) === $length;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Set a value for an element
+	 *
+	 * @param string $key
+	 * @param string $value
+	 * @since 1.0.0
+	 * @return $this
+	 */
+	public function set($key, $value)
+	{
+		$this->items[$key]  = $value;
+		return $this;
 	}	
 
 	/**
@@ -97,19 +162,18 @@ class Collection implements Interfaces\CollectionInterface
 	public function add($key, $item = null)
 	{
 		if (is_array($key)) {
-			foreach ($key as $key => $item) {
-                $this->item[$key] = $item;
-			}
+			$this->items = $key + $this->items;
 		} else {
-            $this->item[$key] = $item;
+            $this->items[$key] = $item;
 		}
+
 		return $this;
 	}
 
 	/**
 	 * Remove an item
 	 *
-	 * @param string|array $element_id
+	 * @param string|array $key
 	 * @return $this
 	 */
  	public function remove($key)
