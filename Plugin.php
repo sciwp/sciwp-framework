@@ -61,7 +61,7 @@ class Plugin
     protected $pluginManager;
    
     /** @var Array $autoloaderCache The Plugin text domain dir path  */
-    private $autoloaderCache;       
+    private $autoloaderCache;
 
     /** @var Collection $config Collection to store config data */
     public $config;

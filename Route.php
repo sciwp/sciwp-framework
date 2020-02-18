@@ -38,14 +38,11 @@ class Route
 	/** @var array $methods Request methods */
 	private $methods;
     
-    /** @var boolean $isAjax Run only of it´s an ajax request */
-	private $isAjax = false;
+    /** @var boolean $ajax Run only of it's an ajax request */
+	private $ajax = false;
 
-	/** @var	string $layout Add wordpress layout */
-	private $addLayout = true;
-	
-	/** @var string $content If it´s html/file/json */
-	private $content = 'html';	
+	/** @var string $layout Add wordpress layout */
+	private $layout = true;
 
 	/**
 	 * Class constructor
@@ -57,7 +54,6 @@ class Route
 	public function __construct($methods, $route, $action)
 	{
 		$this->routeManager = \MyPlugin\Sci\Sci::instance()->routeManager();
-		$this->restManager = \MyPlugin\Sci\Sci::instance()->restManager();
 
         $this->methods = (array) $methods;
         foreach($this->methods as $key => $value) {
@@ -112,7 +108,7 @@ class Route
 	 */
     public static function commit($method, $route, $action)
     {
-		$route = new self($method, $route, $action);
+		$route = self::create($method, $route, $action);
 		$route->register();
         return $route;
     }
@@ -126,8 +122,7 @@ class Route
 	 */
     public static function get($route, $action)
     {
-        $route = new self('get', $route, $action);
-        $route->register();
+		$route = self::create('get', $route, $action);
         return $route;
     }
     
@@ -140,8 +135,7 @@ class Route
 	 */
     public static function post($route, $action)
     {
-        $route = new self('post', $route, $action);
-        $route->register();
+		$route = self::create('post', $route, $action);
         return $route;
     }
 
@@ -154,9 +148,8 @@ class Route
 	 */
     public static function put($route, $action)
     {
-       $route = new self('put', $route, $action);
-       $route->register();
-       return $route;
+		$route = self::create('put', $route, $action);
+		return $route;
     }
 
 	/**
@@ -168,9 +161,8 @@ class Route
 	 */
     public static function patch($route, $action)
     {
-        $route = new self('patch', $route, $action);
-        $route->register();
-        return $route;
+		$route = self::create('patch', $route, $action);
+		return $route;
     }
 
 	/**
@@ -182,9 +174,8 @@ class Route
 	 */
     public static function delete($route, $action)
     {
-        $route = new self('delete', $route, $action);
-        $route->register();
-        return $route;
+		$route = self::create('delete', $route, $action);
+		return $route;
     }
 
 	/**
@@ -196,9 +187,8 @@ class Route
 	 */
     public static function options($route, $action)
     {
-        $route = new self('options', $route, $action);
-        $route->register();
-        return $route;
+		$route = self::create('options', $route, $action);
+		return $route;
     }
 
 	/**
@@ -210,45 +200,27 @@ class Route
 	 */
     public static function any($route, $action)
     {
-        $route = new self(['get', 'post', 'put', 'patch', 'delete', 'options'], $route, $action);
-        $route->register();
-        return $route;
+		$route = self::create(['get', 'post', 'put', 'patch', 'delete', 'options'], $route, $action);
+		return $route;
     }
-
-	/**
-	 * Add a new route answering the selected methods
-	 *
-	 * @param string $route
-	 * @param mixed $action
-	 * @return \MyPlugin\Sci\Route
-	 */
-    public static function match($methods, $route, $action)
-    {
-        $route = new self($methods, $route, $action);
-        $route->register();
-        return $route;
-    }    
 
 	/**
 	 * Add the route to the route manager
 	 *
 	 * @return \MyPlugin\Sci\Route
 	 */
-    public function register($name = false) {
-		if ($this->rest) {
-			if ($name) $this->restManager->register($this, $name);
-			else $this->restManager->register($this);
-		} else {
-			if ($name) $this->routeManager->register($this, $name);
-			else $this->routeManager->register($this);
-		}
-
+	public function register($name = false)
+	{
+		if ($name) $this->routeManager->register($this, $name);
+		else $this->routeManager->register($this);
         return $this;
     }
 
 	/**
 	 * Add parameter restrictions
 	 *
+	 * @param string|array $args[0] Parameter name or array
+	 * @param string $args[1] Regex restriction
 	 * @return \MyPlugin\Sci\Route
 	 */		
     public function where(...$args)
@@ -269,17 +241,6 @@ class Route
         $this->generateRegex();
 		return $this;
 	}
-	
-	/**
-	 * Set if this is a rest request
-	 *
-	 * @param boolean $value
-	 * @return \MyPlugin\Sci\Route
-	 */
-    public function rest($value = false) {
-		$this->rest = $value;
-		return $this;
-    }
 
 	/**
 	 * Set the request to accept async calls
@@ -288,18 +249,7 @@ class Route
 	 */		
     public function ajax($value = true)
     {
-        $this->isAjax = $value;
-		return $this;
-    }
-
-    /**
-	 * Set the response type
-	 *
-	 * @return \MyPlugin\Sci\Route
-	 */		
-    public function content($value = 'html')
-    {
-        $this->content = $value;
+        $this->ajax = $value;
 		return $this;
     }
 
@@ -310,19 +260,9 @@ class Route
 	 */		
     public function layout($value = false)
     {
-        $this->addLayout = $value;
+        $this->layout = $value;
 		return $this;
 	}
-	
-    /**
-	 * Return if this is a rest route
-	 *
-	 * @return boolean
-	 */		
-    public function getRest()
-    {
-		return $rest;
-    }
 
 	/**
 	 * Generate regular expression
@@ -348,6 +288,74 @@ class Route
 	{
 		return $this->action;
 	}
+
+
+    public function loadAction()
+    {
+        global $wp;
+		$requestParams = [];
+
+        preg_match_all('/'.$this->regex.'/', $wp->request, $matches);
+
+        if (is_array($matches) && isset($matches[1])) {
+            $count = 0;
+			$paramNamesArr = array_keys($this->params);
+
+            foreach($matches as $key => $match) {
+                if ($key > 0 && $match[0]) {
+                    $requestParams[$paramNamesArr[$count]] = $match[0];
+                    $count++;
+                }
+            }
+		}
+		
+        if ($this->layout && !$this->ajax) {
+            wp_head();
+            get_header();
+        }
+		
+		if (is_string($this->action) && strpos($this->action, ".") && file_exists($this->action)) {
+            include ($this->action);
+        } else if (is_callable( $this->action )){
+
+			$f = new \ReflectionFunction($this->action);
+			$callParams = array();
+
+            foreach ($f->getParameters() as $key => $param) {
+				if ($param->getClass()) {
+					if (isset($requestParams[$param->getName()]) && is_array($requestParams[$param->getName()])) {
+				
+						$callParams[] = Sci::make($param->getClass()->name, $requestParams[$param->getName()]);
+					} else {
+
+						// it's a funcion or a static method
+						$callParams[] = Sci::make($param->getClass()->name);
+					}
+				} else {
+					// If it is a simple parameter
+					if (isset($requestParams[$param->getName()])) {
+						$callParams[] =  $requestParams[$param->getName()];
+					} else if ($param->isDefaultValueAvailable()) {
+						$callParams[] = $param->getDefaultValue();
+					}
+				}
+			}
+			
+			return call_user_func_array($this->action, $callParams);
+			//return call_user_func_array($this->action, $params);
+	
+
+        } else if (!empty($requestParams)) {
+            Sci::make($this->action, $requestParams); 
+        } else {
+            Sci::make($this->action);
+		}
+
+		if ($this->layout && !$this->ajax) {
+			get_footer();
+		}
+    }
+
     
     /**
 	 * Get the request methods
@@ -364,20 +372,11 @@ class Route
 	 *
 	 * @return boolean
 	 */		
-	public function isAjax()
+	public function getAjax()
 	{
-		return $this->isAjax;
+		return $this->ajax;
 	}
-	
-	/**
-	 * Get the content type of the response
-	 *
-	 * @return string
-	 */		
-	public function getContent()
-	{
-		return $this->content;
-	}
+
 
 	/**
 	 * Get if the response has WordPress layout
@@ -386,7 +385,7 @@ class Route
 	 */		
 	public function getLayout()
 	{
-		return $this->addLayout;
+		return $this->layout;
 	}
     
 	/**

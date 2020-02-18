@@ -125,7 +125,8 @@ if ($rebuildNamespace) {
     }
 }
 
-if (isset($config['autoloader']['cache']) && $config['autoloader']['cache'] !== $configCache['autoloader']['cache']) {
+
+if (isset($config['autoloader']['cache']) /*&& $config['autoloader']['cache'] !== $configCache['autoloader']['cache']*/) {
 
     $configCache['autoloader']['cache'] = $config['autoloader']['cache'];
     

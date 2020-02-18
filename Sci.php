@@ -226,6 +226,59 @@ class Sci
     }
 
     /**
+     * Get parameters from a method and match them to the current parameters
+     * 
+     * Works with both numeric and string keys, used with routes
+     * 
+     * @param string $className The class name
+     * @param string $className The method name
+     * @param array $params The requested parameters
+     * @return array
+     */
+    public function getMethodParams($className, $methodName, $args)
+    {
+        if ($methodName == '__construct') {
+            $reflectionClass= new \ReflectionClass($className);
+            $reflectionMethod = $reflectionClass->getConstructor();
+        } else {
+            $reflectionMethod = new \ReflectionMethod($className, $methodName);
+        }
+
+        if (!$reflectionMethod->getParameters()) return $args;
+
+        $callParams = array();
+        foreach ($reflectionMethod->getParameters() as $key => $param) {
+
+            $isObject = false;
+            if (isset($args[$param->getName()])) $isObject = isset($args[$param->getName()]);
+            else if (isset($args[$key])) $isObject = isset($args[$key]);
+
+            if ($param->getClass() && !$isObject) {
+                 if (isset($args[$param->getName()]) && is_array($args[$param->getName()])) {
+                    $callParams[] = self::make($param->getClass()->name, $args[$param->getName()]);
+                    unset($args[$param->getName()]);
+                 } else if (isset($args[$key]) && is_array($args[$key])) {
+                    $callParams[] = self::make($param->getClass()->name, $args[$key]);
+                } else {
+                    $callParams[] = self::make($param->getClass()->name);
+                }
+             } else {
+				if (isset($args[$param->getName()])  ) {
+                    $callParams[] = $args[$param->getName()];
+                    unset($args[$param->getName()]);
+                } else if (isset($args[$key])  ) {
+					$callParams[] = $args[$key];
+                }
+                else if ($param->isDefaultValueAvailable()) {
+					$callParams[] = $param->getDefaultValue();
+				}
+			}
+        }
+
+        return $callParams;
+    }
+
+    /**
      * Allows to get an instace of any class, injecting the dependences when possible
      * 
      * @param \Object $class_name The classto instantiate
@@ -233,13 +286,13 @@ class Sci
      */    
     public static function make($class_name, $params = array())
     {
-        $Sci = self::instance();
+        $sci = self::instance();
         
-		$class_method_name = false;
+		$classMethodName = false;
 		$class_method = false;
 
 		if (is_array($class_name) && count($class_name) == 2) {
-			$class_method_name = $class_name[1];
+			$classMethodName = $class_name[1];
 			$class_name   = $class_name[0];
 		} 
 
@@ -247,64 +300,47 @@ class Sci
             if (strpos($class_name, '@') !== false) {
                 $arr = explode('@',$class_name);
                 $class_name   = $arr[0];
-                $class_method_name = $arr[1];
-                $instance = $Sci->get($class_name);
-                return call_user_func_array(array($instance, $class_method_name), $params);
+                $classMethodName = $arr[1];
+                $instance = $sci->get($class_name);
+                $callParams = $sci->getMethodParams($class_name, $classMethodName, $params);
+                return call_user_func_array(array($instance, $classMethodName), $callParams);
+                //return self::make([$instance, $classMethodName], $params);
             } else if (strpos($class_name, '::') !== false) {
                 $arr = explode('::',$class_name);
                 $class_name   = $arr[0];
-                $class_method_name = $arr[1];
-                return call_user_func_array(array($class_name, $class_method_name), $params); 
+                $classMethodName = $arr[1];
+                return call_user_func_array(array($class_name, $classMethodName), $params); 
             }
         }
 
-        if (is_string($class_name) && isset($Sci->aliases[$class_name])) {
-            $class_name = $Sci->aliases[$class_name];
+        if (is_string($class_name) && isset($sci->aliases[$class_name])) {
+            $class_name = $sci->aliases[$class_name];
         }
-        else if (is_string($class_name) && isset($Sci->bindings[$class_name])) {
-            $class_name = $Sci->bindings[$class_name];
+        else if (is_string($class_name) && isset($sci->bindings[$class_name])) {
+            $class_name = $sci->bindings[$class_name];
         }
         
         if(is_object($class_name)) {
-            $class_name->Sci = self::instance();
+            $class_name->sci = self::instance();
             return $class_name;
         }
 
 		$reflector = new \ReflectionClass($class_name);
 		$constructor = $reflector->getConstructor();
 
-        if (self::classUsesTrait($class_name, Singleton::class) && !$class_method_name) $class_method_name = 'instance';
-        if ($class_name == self::class) $class_method_name = 'instance';
+        if (self::classUsesTrait($class_name, Singleton::class) && !$classMethodName) $classMethodName = 'instance';
+        if ($class_name == self::class) $classMethodName = 'instance';
         
 		// Singleton or static class
-		if ( ($constructor && !$constructor->isPublic()) || $class_method_name) {
-			if ($class_method_name) {
-
-				$class_method = $reflector->getMethod ($class_method_name);
-				if($class_method->getParameters()) {
-					$instances = array();
-
-					foreach ($class_method->getParameters() as $key => $parameter) {
-						if ($parameter->getClass()) {
-							if (isset($params[$key]) && is_array($params[$key])) {
-								$instances[] = self::get($parameter->getClass()->name, $params[$key]);
-							}
-							else {
-								$instances[] = self::get($parameter->getClass()->name);
-							}
-						}
-						else {
-							$instances[] = isset($params[$key]) ? $params[$key] : null;
-						}
-					}
-					return call_user_func_array(array($reflector->getName(), $class_method_name), $instances);
-				}
-				else if(count($params)) {
-					return call_user_func_array(array($reflector->getName(), $class_method_name), $params);
-				}
-				else {
-					return call_user_func(array($reflector->getName(), $class_method_name));
-				}
+		if ( ($constructor && !$constructor->isPublic()) || $classMethodName) {
+			if ($classMethodName) {
+                $class_method = $reflector->getMethod ($classMethodName);
+				if(count($params)) {
+                    $callParams = $sci->getMethodParams($class_name, $classMethodName, $params);
+					return call_user_func_array(array($reflector->getName(), $classMethodName), $class_method);
+				} else {
+                    return call_user_func(array($reflector->getName(), $classMethodName));
+                }
 			}
 			else {
 				return $reflector->getName();
@@ -313,30 +349,17 @@ class Sci
 		// New object instance
 		else {
             if ($constructor) {
-                $instances = array();
-                foreach ($constructor->getParameters() as $key => $parameter) {
-                    if ($parameter->getClass()) {
-                        if (isset($params[$key]) && is_array($params[$key])) {
-                            $instances[] = self::get($parameter->getClass()->name, $params[$key]);
-                        }
-                        else {
-                            $instances[] = self::get($parameter->getClass()->name);
-                        }
-                    }
-                    else {
-                        $instances[] = isset($params[$key]) ? $params[$key] : null;
-                    }
-                }
-                $instance = $reflector->newInstanceArgs($instances);
+                $callParams = $sci->getMethodParams($class_name, '__construct', $params);
+                $instance = $reflector->newInstanceArgs($callParams);
             } else {
                 $instance = $reflector->newInstance();
             }
-            $instance->Sci = self::instance();
+            $instance->sci = self::instance();
             
             // Check creation functions
             $class_name_index = ltrim($class_name, "\\");
-            if (isset($Sci->created[$class_name_index])) {
-                foreach ($Sci->created[$class_name_index] as $function) {
+            if (isset($sci->created[$class_name_index])) {
+                foreach ($sci->created[$class_name_index] as $function) {
                     if (is_callable($function) ) {
                         
                         if (is_array($function)) {

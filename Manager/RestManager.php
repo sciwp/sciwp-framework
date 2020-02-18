@@ -4,11 +4,10 @@ namespace MyPlugin\Sci\Manager;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use \MyPlugin\Sci\Manager;
-use \MyPlugin\Sci\Route;
-use \MyPlugin\Sci\Helpers\Url;
+use \MyPlugin\Sci\Rest;
 
 /**
- * Route Manager
+ * Rest Manager
  *
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>
@@ -24,71 +23,18 @@ class RestManager extends Manager
     /** @var array $routes Stores a list of the registered routes */
     private $routes = array();
 
-	/** @var boolean $filtersAadded If the WP filters have been added or not. */
-	private $filtersAadded = false;
-
-	/** @var array $segments Segments in the url */
-	private $segments = array();    
-	
-	/** @var array $params Parameters to pass to the action function or method */
-	private $params = array();
-    
-    /** @var array $cache Stores de cached rewrite rules */
-	public $cache = array();
-    
-    /** @var string $dirCache Stores de cache file fir path */
-	private $dirCache;
-    
-    /** @var string $fileCache Stores de cache file path */
-	private $fileCache;
-    
-    /** @var boolean $rewriteRulesFlushed Stores if the rules have been flushed */
-	private $rewriteRulesFlushed = false;
-
-	/**
-	 * Class constructor
-	 */
-	protected function __construct(){
-        $this->dirCache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
-        $this->fileCache = $this->dirCache . 'route.cache.php';
-        $this->cache = is_file($this->fileCache) ? (array) include $this->fileCache : [];
-    }
-    
-	/**
-	 * Saves the route cache
-	 *
-	 * @return	bool
-	 */
-	public function saveCache()
-	{
-        if (!file_exists($this->dirCache)) mkdir($this->dirCache);
-		file_put_contents($this->fileCache, '<?php return ' . var_export($this->cache, true) . ';')
-        or die('Cannot write the file:  '.$this->fileCache);
-	}
-
-	/**
-	 * Add a new route
-     *
-	 * @var $route
-     * @var $action
-	 * @return string
-	 */	
-	public function route($methods, $route, $action) 
-	{
-		$route = new Route($methods, $route, $action);
-        $this->register($route);
-		return $route;
-	}
+	/** @var boolean $isActionInit If the WP actions have been added or not. */
+	private $isActionInit = false;
 
     /**
      * Register a new route into the route manager
      *
      * @param \MyPlugin\Sci\Route $route The route instance
+     * @param string $name The route name
      * @return \MyPlugin\Sci\Manager\RouteManager
      */
     public function register($route, $name = false)
     {
-
         if (!$name) {
             if (count($this->routes)) {
                 $name = max(array_filter(array_keys($this->routes), 'is_int')) + 1;
@@ -99,41 +45,28 @@ class RestManager extends Manager
 
         $this->routes[$name] = $route;
 
-        if (!$this->filtersAadded) {
+        if (!$this->isActionInit) {
             add_action( 'rest_api_init', [$this,'addRestRoutes'], 1);
-            $this->filtersAadded = true;
+            $this->isActionInit = true;
         }
-
 
         return $this;
     }
 
     /**
-     * Generate rewrite rules when fushed
+     * Add routes to WordPress
      *
-     * @return \MyPlugin\Sci\Manager\RouteManager
+     * @return \MyPlugin\Sci\Manager\RestManager
      */
-	public function addRestRoutes() 
+	public function addRestRoutes()
 	{
         foreach($this->routes as $key => $route) {
-            register_rest_route('myplugin/v2', $route->regex, array(
+            register_rest_route($route->getNamespace(), $route->regex, array(
                 'methods' => $route->getMethods(),
-                'callback' => [$this, 'loadAction'],
+                'callback' => [$route, 'loadAction'],
             ));
         }        
 
         return $this;
 	}
-
-    /**
-     * Load the action matching the requested route
-     * 
-     * @param string $template The WordPress template to load
-     * @return mixed
-     */
-    public function loadAction() {
-
-        //echo("------------------------------------------");
-    }
-
 }

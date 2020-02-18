@@ -5,7 +5,6 @@ defined('WPINC') OR exit('No direct script access allowed');
 
 use \MyPlugin\Sci\Manager;
 use \MyPlugin\Sci\Route;
-use \MyPlugin\Sci\Helpers\Url;
 
 /**
  * Route Manager
@@ -63,24 +62,11 @@ class RouteManager extends Manager
         or die('Cannot write the file:  '.$this->fileCache);
 	}
 
-	/**
-	 * Add a new route
-     *
-	 * @var $route
-     * @var $action
-	 * @return string
-	 */	
-	public function route($methods, $route, $action) 
-	{
-		$route = new Route($methods, $route, $action);
-        $this->register($route);
-		return $route;
-	}
-
     /**
      * Register a new route into the route manager
      *
      * @param \MyPlugin\Sci\Route $route The route instance
+     * @param string $name The route name
      * @return \MyPlugin\Sci\Manager\RouteManager
      */
     public function register($route, $name = false)
@@ -102,7 +88,7 @@ class RouteManager extends Manager
                 $query_vars[] = 'sci';
                 return $query_vars;
             }); 
-            add_action( 'template_include', array($this,'loadControllerAction'), 10);
+            add_action( 'template_include', array($this,'loadRouteAction'), 10);
             $this->filtersAadded = true;
         }
         //echo($this->cache[$route->regex]."<br/>");
@@ -149,7 +135,21 @@ class RouteManager extends Manager
         });
         
         return $this;
+    }
+
+    /**
+     * Return if the current request is ajax
+     *
+     * @return boolean
+     */
+	public function isAjax() 
+	{
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            return true;
+        }
+        return false;
 	}
+
 
     /**
      * Load the action matching the requested route
@@ -157,69 +157,20 @@ class RouteManager extends Manager
      * @param string $template The WordPress template to load
      * @return mixed
      */
-    public function loadControllerAction($template)
+    public function loadRouteAction($template)
     {
         $sciVar = get_query_var( 'sci');
 
         if (!$sciVar) return $template;
+        
+        if (!isset($this->routes[$sciVar])) return $template;
+        
+        $route = $this->routes[$sciVar];
 
-        print_r( $this->routes[$sciVar]->getMethods());
-        echo("<br/>" .  "<br/>");
+        if (!in_array($_SERVER['REQUEST_METHOD'], $route->getMethods())) return $template;     
 
+        if ($route->getAjax() !== $this->isAjax())  return $template;
 
-        if (isset($this->routes[$sciVar]) && in_array($_SERVER['REQUEST_METHOD'], $this->routes[$sciVar]->getMethods())) {
-                
-            global $wp;
-            $route = $this->routes[$sciVar];
-            $action = $route->getAction();
-
-            preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
-
-            if (is_array($matches) && isset($matches[1])) {
-                $count = 0;
-                $paramNamesArr = array_keys($route->getParams());
-                echo("<br/>");
-                foreach($matches as $key => $match) {
-                     if ($key > 0) {
-                        $this->params[$paramNamesArr[$count]] = $match[0];
-                        $count++;
-                    }
-                }
-            }
-
-            $request_is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-            if ($route->isAjax() !== $request_is_ajax) {
-                return $template;
-            }
-
-            $includeLayout = $route->getContent() != 'json' && $route->getLayout() && !$request_is_ajax;
-            if ($includeLayout) {
-                wp_head();
-                get_header();
-            }
-            //&& !strpos($action, '::')
-            if (is_string($action) && strpos($action, ".") && file_exists($action)) {
-                include ($action);
-            } else if (is_callable( $action )){
-                $f = new \ReflectionFunction($action);
-                $params = array();
-                foreach ($f->getParameters() as $param) {
-                    if (array_key_exists($param->name, $this->params)) {
-                        $params[$param->name] = $this->params[$param->name];
-                    }
-                }
-
-                return call_user_func_array($action, $params);
-            }                      
-            else if (!empty($this->params)) {
-                $this->sci->get($action, $this->params); 
-            } else {
-                $this->sci->get($action);
-            }
-            if ($includeLayout) get_footer(); 
-
-        } else {
-             return $template;
-        }
+        $route->loadAction();
     }
 }
