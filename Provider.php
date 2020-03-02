@@ -1,6 +1,8 @@
 <?php
 namespace MyPlugin\Sci;
 
+use \MyPlugin\Sci\Manager\ProviderManager;
+
 defined('ABSPATH') OR exit('No direct script access allowed');
 
 /**
@@ -16,23 +18,64 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  */
 class Provider
 {
+	use \MyPlugin\Sci\Traits\Sci;
+
     /** @var array $bindings Class bindings that should be registered. */
     public $bindings;
 
     /** @var array $singletons Class singletons that should be registered. */
     public $singletons;
 
+	/** @var \MyPlugin\Sci\Manager\ProviderManager $providerManager */
+	private $providerManager;
+
 	/**
-	 * Register elements in the Sci container
-	 */			
-	public function register()
+	 * Class constructor
+     *
+     * @var \MyPlugin\Sci\Manager\ProviderManager $providerManager
+	 * @return \MyPlugin\Sci\Provider
+	 */
+	public function __construct(ProviderManager $providerManager)
 	{
+		$this->providerManager = $providerManager;
 	}
+
+	/**
+	 * Add a provider
+	 *
+	 * @return \MyPlugin\Sci\Provider
+	 */
+    public static function create()
+    {
+        return Sci::make(self::class); 
+	}
+	
+	/**
+	 * Add the provider to the provider manager
+	 *
+	 * @return \MyPlugin\Sci\Provider
+	 */
+	public function register($name = false)
+	{
+		if ($name) {
+			$this->providerManager->register($this, $name);
+		} else {
+			$this->providerManager->register($this);
+		}
+        return $this;
+    }
+
+	/**
+	 * Executed when the provider is registered
+	 */
+    public function start()
+	{
+    }
 
 	/**
 	 * Executed when all plugins are loaded
 	 */	    
     public function boot()
-	{ 
-    }   
+	{
+    }
 }

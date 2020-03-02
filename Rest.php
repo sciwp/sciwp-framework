@@ -20,7 +20,10 @@ defined('WPINC') OR exit('No direct script access allowed');
 class Rest
 {
     use \MyPlugin\Sci\Traits\Sci;
-    
+	
+	/** @var \WP_REST_Request $request WordPress request */
+	private static $request;
+
     /** @var string $namespace */
 	public $namespace;
 
@@ -41,6 +44,9 @@ class Rest
 
 	/** @var array $methods Request methods */
 	private $methods;
+
+	/** @var array $args Route args */
+	private $args = [];
 
 	/**
 	 * Class constructor
@@ -83,6 +89,15 @@ class Rest
 
 		$this->action = $action;
         return $this;
+	}
+
+	/**
+	 * Return the request object
+	 *
+	 * @return \WP_REST_Request
+	 */
+	public static function request() {
+		return self::$request;
 	}
 
 	/**
@@ -257,12 +272,24 @@ class Rest
 		foreach ($args as $key => $arg) {
             $optionalCharacter = false;
             if (substr($this->params[$key], -1) == '?') {
-				$this->params[$key] = '?(' . $arg . ')?'; 
+				$this->params[$key] = '?(?P<'.$key.'>' . $arg . ')?'; 
             } else {
-                $this->params[$key] = '?(' . $arg . ')';
+                $this->params[$key] = '(?P<'.$key.'>' . $arg . ')';
             }                
 		}
         $this->generateRegex();
+		return $this;
+	}
+
+	/**
+	 * Add WP args
+	 *
+	 * @param string|array $args array of args
+	 * @return \MyPlugin\Sci\Rest
+	 */		
+    public function args($args)
+    {
+		$this->args = (array) $args;
 		return $this;
 	}
 
@@ -303,60 +330,71 @@ class Rest
     /**
      * Load the action matching the requested route
      * 
-     * @param string $template The WordPress template to load
+     * @param \WP_REST_Request $request The WordPress request object
      * @return mixed
      */
-    public function loadAction(\WP_REST_Request $request) {
+	public function loadAction(\WP_REST_Request $request)
+	{
+		global $wp;
+		
+		self::$request =  $request;
 
-        /*
-        $param = $request->get_param( 'id' );
-        $numargs =func_get_args();
-        return($param);
-        */
+		$requestParams = [];
 
+        preg_match_all('/'.$this->regex.'/', $wp->request, $matches);
 
-                
-            global $wp;
+        if (is_array($matches) && isset($matches[1])) {
+            $count = 0;
+			$paramNamesArr = array_keys($this->params);
 
-
-
-            /*
-            $action = $route->getAction();
-
-            preg_match_all('/'.$route->getRegex().'/', $wp->request, $matches);
-
-            if (is_array($matches) && isset($matches[1])) {
-                $count = 0;
-                $paramNamesArr = array_keys($route->getParams());
-                echo("<br/>");
-                foreach($matches as $key => $match) {
-                     if ($key > 0) {
-                        $this->params[$paramNamesArr[$count]] = $match[0];
-                        $count++;
-                    }
+            foreach($matches as $key => $match) {
+                if ($key > 0 && $match[0]) {
+                    $requestParams[$paramNamesArr[$count]] = $match[0];
+                    $count++;
                 }
             }
-            */
+		}
 
-            if (is_string($this->action) && strpos($this->action, ".") && file_exists($this->action)) {
-                include ($this->action);
-            } else if (is_callable( $this->action )){
-                $f = new \ReflectionFunction($this->action);
-                $params = array();
-                foreach ($f->getParameters() as $param) {
-                    if (array_key_exists($param->name, $this->params)) {
-                        $params[$param->name] = $this->params[$param->name];
-                    }
-                }
+		if (is_string($this->action)) {
 
-                return call_user_func_array($this->action, $params);
-            }                      
-            else if (!empty($this->params)) {
-                $this->sci->get($this->action, $this->params); 
-            } else {
-                $this->sci->get($this->action);
-            }
+			if (strpos($this->action, ".") && file_exists($this->action)) {
+				return include ($this->action);
+			} else if (!empty($requestParams)) {
+				return Sci::make($this->action, $requestParams); 
+			} else {
+				return Sci::make($this->action);
+			}
 
+        } else if (is_callable( $this->action )){
+
+			$f = new \ReflectionFunction($this->action);
+			$callParams = array();
+
+            foreach ($f->getParameters() as $key => $param) {
+				if ($param->getClass()) {
+					if (isset($requestParams[$param->getName()]) && is_array($requestParams[$param->getName()])) {
+				
+						$callParams[] = Sci::make($param->getClass()->name, $requestParams[$param->getName()]);
+					} else {
+
+						// it's a funcion or a static method
+						$callParams[] = Sci::make($param->getClass()->name);
+					}
+				} else {
+					// If it is a simple parameter
+					if (isset($requestParams[$param->getName()])) {
+						$callParams[] =  $requestParams[$param->getName()];
+					} else if ($param->isDefaultValueAvailable()) {
+						$callParams[] = $param->getDefaultValue();
+					}
+				}
+			}
+
+			return call_user_func_array($this->action, $callParams);
+
+        } else {
+            return Sci::make($this->action);
+		}		
     }
 
     /**
@@ -377,6 +415,16 @@ class Rest
 	public function getRegex()
 	{
 		return $this->regex;
+	}
+
+	/**
+	 * Get the route args
+	 *
+	 * @return array
+	 */		
+	public function getArgs()
+	{
+		return $this->args;
 	}
 
     /**

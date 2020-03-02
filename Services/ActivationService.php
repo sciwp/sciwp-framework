@@ -4,7 +4,7 @@ namespace MyPlugin\Sci\Services;
 defined('ABSPATH') OR exit('No direct script access allowed');
 
 /**
- * Autoloader Class
+ * ActivationService Class
  *
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>

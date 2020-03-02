@@ -4,7 +4,7 @@ namespace MyPlugin\Sci\Services;
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * Autoloader Class
+ * DeactivationService Class
  *
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>

@@ -71,10 +71,14 @@ class RouteManager extends Manager
      */
     public function register($route, $name = false)
     {
-
         if (!$name) {
             if (count($this->routes)) {
-                $name = max(array_filter(array_keys($this->routes), 'is_int')) + 1;
+                $numericKeys = array_filter(array_keys($this->routes), 'is_int');
+                if (count($numericKeys)) {
+                    $name = max($numericKeys) + 1;
+                } else {
+                    $name = 1;
+                }
             } else {
                 $name = 1;
             }
@@ -91,7 +95,7 @@ class RouteManager extends Manager
             add_action( 'template_include', array($this,'loadRouteAction'), 10);
             $this->filtersAadded = true;
         }
-        //echo($this->cache[$route->regex]."<br/>");
+
         if (!isset($this->cache[$route->regex]) || $this->cache[$route->regex] !== $name) {
 
             if (!$this->rewriteRulesFlushed) {
@@ -113,7 +117,6 @@ class RouteManager extends Manager
         }
         $this->saveCache();
         flush_rewrite_rules(true);
-       
     }
 
     /**
@@ -125,9 +128,11 @@ class RouteManager extends Manager
 	{
         add_filter( 'generate_rewrite_rules', function ( $wp_rewrite ) {
             $routes = array();
+
             foreach($this->routes as $key => $route) {
                 $routes[$route->regex] = 'index.php?sci='.$key;
             }
+
             $wp_rewrite->rules = array_merge(
                 $routes,
                 $wp_rewrite->rules
@@ -138,11 +143,11 @@ class RouteManager extends Manager
     }
 
     /**
-     * Return if the current request is ajax
+     * Return if the current request is async
      *
      * @return boolean
      */
-	public function isAjax() 
+	public function isAsync() 
 	{
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             return true;
@@ -162,14 +167,14 @@ class RouteManager extends Manager
         $sciVar = get_query_var( 'sci');
 
         if (!$sciVar) return $template;
-        
+
         if (!isset($this->routes[$sciVar])) return $template;
-        
+
         $route = $this->routes[$sciVar];
 
         if (!in_array($_SERVER['REQUEST_METHOD'], $route->getMethods())) return $template;     
 
-        if ($route->getAjax() !== $this->isAjax())  return $template;
+        if ($route->getAsync() !== $this->isAsync())  return $template;
 
         $route->loadAction();
     }

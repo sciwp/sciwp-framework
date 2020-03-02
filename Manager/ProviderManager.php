@@ -4,6 +4,7 @@ namespace MyPlugin\Sci\Manager;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use \MyPlugin\Sci\Manager;
+use \MyPlugin\Sci\Provider;
 
 /**
  * Provider Manager
@@ -22,9 +23,11 @@ class ProviderManager extends Manager
     /** @var array $providers Stores a list of the registered providers */
     private $providers = array();
 	
-    /**
-     * @param Autoloader $autoloader
-     */    
+	/**
+	 * Class constructor
+     *
+     * @return \MyPlugin\Sci\Manager\ProviderManager
+	 */
 	protected function __construct()
     {
         add_action( 'plugins_loaded', array($this, 'boot'), 1 );
@@ -41,22 +44,22 @@ class ProviderManager extends Manager
         foreach ((array)$providers as $provider) {
             
             if(!is_object($provider)) {
-                $provider = $this->Sci->get($provider);
+                $provider = $this->Sci::make($provider);
             }
 
-            if (!is_subclass_of($provider, '\MyPlugin\Sci\Provider')) {
+            if (!is_subclass_of($provider, Provider::class)) {
                 throw new Exception('Only child classes or instances of the Provider class are accepted.');
             }
 
             $this->providers[] = $provider;
-            $provider->register();
+            $provider->start();
         }
     }
 
     /**
      * Calls the boot method for all the providers
      * 
-     * @return Plugin
+     * @return \MyPlugin\Sci\Manager\ProviderManager;
      */
     public function boot()
     {

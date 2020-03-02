@@ -1,13 +1,13 @@
 <?php
-namespace MyPlugin\Sci\Manager;
+namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \MyPlugin\Sci\Manager;
-use \MyPlugin\Sci\Rest;
+use \WP_Error;
+use \MyPlugin\Sci\Traits\Singleton;
 
 /**
- * Rest Manager
+ * Response
  *
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>
@@ -18,13 +18,18 @@ use \MyPlugin\Sci\Rest;
  * @since		Version 1.0.0 
  */
 
-class RestManager extends Manager
+class Response
 {
-    /** @var array $routes Stores a list of the registered routes */
-    private $routes = array();
+    use Singleton;
 
-	/** @var boolean $isActionInit If the WP actions have been added or not. */
-	private $isActionInit = false;
+    /** @var integer $status The response status code */
+    private $status = 200;
+
+	/** @var string $format The response format */
+	private $format = 'json';
+
+	/** @var string $content The response content */
+	private $content = '';
 
     /**
      * Register a new route into the route manager
@@ -35,7 +40,13 @@ class RestManager extends Manager
      */
     public function register($route, $name = false)
     {
-        if (!$name) $name = $this->getRoutesNextArrKey();
+        if (!$name) {
+            if (count($this->routes)) {
+                $name = max(array_filter(array_keys($this->routes), 'is_int')) + 1;
+            } else {
+                $name = 1;
+            }
+        }
 
         $this->routes[$name] = $route;
 
@@ -45,22 +56,6 @@ class RestManager extends Manager
         }
 
         return $this;
-    }
-
-    /**
-     * Get next array numeric key
-     *
-     * @return \MyPlugin\Sci\Manager\RouteManager
-     */
-    public function getRoutesNextArrKey()
-    {
-        if (count($this->routes)) {
-            $numericKeys = array_filter(array_keys($this->routes), 'is_int');
-            if (count($numericKeys)) {
-                return max($numericKeys) + 1;
-            }
-        }
-        return 1;
     }
 
     /**
@@ -74,7 +69,6 @@ class RestManager extends Manager
             register_rest_route($route->getNamespace(), $route->regex, array(
                 'methods' => $route->getMethods(),
                 'callback' => [$route, 'loadAction'],
-                'args' => $route->getArgs(),
             ));
         }        
 

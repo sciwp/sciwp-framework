@@ -38,11 +38,14 @@ class Route
 	/** @var array $methods Request methods */
 	private $methods;
     
-    /** @var boolean $ajax Run only of it's an ajax request */
-	private $ajax = false;
+    /** @var boolean $async Run only of it's an ajax request */
+	private $async = false;
 
 	/** @var string $layout Add wordpress layout */
 	private $layout = true;
+
+	/** @var \MyPlugin\Sci\Manager\RouteManager $routeManager */
+	private $routeManager;
 
 	/**
 	 * Class constructor
@@ -71,10 +74,10 @@ class Route
                 $this->params[$match] = isset($matches[4][$key]) && $matches[4][$key] ? '(?P<'.$match.'>'.$matches[4][$key].')' : '(?P<'.$match.'>[A-Za-z0-9\-\_]+)';
                 if($matches[2][$key] == '?') {
                     $this->params[$match] = '?' . $this->params[$match] . '?';
-                }
+				}
                 /** NEW PARAM: add order, regex and name. Then, add to a request object, which will be linked to the current route */
             }           
-        }
+		}
 
         $this->route = preg_replace('/\{(.*?)(\?)?(\|((.*?)({.*})?)?)?\}/', '{$1}', $route); 
 
@@ -233,9 +236,9 @@ class Route
 		foreach ($args as $key => $arg) {
             $optionalCharacter = false;
             if (substr($this->params[$key], -1) == '?') {
-				$this->params[$key] = '?(' . $arg . ')?'; 
+				$this->params[$key] = '?(?P<'.$key.'>' . $arg . ')?'; 
             } else {
-                $this->params[$key] = '?(' . $arg . ')';
+                $this->params[$key] = '(?P<'.$key.'>' . $arg . ')';
             }                
 		}
         $this->generateRegex();
@@ -247,9 +250,9 @@ class Route
 	 *
 	 * @return \MyPlugin\Sci\Route
 	 */		
-    public function ajax($value = true)
+    public function async($value = true)
     {
-        $this->ajax = $value;
+        $this->async = $value;
 		return $this;
     }
 
@@ -309,13 +312,21 @@ class Route
             }
 		}
 		
-        if ($this->layout && !$this->ajax) {
+        if ($this->layout && !$this->async) {
             wp_head();
             get_header();
         }
 		
-		if (is_string($this->action) && strpos($this->action, ".") && file_exists($this->action)) {
-            include ($this->action);
+		if (is_string($this->action)) {
+
+			if (strpos($this->action, ".") && file_exists($this->action)) {
+				include ($this->action);
+			} else if (!empty($requestParams)) {
+				Sci::make($this->action, $requestParams); 
+			} else {
+				Sci::make($this->action);
+			}
+
         } else if (is_callable( $this->action )){
 
 			$f = new \ReflectionFunction($this->action);
@@ -342,20 +353,15 @@ class Route
 			}
 			
 			return call_user_func_array($this->action, $callParams);
-			//return call_user_func_array($this->action, $params);
-	
 
-        } else if (!empty($requestParams)) {
-            Sci::make($this->action, $requestParams); 
         } else {
             Sci::make($this->action);
 		}
 
-		if ($this->layout && !$this->ajax) {
+		if ($this->layout && !$this->async) {
 			get_footer();
 		}
     }
-
     
     /**
 	 * Get the request methods
@@ -372,9 +378,9 @@ class Route
 	 *
 	 * @return boolean
 	 */		
-	public function getAjax()
+	public function getAsync()
 	{
-		return $this->ajax;
+		return $this->async;
 	}
 
 
