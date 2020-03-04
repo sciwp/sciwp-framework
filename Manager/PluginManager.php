@@ -68,7 +68,7 @@ class PluginManager extends Manager
         $this->autoloader::addPlugin($pluginId, $autoloadData);
 
         if ($providers = $plugin->config->get('providers')) {
-            $this->Sci->providers()->register((Array) $providers);
+            $this->Sci->providerManager()->register((Array) $providers);
         }
         
         return $this->plugins[$pluginId];

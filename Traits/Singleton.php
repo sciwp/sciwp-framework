@@ -67,9 +67,9 @@ trait Singleton
                 foreach ($constructor->getParameters() as $key => $parameter) {
                     if ($parameter->getClass()) {
                         if (isset($args[$key]) && is_array($args[$key])) {
-                            $inst_args[] = Sci::get($parameter->getClass()->name, $args[$key]);
+                            $inst_args[] = Sci::make($parameter->getClass()->name, $args[$key]);
                         } else {
-                            $inst_args[] = Sci::get($parameter->getClass()->name);
+                            $inst_args[] = Sci::make($parameter->getClass()->name);
                         }
                     } else {
                         $inst_args[] = isset($args[$key]) ? $args[$key] : null;

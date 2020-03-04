@@ -221,7 +221,7 @@ class Plugin
      */
     public function templateManager ()
     {
-        if (!$this->template_manager) $this->template_manager = $this->Sci->get(TemplateManager::class, [$this->dir]);
+        if (!$this->template_manager) $this->template_manager = Sci::make(TemplateManager::class, [$this->dir]);
         return $this->template_manager;
     }
 

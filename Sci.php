@@ -1,4 +1,5 @@
 <?php
+
 namespace MyPlugin\Sci;
 
 use \MyPlugin\Sci\Manager\PluginManager;
@@ -68,11 +69,11 @@ class Sci
 	 */    
     public function init ()
     {
-        $this->pluginManager = self::get(PluginManager::class);
-        $this->templateManager = self::get(TemplateManager::class);
-        $this->providerManager = self::get(ProviderManager::class);
-        $this->routeManager = self::get(RouteManager::class);
-        $this->restManager = self::get(RestManager::class);
+        $this->pluginManager = self::make(PluginManager::class);
+        $this->templateManager = self::make(TemplateManager::class);
+        $this->providerManager = self::make(ProviderManager::class);
+        $this->routeManager = self::make(RouteManager::class);
+        $this->restManager = self::make(RestManager::class);
         return $this;
     }
 
@@ -121,6 +122,16 @@ class Sci
      *
      * @return ProviderManager
      */       
+    public function providerManager()
+    {
+        return $this->providerManager;
+    }
+
+    /**
+     * Get the provider manager
+     *
+     * @return ProviderManager
+     */       
     public function providers()
     {
         return $this->providerManager;
@@ -134,16 +145,6 @@ class Sci
     public function templateManager()
     {
         return $this->templateManager;
-    }
-
-    /**
-     * Get the route manager
-     *
-     * @return RouteManager
-     */
-    public function router()
-    {
-        return $this->routeManager;
     }
 
     /**
@@ -174,7 +175,6 @@ class Sci
      */
     public function __call($name, $arguments)
     {
-        if ($name === 'get') return self::make(...$arguments);
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
     }
@@ -187,7 +187,6 @@ class Sci
      */
     public static function __callStatic($name, $arguments)
     {
-        if ($name === 'get') return self::make(...$arguments);
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
     }
