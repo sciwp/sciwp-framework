@@ -57,6 +57,7 @@ class TemplateService
 	 */
 	public function init($plugin)
 	{
+        /*
         $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin);
 
         $templates = $this->plugin->config()->get('templates');
@@ -71,6 +72,7 @@ class TemplateService
             }
             $this->template($key, $template); 
         }
+        */
 
         return $this;
     }

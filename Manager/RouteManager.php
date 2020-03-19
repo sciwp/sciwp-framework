@@ -71,18 +71,7 @@ class RouteManager extends Manager
      */
     public function register($route, $name = false)
     {
-        if (!$name) {
-            if (count($this->routes)) {
-                $numericKeys = array_filter(array_keys($this->routes), 'is_int');
-                if (count($numericKeys)) {
-                    $name = max($numericKeys) + 1;
-                } else {
-                    $name = 1;
-                }
-            } else {
-                $name = 1;
-            }
-        }
+        if (!$name) $name = $this->getRoutesNextArrKey();
 
         $this->routes[$name] = $route;
 
@@ -105,6 +94,22 @@ class RouteManager extends Manager
             
         }
         return $this;
+    }
+
+    /**
+     * Get next array numeric key
+     *
+     * @return integer
+     */
+    public function getRoutesNextArrKey()
+    {
+        if (count($this->routes)) {
+            $numericKeys = array_filter(array_keys($this->routes), 'is_int');
+            if (count($numericKeys)) {
+                return max($numericKeys) + 1;
+            }
+        }
+        return 1;
     }
 
     /**

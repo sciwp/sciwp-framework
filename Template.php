@@ -22,9 +22,6 @@ class Template
 {
     /** @var \MyPlugin\Sci\Manager\TemplateManager $templateManager The Sci template manager */
     protected $templateManager;
-    
-	/** @var string $key The template key */
-	protected $key;
 
 	/** @var string $path The template path relative to the plugin base folder */
 	protected $path;
@@ -41,15 +38,14 @@ class Template
     /**
      * Create a new template
      *
-     * @param string|array $key The template key
-     * @param string $template The template file or array with the other fields
+     * @param string $template|array The template file or array with the other fields
      * @param string $name The name to display in WordPress for the template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
      */
-    public function __construct($key, $template = false, $name = false, $postTypes = false, $themePath = false)
+    public function __construct($template = false, $name = false, $postTypes = false, $themePath = false)
     {
-        $this->templateManager = TemplateManager::instance();
+        $this->templateManager = \MyPlugin\Sci\Sci::instance()->templateManager();
 
         if (is_array($template)) {
 
@@ -75,7 +71,6 @@ class Template
             $path = $template;
         }
 
-        $this->key = $key;
         $this->path = $path;
         $this->name = $name;
         $this->postTypes = $postTypes ? (array) $postTypes : [];
@@ -86,26 +81,27 @@ class Template
 	/**
 	 * Add a new template
 	 *
-     * @param string|array $key Plugin array data or the template key
+     * @param string $template The template file or array with the other fields
      * @param string $name The name to display in WordPress for the template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
 	 * @return \MyPlugin\Sci\Template
 	 */
-    public static function create($key, $template = false, $name = false, $postTypes = false, $themePath = false)
+    public static function create($template = false, $name = false, $postTypes = false, $themePath = false)
     {
-        $template = new self($key, $template, $name, $postTypes, $themePath);
-        $template->register();
-        return $template;
+        $template = new self($template, $name, $postTypes, $themePath);
+        return  $template;
     }
 
     /**
      * Add the template to the template manager
-     *
+     * @param string $key The template key
      * @return \MyPlugin\Sci\Template
      */
-    public function register() {
-        $this->templateManager->register($this);     
+    public function register($key = false)
+    {
+		if ($key) $this->templateManager->register($this, $key);
+		else $this->templateManager->register($this);
         return $this;
     }
 
@@ -114,7 +110,8 @@ class Template
      *
      * @return string
      */
-    public function getPath() {
+    public function getPath()
+    {
         return $this->path;
     }
 
@@ -123,7 +120,8 @@ class Template
      *
      * @return string
      */
-    public function getThemePath() {
+    public function getThemePath()
+    {
         return get_theme_root() . '/'. get_stylesheet() . '/' . ltrim($this->themePath, '/');
     }
 
@@ -132,17 +130,9 @@ class Template
      *
      * @return string
      */
-    public function getName() {
+    public function getName()
+    {
         return $this->name;  
-    }
-
-    /**
-     * Returns the key
-     *
-     * @return string
-     */
-    public function getKey() {
-        return $this->key;  
     }
 
     /**
@@ -150,7 +140,8 @@ class Template
      *
      * @return array
      */
-    public function getPostTypes() {
+    public function getPostTypes()
+    {
         return $this->postTypes;
     }
 

@@ -50,7 +50,7 @@ class RestManager extends Manager
     /**
      * Get next array numeric key
      *
-     * @return \MyPlugin\Sci\Manager\RouteManager
+     * @return integer
      */
     public function getRoutesNextArrKey()
     {
