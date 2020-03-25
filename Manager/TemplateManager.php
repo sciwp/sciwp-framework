@@ -25,7 +25,10 @@ class TemplateManager extends Manager
 	private $templates = array();
 
 	/** @var boolean $filtersAdded If the WP filters have been added or not. */
-	private $filtersAdded = false;
+    private $filtersAdded = false;
+    
+    /** @var string[] $postTypesWithTemplates The post types with templates. */
+	private $postTypesWithTemplates = [];
 
     /**
      * Add a new template to the template manager
@@ -34,15 +37,21 @@ class TemplateManager extends Manager
      * @param \MyPlugin\Sci\Template $template The template identification name
      * @return \MyPlugin\Sci\Manager\TemplateManager
      */
-	public function register($template, $key)
+	public function register($template, $key = false)
 	{
         if (!is_object($template) || !($template instanceof \MyPlugin\Sci\Template)) {
-            throw new Exception('Only instances of the Template class can be regsitered.');
+            throw new Exception('Only instances of the Template class can be registered.');
         }
 
         if (!$key) $key = $this->getTemplatesNextArrKey();
 
         $this->templates[$key] = $template;
+
+        foreach ($template->getPostTypes() as $postType) {
+            if (!in_array($postType, $this->postTypesWithTemplates)) {
+                $this->postTypesWithTemplates[] = $postType;
+            }
+        }
 
         if (!$this->filtersAdded) {
             $this->addFilters();
@@ -88,11 +97,81 @@ class TemplateManager extends Manager
 
 		// Add a filter to the template include to determine if the page has our template assigned and return it's path
 		add_filter('template_include', [$this, 'viewTemplate']);
-        
+
+        // Page attributes support for post types with templates
+        add_action( 'admin_init', [$this, 'addPageAttributesSupport'] );
+
+        // Add Attributes meta box to custom post types with page-attributes option enabled
+        add_action( 'add_meta_boxes', [$this, 'addPostTypeTemplateDropdown'] );
+        add_action( 'save_post', [$this, 'addSaveTemplateAction'] );
+
         // To avoid repeating this action
         $this->filtersAdded = true;
         return $this;
 	}
+
+    /**
+     * Add support for page-attributes
+     * 
+     * @param string $postType The name of the the post type
+     * 
+     * @return void
+     */
+    function addPageAttributesSupport()
+    {
+        foreach ($this->postTypesWithTemplates as $postType) {
+            if (!post_type_supports($postType, 'page-attributes') ) {
+                add_post_type_support( $postType, 'page-attributes' );
+            }
+        }
+    }
+
+    /**
+     * Add the attributes meta box to posts with page-attributes enabled
+     * 
+     * @return void
+     */
+    function addPostTypeTemplateDropdown()
+    {
+        global $post;
+        if ( 'page' != $post->post_type && post_type_supports($post->post_type, 'page-attributes') ) {
+            add_meta_box( 'custompageparentdiv', __('Template'), [$this, 'addPostTypeAttributesMetaBox'], NULL, 'side', 'core');
+        }
+    }
+
+    /**
+     * Add the attributes meta box with the template selector
+     * 
+     * @param \WP_POST $post The post object
+     * @return void
+     */
+    function addPostTypeAttributesMetaBox($post)
+    {
+        $template = get_post_meta( $post->ID, '_wp_page_template', 1 );
+        ?>
+        <select name="page_template" id="page_template">
+            <?php $default_title = apply_filters( 'default_page_template_title',  __( 'Default Template' ), 'meta-box' ); ?>
+            <option value="default"><?php echo esc_html( $default_title ); ?></option>
+            <?php page_template_dropdown($template); ?>
+        </select>
+        <?php
+    }
+    
+    /**
+     * Save the selected template
+     * 
+     * @param int $postId The id of the post which will be saved
+     * @return void
+     */
+    function addSaveTemplateAction( $postId )
+    {
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+        if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) return;
+        if ( ! current_user_can( 'edit_post', $postId ) ) return;
+        if ( ! empty( $_POST['page_template'] ) && get_post_type( $postId ) != 'page' ) {
+            update_post_meta( $postId, '_wp_page_template', $_POST['page_template'] );
+        }
+    }
 
 	/**
 	 * Adds our template to the page dropdown for v4.7+

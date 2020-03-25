@@ -3,10 +3,10 @@ namespace MyPlugin\Sci\Services;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \MyPlugin\Sci\Template;
-use \MyPlugin\Sci\Plugin;
-use \MyPlugin\Sci\Manager\TemplateManager;
-use \Exception;
+use MyPlugin\Sci\Template;
+use MyPlugin\Sci\Plugin;
+use MyPlugin\Sci\Manager\TemplateManager;
+use Exception;
 
 
 /**
@@ -34,17 +34,36 @@ class TemplateService
         $this->templateManager = $templateManager;
     }
 
-    public function template($key, $template, $name = false, $post_types = false, $theme_path = false)
+    /**
+     * Allows to add a template using a relative route
+     * 
+     * @param string $template The plugin relative route to the template file
+     * @param string $name The name to display in WordPress for the template
+     * @param string|array $postTypes The post type or post types to add to the template
+     * @param string $themePath The path relative to the theme where the plugin should also look for
+     * @return void
+     */
+    public function template($template, $name = false, $post_types = false, $theme_path = false)
     {
-        $templateInstance = Template::create($key, $template, $name, $post_types, $theme_path);
-        $this->templateManager->register($templateInstance);
-        return $templateInstance;
+        if (is_array($tempate)) {
+            $tempate['path'] = $this->plugin->getDir() . '/' . $tempate['path'];
+        } else {
+            $tempate = $this->plugin->getDir() . '/' . $template;
+        }
+        
+        return Template::create($template, $name, $post_types, $theme_path);
     }
     
-    public function templates($tempate_data_arr)
+    /**
+     * Allows to add a set of templates in array format
+     * 
+     * @param array $tempatesDataArr Set of arrays with template data
+     * @return void
+     */
+    public function templates($tempatesDataArr)
     {
-        foreach ($tempate_data_arr as $key => $tempate_data){
-            $this->template($key, $tempate_data);
+        foreach ($tempatesDataArr as $key => $tempateData) {
+            $this->template($tempateData)->register($key);
         }
         return $this;
     }
@@ -57,10 +76,10 @@ class TemplateService
 	 */
 	public function init($plugin)
 	{
-        /*
         $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin);
 
         $templates = $this->plugin->config()->get('templates');
+        
         if (!$templates) return;
 
         foreach ( (array) $templates as $key => $template) {
@@ -68,11 +87,15 @@ class TemplateService
             if (is_array($template)) {
                 $template['path'] = $this->plugin->getDir() . '/' . $template['path'];
             } else {
-                $template = $this->plugin->getDir() . '/' . $template;
+                $template = [
+                    'path' => $this->plugin->getDir() . '/' . $template,
+                    'name' => $key,
+                    'post_types' => ['post']
+                ];
             }
-            $this->template($key, $template); 
+
+            Template::create($template)->register($key);
         }
-        */
 
         return $this;
     }

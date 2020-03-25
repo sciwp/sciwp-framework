@@ -3,6 +3,7 @@ namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use Exception;
 use \MyPlugin\Sci\Plugin;
 use \MyPlugin\Sci\Manager\TemplateManager;
 
@@ -43,7 +44,7 @@ class Template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
      */
-    public function __construct($template = false, $name = false, $postTypes = false, $themePath = false)
+    public function __construct($template, $name = false, $postTypes = false, $themePath = false)
     {
         $this->templateManager = \MyPlugin\Sci\Sci::instance()->templateManager();
 
@@ -59,22 +60,23 @@ class Template
                 $name = $template['name'];
             }
 
-            if (!$postTypes && isset($template['postTypes'])) {
-                $postTypes = $template['postTypes'];
+            if (!$postTypes && isset($template['post_types'])) {
+                $postTypes = $template['post_types'];
             }
 
-            if (!$themePath && isset($template['themePath'])) {
-                $themePath = $template['themePath'];
+            if (!$themePath && isset($template['theme_path'])) {
+                $themePath = $template['theme_path'];
             }
 
         } else {
             $path = $template;
         }
 
+        if (!$name) throw new Exception('A template name is required.');
+
         $this->path = $path;
         $this->name = $name;
         $this->postTypes = $postTypes ? (array) $postTypes : [];
-
         if ($themePath) $this->themePath = $themePath;
     }
 
@@ -87,7 +89,7 @@ class Template
      * @param string $themePath The path relative to the theme where the plugin should also look for
 	 * @return \MyPlugin\Sci\Template
 	 */
-    public static function create($template = false, $name = false, $postTypes = false, $themePath = false)
+    public static function create($template, $name = false, $postTypes = false, $themePath = false)
     {
         $template = new self($template, $name, $postTypes, $themePath);
         return  $template;
@@ -100,8 +102,8 @@ class Template
      */
     public function register($key = false)
     {
-		if ($key) $this->templateManager->register($this, $key);
-		else $this->templateManager->register($this);
+        if (!$key) $key = str_replace(' ', '-', strtolower($this->name));
+        $this->templateManager->register($this, $key);
         return $this;
     }
 
