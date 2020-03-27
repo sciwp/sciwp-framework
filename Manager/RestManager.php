@@ -26,6 +26,16 @@ class RestManager extends Manager
 	/** @var boolean $isActionInit If the WP actions have been added or not. */
 	private $isActionInit = false;
 
+	/**
+	 * Class constructor
+     *
+     * @return \MyPlugin\Sci\Manager\RestManager
+	 */
+	protected function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * Register a new route into the route manager
      *

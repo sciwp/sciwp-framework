@@ -30,6 +30,7 @@ class ProviderManager extends Manager
 	 */
 	protected function __construct()
     {
+        parent::__construct();
         add_action( 'plugins_loaded', array($this, 'boot'), 1 );
     }
 
@@ -44,7 +45,7 @@ class ProviderManager extends Manager
         foreach ((array)$providers as $provider) {
             
             if(!is_object($provider)) {
-                $provider = $this->Sci::make($provider);
+                $provider = $this->sci::make($provider);
             }
 
             if (!is_subclass_of($provider, Provider::class)) {

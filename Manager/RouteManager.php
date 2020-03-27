@@ -44,7 +44,9 @@ class RouteManager extends Manager
 	/**
 	 * Class constructor
 	 */
-	protected function __construct(){
+    protected function __construct()
+    {
+        parent::__construct();
         $this->dirCache = dirname(dirname(substr(plugin_dir_path( __FILE__ ), 0, -1))) . '/cache/';
         $this->fileCache = $this->dirCache . 'route.cache.php';
         $this->cache = is_file($this->fileCache) ? (array) include $this->fileCache : [];

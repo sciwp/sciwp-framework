@@ -19,16 +19,16 @@ defined('WPINC') OR exit('No direct script access allowed');
 trait Sci
 {
     /** @var SciMain $Sci Stores the Sci reference */
-    public $Sci;
+    public $sci;
 
     /**
      * Get the main Sci class instance
      */
     public function Sci()
     {
-        if ($this->Sci === null) {
-            $this->Sci = SciMain::instance();
+        if ($this->sci === null) {
+            $this->sci = SciMain::instance();
         }
-        return $this->Sci;
+        return $this->sci;
     }
 }

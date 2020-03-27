@@ -3,6 +3,7 @@ namespace MyPlugin\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use \MyPlugin\Sci\Sci;
 use \MyPlugin\Sci\Traits\Singleton;
 
 /**
@@ -20,4 +21,15 @@ use \MyPlugin\Sci\Traits\Singleton;
 class Manager
 {
     use Singleton;
+
+    /** @var $sci The Sci class reference */
+    protected $sci;
+
+	/**
+	 * Class constructor
+	 */
+	protected function __construct()
+    {
+        $this->sci = Sci::class;
+    }
 }

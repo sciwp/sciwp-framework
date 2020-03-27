@@ -39,7 +39,7 @@ class Template
     /**
      * Create a new template
      *
-     * @param string $template|array The template file or array with the other fields
+     * @param string|array $template The template file or array with the other fields
      * @param string $name The name to display in WordPress for the template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for

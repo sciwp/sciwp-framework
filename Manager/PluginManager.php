@@ -26,11 +26,12 @@ class PluginManager extends Manager
     /** @var array $plugins Stores a list of the registered plugins */
     private $plugins = array();
 
-     /** @var Autoloader $autoloader Reference to the Autoloader class */
+     /** @var $autoloader Reference to the Autoloader class */
 	private $autoloader;
 	
 	public function __construct()
 	{
+        parent::__construct();
         $this->autoloader = Autoloader::class;
 	}
 

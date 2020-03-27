@@ -46,7 +46,7 @@ class Plugin
     private $url;
     
     /** @var Array $name  The Plugin config cache array */
-    private $configCache ;
+    private $configCache;
     
     /** @var string $textDomain The Plugin text domain  */
     private $textDomain;
@@ -55,7 +55,7 @@ class Plugin
     private $domainPath;
 
     /** @var Collection $services Collection to store the services */
-    private $extensions;
+    private $services;
 
     /** @var PluginManager $pluginManager The plugin manager */
     protected $pluginManager;
@@ -66,11 +66,11 @@ class Plugin
     /** @var Collection $config Collection to store config data */
     public $config;
     
-    public function __construct($plugin_file, PluginManager $pluginManager, Collection $extensions, Collection $config)
+    public function __construct($plugin_file, PluginManager $pluginManager, Collection $services, Collection $config)
     {
         // Injected instances
         $this->pluginManager = $pluginManager;
-        $this->extensions = $extensions;
+        $this->services = $services;
         $this->config = $config;
         
         $this->file = $plugin_file;
@@ -161,12 +161,12 @@ class Plugin
         // Autoloader Cache
         $this->autoloaderCache  = $this->config->check('autoloader/cache', true);
 
-        // Extensions
-        if ($extensions = $this->config->get('extensions')) {
-            foreach ($extensions as $key => $extension) {
-                $instance = Sci::make($extension);
+        // services
+        if ($services = $this->config->get('services')) {
+            foreach ($services as $key => $service) {
+                $instance = Sci::make($service);
                 $instance->init($this);
-                $this->extensions->add($key, $instance);
+                $this->services->add($key, $instance);
             }
         }
     }
@@ -178,7 +178,7 @@ class Plugin
      * @return Plugin
 	 * @return \MyPlugin\Sci\Plugin
 	 */
-    public static function create($pluginFile)
+    public static function create ($pluginFile)
     {
         $plugin = Sci::make(\MyPlugin\Sci\Plugin::class, [$pluginFile]);
         return $plugin;
@@ -189,29 +189,29 @@ class Plugin
 	 *
 	 * @return \MyPlugin\Sci\Plugin
 	 */
-    public function register() {
+    public function register () {
         $this->pluginManager->register($this);
         return $this;
     }
 
     /**
-     * Get the extensions collection
+     * Get the services collection
      * 
-     * @return Collection The extensions collection
+     * @return Collection The services collection
      */
-    public function extensions ()
+    public function services ()
     {
-        return $this->extensions;
+        return $this->services;
     }
 
     /**
-     * Get a single extension
+     * Get a single service
      * 
-     * @return mixed The requested extension
+     * @return mixed The requested service
      */
-    public function extension ($extensionId)
+    public function service ($serviceId)
     {
-        return $this->extensions->get($extensionId);
+        return $this->services->get($serviceId);
     }    
 
     /**
@@ -219,11 +219,13 @@ class Plugin
      * 
      * @return mixed The requested service
      */
+    /*
     public function templateManager ()
     {
         if (!$this->template_manager) $this->template_manager = Sci::make(TemplateManager::class, [$this->dir]);
         return $this->template_manager;
     }
+    */
 
     public function getName ()
     {

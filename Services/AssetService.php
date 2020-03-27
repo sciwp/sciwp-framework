@@ -1,25 +1,26 @@
 <?php
-/**
- * Class Page
- */
-
-namespace  MyPlugin\Sci\Service;
-
-use \MyPlugin\Sci\Plugin;
-use \MyPlugin\Sci\Helper as Helper;
+namespace MyPlugin\Sci\Services;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-class Assets {
+use MyPlugin\Sci\Plugin;
 
-	use \MyPlugin\Sci\Traits\StaticClass;
-
-	const SELF = __class__;
-	
-	/** @var array $assets Stores de asset files */
+/**
+ * Class AssetService
+ * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
+ * @author		Kenodo LTD <info@kenodo.com>
+ * @copyright	2018 Kenodo LTD
+ * @license		http://opensource.org/licenses/MIT	MIT License
+ * @version     1.0.0
+ * @link		https://www.Sci.com 
+ * @since		Version 1.0.0 
+ */
+class AssetService
+{	
+	/** @var array $assets Stores the asset files */
 	public static $assets = array();
 	
-	/** @var array $assets Stores de group files */
+	/** @var array $assets Stores the group files */
 	public static $groups = array();
 	
 	/** @var string $folder Stores de plugin base folder */	
@@ -28,42 +29,31 @@ class Assets {
 	/** @var string $uri Stores de plugin base uri */	
 	private static $url;	
 	
-	/**---------------------------------------------------------------
-	 * Initialize the Asset loader
-	 * ---------------------------------------------------------------
-	 * @static
+
+	/**
+	 * Initializes the class
+	 *
+     * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
+	 * @return \MyPlugin\Sci\Services\AssetService
 	 */
-	public static function init()
+
+	/**
+	 * Initialize the Asset loader
+	 *
+	 * @return AssetService
+	 */
+	public function init($plugin)
 	{
-		add_action( 'wp_enqueue_scripts', array(self::SELF, 'enqueueFrontAssets') );
-		add_action( 'admin_enqueue_scripts', array(self::SELF, 'enqueueAdminAssets') );
+		$this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin);
+
+		add_action( 'wp_enqueue_scripts', [$this, 'enqueueFrontAssets'] );
+		add_action( 'admin_enqueue_scripts', [$this, 'enqueueAdminAssets'] );
 		
 	}
 
-	/**---------------------------------------------------------------
-	 * Enqueue admin scripts and styles (auto = true)
-	 * ---------------------------------------------------------------
-	 * @static
-	 */
-	public static function enqueueAdminAssets()
-	{
-		foreach(self::$assets as $key => $asset) {
-			if (isset($asset['auto']) && $asset['auto'] && (!isset($asset['zone']) || $asset['zone'] == 'admin')) self::enqueue($key);
-		}
-	}
-	
-	/**---------------------------------------------------------------
-	 * Enqueue front scripts and styles (auto = true)
-	 * ---------------------------------------------------------------
-	 * @static
-	 */
-	public static function enqueueFrontAssets()
-	{
-		foreach(self::$assets as $key => $asset) {
-			if (isset($asset['auto']) && $asset['auto'] && (!isset($asset['zone']) || $asset['zone'] == 'front')) self::enqueue($key);
-		}		
 
-	}
+	
+
 
 	/**---------------------------------------------------------------
 	 * Enqueue a registered asset (manual)
@@ -90,48 +80,32 @@ class Assets {
 		}
 	}
 	
-	/**---------------------------------------------------------------
-	 * Enqueue group
-	 * ---------------------------------------------------------------
-	 * @static
-	 */
-	public static function enqueueGroup($group_id)
-	{
-		if (!isset(self::$groups[$group_id])) return;
-		call_user_func_array(self::enqueue(), (array) $groups[$group_id]);
-	}	
-
-	/**---------------------------------------------------------------
-	 * Enqueue groups
-	 * ---------------------------------------------------------------
-	 * @static
-	 */
-	public static function enqueueGroups()
-	{
-		$group_ids = func_get_args ();
-		foreach($group_ids as $group_id) self::enqueueGroup($group_id);
-	}		
+	
 	
 	/**---------------------------------------------------------------
 	 * Add an asset to the Asset loader
 	 * ---------------------------------------------------------------
 	 * @static
 	 */	 
+	/*
 	public static function addAsset($name, $values = array())
 	{
 		self::$assets = array_merge(self::$assets, array($name => $values));
 		return __class__;
 	}
+	*/
 	
 	/**---------------------------------------------------------------
 	 * Add an array of assets to the Asset loader
 	 * ---------------------------------------------------------------
 	 * @static
 	 */	 
+	/*
 	public static function addAssets($assets = array())
 	{
 		self::$assets = array_merge(self::$assets, (array) $assets);
 	}
+	*/
 		
 	
 	/**---------------------------------------------------------------
@@ -139,18 +113,22 @@ class Assets {
 	 * ---------------------------------------------------------------
 	 * @static
 	 */
+	/*
 	public static function addGroup($name, $assets = array())
 	{
 		self::$groups = array_merge(self::$groups, (array) $assets);
 	}
+	*/
 	
 	/**---------------------------------------------------------------
 	 * Add an array of assets to the Asset loader
 	 * ---------------------------------------------------------------
 	 * @static
-	 */	 
+	 */
+	/*
 	public static function addGroups($groups = array())
 	{
 		self::$groups = array_merge(self::$groups, (array) $groups);
 	}	
+	*/
 }

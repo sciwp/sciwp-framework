@@ -30,11 +30,21 @@ class TemplateManager extends Manager
     /** @var string[] $postTypesWithTemplates The post types with templates. */
 	private $postTypesWithTemplates = [];
 
+	/**
+	 * Class constructor
+     *
+     * @return \MyPlugin\Sci\Manager\TemplateManager
+	 */
+	protected function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * Add a new template to the template manager
      *
-     * @param string|arrat $key_or_array Array of tempaltes or template key
-     * @param \MyPlugin\Sci\Template $template The template identification name
+     * @param \MyPlugin\Sci\Template $template The template object
+     * @param string|bool $key The template identification key
      * @return \MyPlugin\Sci\Manager\TemplateManager
      */
 	public function register($template, $key = false)
@@ -53,10 +63,7 @@ class TemplateManager extends Manager
             }
         }
 
-        if (!$this->filtersAdded) {
-            $this->addFilters();
-            $this->filtersAdded = true;
-        }
+        if (!$this->filtersAdded) $this->addFilters();
 
         return $this;
     }

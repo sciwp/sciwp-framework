@@ -7,6 +7,7 @@ use \MyPlugin\Sci\Manager\TemplateManager;
 use \MyPlugin\Sci\Manager\ProviderManager;
 use \MyPlugin\Sci\Manager\RouteManager;
 use \MyPlugin\Sci\Manager\RestManager;
+use \MyPlugin\Sci\Manager\AssetManager;
 use \MyPlugin\Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
@@ -38,12 +39,15 @@ class Sci
 
     /** @var ProviderManager $providerManager Stores a reference to the provider manager. */
     private $providerManager;
-    
+
     /** @var TemplateManager $templateManager Stores a reference to the template manager. */
     private $templateManager;
-    
+
     /** @var RouteManager $routeManager Stores a reference to the route manager. */
-    private $routeManager;   
+    private $routeManager;
+
+    /** @var AssetManager $assetManager Stores a reference to the asset manager. */
+    private $assetManager;
 
     /**
      * @param PluginManager $pluginManager
@@ -74,6 +78,7 @@ class Sci
         $this->providerManager = self::make(ProviderManager::class);
         $this->routeManager = self::make(RouteManager::class);
         $this->restManager = self::make(RestManager::class);
+        $this->restManager = self::make(AssetManager::class);
         return $this;
     }
 
@@ -165,6 +170,16 @@ class Sci
     public function restManager()
     {
         return $this->restManager;
+    }
+
+    /**
+     * Get the asset manager
+     *
+     * @return AssetManager
+     */
+    public function assetManager()
+    {
+        return $this->assetManager;
     }
 
     /**

@@ -43,27 +43,27 @@ class TemplateService
      * @param string $themePath The path relative to the theme where the plugin should also look for
      * @return void
      */
-    public function template($template, $name = false, $post_types = false, $theme_path = false)
+    public function template($template, $name = false, $postTypes = false, $themePath = false)
     {
-        if (is_array($tempate)) {
-            $tempate['path'] = $this->plugin->getDir() . '/' . $tempate['path'];
+        if (is_array($template)) {
+            $template['path'] = $this->plugin->getDir() . '/' . $template['path'];
         } else {
-            $tempate = $this->plugin->getDir() . '/' . $template;
+            $template = $this->plugin->getDir() . '/' . $template;
         }
         
-        return Template::create($template, $name, $post_types, $theme_path);
+        return Template::create($template, $name, $postTypes, $themePath);
     }
     
     /**
      * Allows to add a set of templates in array format
      * 
-     * @param array $tempatesDataArr Set of arrays with template data
+     * @param array $templatesDataArr Set of arrays with template data
      * @return void
      */
-    public function templates($tempatesDataArr)
+    public function templates($templatesDataArr)
     {
-        foreach ($tempatesDataArr as $key => $tempateData) {
-            $this->template($tempateData)->register($key);
+        foreach ($templatesDataArr as $key => $templateData) {
+            $this->template($templateData)->register($key);
         }
         return $this;
     }
