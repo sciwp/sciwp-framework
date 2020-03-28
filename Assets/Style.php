@@ -46,7 +46,7 @@ class Style extends Asset
 	/**
 	 * Add a new style
 	 *
-     * @param string $src The css file location
+     * @param string|array $src The css file location
      * @param string $version The css file asset version
      * @param string[]  $dependences The registered css file dependences
      * @param string $media The asset version

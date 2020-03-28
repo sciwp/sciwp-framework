@@ -3,6 +3,8 @@ namespace MyPlugin\Sci\Services;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+use MyPlugin\Sci\Plugin;
+
 /**
  * DeactivationService Class
  *
@@ -25,7 +27,10 @@ class DeactivationService
 	/**
 	 * Class constructor
 	 */
-	public function __construct(){}    
+	public function __construct(Plugin $plugin)
+	{
+		$this->plugin = $plugin;
+	}   
 
 	/**
 	 * Initializes the class
@@ -33,9 +38,8 @@ class DeactivationService
      * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
 	 * @return self
 	 */
-	public function init($plugin)
+	public function configure()
     {
-        $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->pluginManager()->get($plugin);
 		register_deactivation_hook($this->plugin->getFile(), array($this,'run'));
 		return $this;
 	}

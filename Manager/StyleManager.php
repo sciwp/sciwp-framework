@@ -4,6 +4,7 @@ namespace MyPlugin\Sci\Manager;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
+use MyPlugin\Sci\Plugin;
 use MyPlugin\Sci\Manager;
 use MyPlugin\Sci\Assets\Style;
 
@@ -111,5 +112,5 @@ class StyleManager extends Manager
         // To avoid repeating this action
         $this->filtersAdded = true;
         return $this;
-	}
+    }
 }

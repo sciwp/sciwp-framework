@@ -3,6 +3,8 @@ namespace MyPlugin\Sci\Services;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
+use MyPlugin\Sci\Plugin;
+
 /**
  * ActivationService Class
  *
@@ -28,7 +30,10 @@ class ActivationService
 	/**
 	 * Class constructor
 	 */
-	public function __construct(){}
+	public function __construct(Plugin $plugin)
+	{
+		$this->plugin = $plugin;
+	}
 
 	/**
 	 * Initializes the class
@@ -36,12 +41,9 @@ class ActivationService
      * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
 	 * @return self
 	 */	
-	public function init($plugin)
-    {
-		$this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugins()->get($plugin);
-        
+	public function configure()
+    {        
 		register_activation_hook($this->plugin->getFile(), array($this,'run'));
-
 		return $this;
 	}
 

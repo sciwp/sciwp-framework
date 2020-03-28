@@ -188,7 +188,6 @@ class Container
      */ 
 	public function runInstanceActions($class, $instance)
 	{
-
         if (!isset($this->actions[$class])) return;
         if (!count($this->actions[$class])) return;
   
@@ -278,8 +277,10 @@ class Container
      * @param \Object $class_name The classto instantiate
      * @param array $params The array with the arguments
      */    
-    public function make($class_name, $params = array())
+    public function make($class_name, $params = [])
     {
+        if (!is_array($params)) $params = [$params];
+
 		$classMethodName = false;
 		$class_method = false;
 

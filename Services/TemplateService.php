@@ -29,8 +29,9 @@ class TemplateService
 	/** @var TemplateManager $templateManager The instance of the template manager. */
 	private $templateManager;
 
-    public function __construct(TemplateManager $templateManager)
+    public function __construct(Plugin $plugin, TemplateManager $templateManager)
     {
+        $this->plugin = $plugin;
         $this->templateManager = $templateManager;
     }
 
@@ -74,10 +75,8 @@ class TemplateService
      * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
 	 * @return self
 	 */
-	public function init($plugin)
+	public function configure()
 	{
-        $this->plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->Sci->plugin($plugin);
-
         $templates = $this->plugin->config()->get('templates');
         
         if (!$templates) return;

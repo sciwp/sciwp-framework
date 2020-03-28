@@ -2,12 +2,14 @@
 
 namespace MyPlugin\Sci;
 
+use \MyPlugin\Sci\Manager;
 use \MyPlugin\Sci\Manager\PluginManager;
 use \MyPlugin\Sci\Manager\TemplateManager;
 use \MyPlugin\Sci\Manager\ProviderManager;
 use \MyPlugin\Sci\Manager\RouteManager;
 use \MyPlugin\Sci\Manager\RestManager;
-use \MyPlugin\Sci\Manager\AssetManager;
+use \MyPlugin\Sci\Manager\ScriptManager;
+use \MyPlugin\Sci\Manager\StyleManager;
 use \MyPlugin\Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
@@ -29,25 +31,13 @@ class Sci
     use Singleton;
 
     /** @var Sci  $_instance The class instance. */  
-    private static $_instance;
+    protected static $_instance;
+
+    /** @var Manager[] $managers Stores references to managers. */
+    private $managers = [];
 
     /** @var Container $container Stores bindings and creation actions */
-    protected $container;    
-
-    /** @var PluginManager $pluginManager Stores a reference to the plugin manager. */
-    private $pluginManager;
-
-    /** @var ProviderManager $providerManager Stores a reference to the provider manager. */
-    private $providerManager;
-
-    /** @var TemplateManager $templateManager Stores a reference to the template manager. */
-    private $templateManager;
-
-    /** @var RouteManager $routeManager Stores a reference to the route manager. */
-    private $routeManager;
-
-    /** @var AssetManager $assetManager Stores a reference to the asset manager. */
-    private $assetManager;
+    protected $container; 
 
     /**
      * @param PluginManager $pluginManager
@@ -74,11 +64,14 @@ class Sci
     public function init ()
     {
         $this->pluginManager = self::make(PluginManager::class);
-        $this->templateManager = self::make(TemplateManager::class);
-        $this->providerManager = self::make(ProviderManager::class);
-        $this->routeManager = self::make(RouteManager::class);
-        $this->restManager = self::make(RestManager::class);
-        $this->restManager = self::make(AssetManager::class);
+
+        $this->managers['plugin']   =   self::make(TemplateManager::class);
+        $this->managers['template'] =   self::make(TemplateManager::class);
+        $this->managers['provider'] =   self::make(ProviderManager::class);
+        $this->managers['route']    =   self::make(RouteManager::class);
+        $this->managers['rest']     =   self::make(RestManager::class);
+        $this->managers['script']   =   self::make(ScriptManager::class);
+        $this->managers['style']    =   self::make(StyleManager::class);
         return $this;
     }
 
@@ -93,13 +86,37 @@ class Sci
     }
 
     /**
+     * Get the requested manager
+     *
+     * @param string $name The manager name
+     * @return Manager
+     */
+    public function manager($name)
+    {
+        if (!isset($this->managers[$name])) {
+            throw new Exception('The manager ' . $name . ' is not configured.');
+        }
+        return $this->managers[$name];
+    }
+
+    /**
+     * Get all the managers
+     *
+     * @return Manager[]
+     */
+    public function managers()
+    {
+        return $this->managers;
+    }
+
+    /**
      * Get a plugin
      * @param string $plugin The plugin id
      * @return Plugin
      */
-    public function plugin($plugin_id)
+    public function plugin($pluginId)
     {
-        return $this->pluginManager->get($plugin_id);
+        return $this->managers['plugin']->get($pluginId);
     }
     
     /**
@@ -109,7 +126,7 @@ class Sci
      */
     public function plugins()
     {
-        return $this->pluginManager;
+        return $this->managers['plugin'];
     }
 
     /**
@@ -119,7 +136,7 @@ class Sci
      */
     public function pluginManager()
     {
-        return $this->pluginManager;
+        return $this->managers['plugin'];
     }
 
     /**
@@ -129,7 +146,7 @@ class Sci
      */       
     public function providerManager()
     {
-        return $this->providerManager;
+        return $this->managers['provider'];
     }
 
     /**
@@ -139,7 +156,7 @@ class Sci
      */       
     public function providers()
     {
-        return $this->providerManager;
+        return $this->managers['provider'];
     }
 
     /**
@@ -149,7 +166,7 @@ class Sci
      */    
     public function templateManager()
     {
-        return $this->templateManager;
+        return $this->managers['template'];
     }
 
     /**
@@ -159,7 +176,7 @@ class Sci
      */
     public function routeManager()
     {
-        return $this->routeManager;
+        return $this->managers['route'];
     }
 
     /**
@@ -169,17 +186,27 @@ class Sci
      */
     public function restManager()
     {
-        return $this->restManager;
+        return $this->managers['rest'];
     }
 
     /**
-     * Get the asset manager
+     * Get the style manager
      *
-     * @return AssetManager
+     * @return StyleManager
      */
-    public function assetManager()
+    public function styleManager()
     {
-        return $this->assetManager;
+        return $this->managers['style'];
+    }
+
+    /**
+     * Get the script manager
+     *
+     * @return ScriptManager
+     */
+    public function scriptManager()
+    {
+        $this->managers['script'];
     }
 
     /**

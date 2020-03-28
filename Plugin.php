@@ -2,7 +2,6 @@
 namespace MyPlugin\Sci;
 
 use MyPlugin\Sci\Manager\PluginManager;
-use MyPlugin\Sci\Template as Template;
 use MyPlugin\Sci\Collection;
 use MyPlugin\Sci\Sci;
 
@@ -65,9 +64,14 @@ class Plugin
 
     /** @var Collection $config Collection to store config data */
     public $config;
+
+    /** @var Sci $sci Sci instance */
+     public $sci;
     
     public function __construct($plugin_file, PluginManager $pluginManager, Collection $services, Collection $config)
     {
+        $this->sci = Sci::instance();
+
         // Injected instances
         $this->pluginManager = $pluginManager;
         $this->services = $services;
@@ -109,15 +113,44 @@ class Plugin
             $this->textDomain = isset($this->configCache['text_domain']) && strlen($this->configCache['text_domain']) ? $this->configCache['text_domain'] : $dirName;
         }
 
-        if ($this->config->length('domain_path')) {
-             $this->domainPath = trim($this->config->get('domain_path'), '/');
-        } else if (isset($this->configCache['domain_path']) && strlen($this->configCache['domain_path'])) {
-            $this->domainPath = trim($this->configCache['domain_path'], '/');
-        } else {
-            $this->domainPath = trim('languages');          
-        }
+        $this->configureDomainPath();
 
-        // Base namespace
+        $this->configureBaseNamespace();
+
+        $this->configureMainDir();
+
+        $this->configureMainNamespace();
+
+        $this->configureModulesDirectory();
+
+        $this->autoloaderCache  = $this->config->check('autoloader/cache', true);
+
+        $this->configureServices();
+    }
+
+    /**
+     * Configure the text domain path
+     * 
+     * @return void
+     */
+    private function configureDomainPath()
+    {
+        if ($this->config->length('domain_path')) {
+            $this->domainPath = trim($this->config->get('domain_path'), '/');
+        } else if (isset($this->configCache['domain_path']) && strlen($this->configCache['domain_path'])) {
+           $this->domainPath = trim($this->configCache['domain_path'], '/');
+        } else {
+           $this->domainPath = trim('languages');          
+        }
+    }
+
+    /**
+     * Configure the base namespace
+     * 
+     * @return void
+     */
+    private function configureBaseNamespace()
+    {
         if ($this->config->length('namespace')) {
             $this->namespace = $this->config->get('namespace');
         } else if (isset( $this->configCache['namespace'] ) && strlen( $this->configCache['namespace'] )) {
@@ -128,46 +161,77 @@ class Plugin
             $file_contents = "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache, true) . ';';
             file_put_contents ( plugin_dir_path( dirname(__FILE__) ) . 'cache/config.cache.php', $file_contents );
         }
+    }
 
-        // Set main folder
-		if ($configMainDir = $this->config->get('dir/main')) {
-            $this->mainDir = trim($configMainDir, '/');
-			$this->mainDir = $configMainDir === '' ? $this->dir : $this->dir . '/' . $configMainDir;
-		}
-		else {
-            $this->mainDir = file_exists($this->dir . '/app') ? $this->dir . '/app' : $this->dir;
-        }
-
-        // Main namespace
+    /**
+     * Configure then main namespace
+     * 
+     * @return void
+     */
+    private function configureMainNamespace()
+    {
         if ($this->config->length('main_namespace')) {
             $this->mainNamespace =  $this->config->get('main_namespace');
         } else {
             $this->mainNamespace =  preg_replace("/[^A-Za-z0-9]/", '', basename($this->mainDir));
         }
+    }
 
-        // Set modules folder
-		if ($config_modules_dir = $this->config->get('dir/modules')) {
-            $this->modulesDir = trim($config_modules_dir, '/');
-            if ($config_modules_dir == '') {
-                $this->modulesDir = file_exists($this->dir . '/modules') ? $this->dir . '/modules' : false ;
-            } else {
-                $this->modulesDir = $this->dir .'/'. $config_modules_dir;
-            }
-		}
-		else {
-            $this->modulesDir = file_exists($this->dir . '/modules') ? $this->dir . '/modules' : false;
+    /**
+     * Configure then main directory
+     * 
+     * @return void
+     */
+    private function configureMainDir()
+    {
+        $configMainDir = $this->config->get('dir/main');
+
+		if ($configMainDir) {
+            $this->mainDir = trim($configMainDir, '/');
+            $this->mainDir = $configMainDir === '' ? $this->dir : $this->dir . '/' . $configMainDir;
+            return;
         }
 
-        // Autoloader Cache
-        $this->autoloaderCache  = $this->config->check('autoloader/cache', true);
+        $this->mainDir = file_exists($this->dir . '/app') ? $this->dir . '/app' : $this->dir;
+    }
 
-        // services
-        if ($services = $this->config->get('services')) {
-            foreach ($services as $key => $service) {
-                $instance = Sci::make($service);
-                $instance->init($this);
-                $this->services->add($key, $instance);
+
+    /**
+     * Configure the modules directory
+     * 
+     * @return void
+     */
+    private function configureModulesDirectory()
+    {
+        $configModulesDir = $this->config->get('dir/modules');
+
+        if ($configModulesDir) {
+            $this->modulesDir = trim($configModulesDir, '/');
+            if ($configModulesDir == '') {
+                $this->modulesDir = file_exists($this->dir . '/modules') ? $this->dir . '/modules' : false ;
+            } else {
+                $this->modulesDir = $this->dir .'/'. $configModulesDir;
             }
+            return;
+        }
+        
+        $this->modulesDir = file_exists($this->dir . '/modules') ? $this->dir . '/modules' : false;
+    }
+
+    /**
+     * Configure the required services
+     * 
+     * @return void
+     */
+    private function configureServices()
+    {
+        $services = $this->config->get('services');
+        if (!$services) return;
+
+        foreach ($services as $key => $service) {
+            $instance = Sci::make($service, $this);
+            $instance->configure();
+            $this->services->add($key, $instance);
         }
     }
 
@@ -214,19 +278,6 @@ class Plugin
         return $this->services->get($serviceId);
     }    
 
-    /**
-     * Get the template manager
-     * 
-     * @return mixed The requested service
-     */
-    /*
-    public function templateManager ()
-    {
-        if (!$this->template_manager) $this->template_manager = Sci::make(TemplateManager::class, [$this->dir]);
-        return $this->template_manager;
-    }
-    */
-
     public function getName ()
     {
         if ($this)
@@ -237,7 +288,7 @@ class Plugin
     {
         return $this->config;
     }
-    
+
     /**
      * Get the namespace form the main plugin file
      * 
@@ -294,7 +345,6 @@ class Plugin
 		return $this->file;
 	}    
         
-    
     /**
      * Get the Plugin dir
      * 
@@ -314,7 +364,7 @@ class Plugin
 	{
 		return $this->modulesDir;
 	}
-    
+
     /**
      * Get the Maindir
      * 
@@ -324,8 +374,8 @@ class Plugin
 	{
 		return $this->mainDir;
 	}
-    
-     /**
+
+    /**
      * Get the Maindir
      * 
      * @return string The Plugin main folder
@@ -333,88 +383,5 @@ class Plugin
 	public function getAutoloaderCacheEnabled()
 	{
 		return $this->autoloaderCache;
-	}   
-
-    
-		// Load text domain
-		//$languages_path = this->dir . $this->domainPath;
-		//load_plugin_textdomain( $this->textDomain, false, $this->domainPath ); 
-		 /*
-
-		if ( isset($this->plugin::config['collections']) && is_array($this->plugin::config['collections']) ) {
-			foreach ($this->plugin::config['collections'] as $key => $collection)
-				if (is_array($collection)) {
-					
-					
-					
-					if (isset($collection['container'])) $container = $collection['container'];
-					else $container = '\MyPlugin\Sci\Collection';
-					if (isset($collection['shortcut'])) $shortcut = $collection['shortcut'];
-					else $shortcut = $key;
-					$this->collections[$shortcut] = $this->Sci::get($container);
-					
-					$collectionManager->add($key, $collection_class);
-					
-					
-					if (isset($collection['register']) && is_array($collection['register'])) {
-						$this->collections[$shortcut]->register($collection['register']);
-					}
-				}
-				else {
-					$collectionManager->add($id, $this::get($collection));
-				}
-			}
-		}
-        
-        */
-     
-		/*
-		$this->plugin::addStaticMethod('collections', function ($collection_id = null) {
-			if (isset($collection_id) && $collection_id) {
-				return $this->get($collection_id);
-			}
-			return $this;
-		});
-
-		
-		self::addStaticMethod('collections', function () {
-			return self::$collections;
-		});		
-
-		
-	
-		self::$collections = new \MyPlugin\Sci\Collection();
-		self::addStaticMethod('collections', function () {
-			return self::$collections;
-		});
-		
-
-		self::$services =  new \MyPlugin\Sci\Collection();
-		self::addStaticMethod('services', function () {
-			return self::$collections['services'];
-		});		
-		foreach ($config['collections']['services']['regsiter'] as $element) {
-			self::services()->add();
-		}
-		
-		// Include helpers
-		//Helper::requireFilesOnce(plugin_dir_path( __FILE__ ) . 'functions');
-		
-		$scan = preg_grep('/^([^.])/', scandir(self::dir() . 'methods'));
-		foreach($scan as $file) {
-			require_once(self::dir() . 'methods/'.$file);	
-		}
-		//add_filter( 'get_post_metadata' , array(self::SELF, 'fallback_get_post_metadata'), 10 , 4 );		
-		
-		//Los archivos de configuracion se debn juntar antes de este punto, en caso de haber varios
-		Service\Assets::init();
-		Service\Assets::addAssets(self::$config['assets']['assets']);
-		Service\Assets::addGroups(self::$config['assets']['groups']);
-
-		//Service\Asset::add('media', 'image_uploader');
-		//TaxonomyController::init();
-        return __class__;
-       
-	}		
-	*/
+	}
 }

@@ -113,5 +113,44 @@ class ScriptManager extends Manager
         // To avoid repeating this action
         $this->filtersAdded = true;
         return $this;
-	}
+    }
+
+	/**
+	 * Read the plugin configuration
+	 *
+     * @param \MyPlugin\Sci\Plugin|string $plugin The plugin/id
+	 * @return $this
+	 */
+	public function configure($plugin)
+	{
+        $plugin = $plugin instanceof \MyPlugin\Sci\Plugin ? $plugin : $this->sci->plugin($plugin);
+
+        $scripts = $plugin->config()->get('scripts');
+        
+        if (!$scripts) return;
+
+        foreach ( (array) $scripts as $handle => $script) {
+            
+            if (is_array($script)) {
+
+                $script['src'] = plugin_dir_url($plugin->getDir()) . '/' . $script['src'];
+                $script['version'] = $script['version'] ?? null;
+                $script['dependences'] = $script['dependences'] ?? [];
+                $script['footer'] = isset($script['footer']) && $script['footer'] ? true : false;
+
+                Script::create(
+                    $script['src'],
+                    $script['version'],
+                    $script['dependences'],
+                    $script['footer']
+                )->register($handle, $version);
+
+            } else {
+                $src = plugin_dir_url($plugin->getDir()) . '/' . $script;
+                Script::create($src)->register($handle);
+            }
+        }
+
+        return $this;
+    }
 }
