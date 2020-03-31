@@ -4,6 +4,7 @@ namespace MyPlugin\Sci\Assets;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
+use MyPlugin\Sci\Sci;
 use MyPlugin\Sci\Asset;
 use MyPlugin\Sci\Manager\StyleManager;
 
@@ -36,10 +37,10 @@ class Style extends Asset
      * @param string[]  $dependences The registered css file dependences
      * @param string $media The asset version
      */
-    public function __construct($src, $version = false, $dependences = [], $media = 'all')
+    public function __construct($src, $version = false, $dependences = [], $media = 'all', StyleManager $styleManager)
     {
         parent::__construct($src, $version, $dependences);
-        $this->styleManager = $this->sci::make(StyleManager::class);
+        $this->styleManager = $styleManager;
         $this->media = $media;
     }
 
@@ -54,7 +55,7 @@ class Style extends Asset
 	 */
     public static function create($src, $version = false, $dependences = [], $media = 'all')
     {
-        $style = new self($src, $version, $dependences, $media);
+        $style = Sci::make(self::class, [$src, $version, $dependences, $media]);
         return  $style;
     }
 

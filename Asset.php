@@ -22,9 +22,6 @@ use \MyPlugin\Sci\Manager\AssetManager;
  
 class Asset
 {
-    /** @var $sci The Sci class reference */
-    protected $sci;
-
 	/** @var string $src The asset absolute path */
     protected $src;
 
@@ -46,7 +43,6 @@ class Asset
         $this->src = $src;
         $this->version = $version;
         $this->dependences = (array) $dependences;
-        $this->sci = Sci::class;
     }
 
 	/**

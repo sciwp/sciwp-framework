@@ -4,6 +4,7 @@ namespace MyPlugin\Sci\Assets;
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
+use MyPlugin\Sci\Sci;
 use MyPlugin\Sci\Asset;
 use MyPlugin\Sci\Manager\ScriptManager;
 
@@ -36,10 +37,10 @@ class Script extends Asset
      * @param string[]  $dependences The registered script dependences
      * @param string $footer Script location
      */
-    public function __construct($src,  $version = false, $dependences = [], $footer = true)
+    public function __construct($src,  $version = false, $dependences = [], $footer = true, ScriptManager $scriptManager)
     {
         parent::__construct($src, $version, $dependences);
-        $this->scriptManager = $this->sci::make(ScriptManager::class);
+        $this->scriptManager = $scriptManager;
         $this->footer = $footer;
     }
 
@@ -55,7 +56,7 @@ class Script extends Asset
 	 */
     public static function create($src,  $version = false, $dependences = [],  $footer = true)
     {
-        $script = new self($src, $version, $dependences, $footer);
+        $script = Sci::make(self::class, [$src, $version, $dependences, $footer]);
         return  $script;
     }
 

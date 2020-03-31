@@ -59,12 +59,16 @@ class TemplateService
      * Allows to add a set of templates in array format
      * 
      * @param array $templatesDataArr Set of arrays with template data
+     * @param boolean $register If the templates should be registered
      * @return void
      */
-    public function templates($templatesDataArr)
+    public function templates($templatesDataArr, $register = false)
     {
         foreach ($templatesDataArr as $key => $templateData) {
-            $this->template($templateData)->register($key);
+            $template = $this->template($templateData);
+            if($register) {
+                $template->register($key);
+            }
         }
         return $this;
     }

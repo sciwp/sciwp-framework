@@ -128,6 +128,19 @@ class Plugin
         $this->configureServices();
     }
 
+	/**
+	 * Add a new plugin
+	 *
+     * @param string $pluginFile The plugin file path
+     * @return Plugin
+	 * @return \MyPlugin\Sci\Plugin
+	 */
+    public static function create ($pluginFile)
+    {
+        $plugin = Sci::make(\MyPlugin\Sci\Plugin::class, [$pluginFile]);
+        return $plugin;
+    }
+
     /**
      * Configure the text domain path
      * 
@@ -236,36 +249,23 @@ class Plugin
     }
 
 	/**
-	 * Add a new plugin
-	 *
-     * @param string $pluginFile The plugin file path
-     * @return Plugin
-	 * @return \MyPlugin\Sci\Plugin
-	 */
-    public static function create ($pluginFile)
-    {
-        $plugin = Sci::make(\MyPlugin\Sci\Plugin::class, [$pluginFile]);
-        return $plugin;
-    }
-
-	/**
 	 * Add the plugin to the plugin manager
 	 *
 	 * @return \MyPlugin\Sci\Plugin
 	 */
-    public function register () {
-        $this->pluginManager->register($this);
+    public function register ($pluginId = false, $addon = false) {
+        $this->pluginManager->register($this, $pluginId, $addon);
         return $this;
     }
 
     /**
-     * Get the services collection
+     * Get all the services
      * 
-     * @return Collection The services collection
+     * @return array Array with services
      */
     public function services ()
     {
-        return $this->services;
+        return $this->services->all();
     }
 
     /**
@@ -284,8 +284,15 @@ class Plugin
         return $this->config['name'];
     }
 
-    public function config ()
+    /**
+     * Get the plugin configuration
+     * 
+     * @param string $setting The setting to get
+     * @return mixed The setting
+     */
+    public function config ($setting = null)
     {
+        if ($setting) return $this->config->get($setting);
         return $this->config;
     }
 

@@ -28,7 +28,10 @@ class PluginManager extends Manager
 
      /** @var $autoloader Reference to the Autoloader class */
 	private $autoloader;
-	
+    
+    /** @var string $mainPluginKey Stores the main plugin key */
+    private $mainPluginKey = false;
+
 	public function __construct()
 	{
         parent::__construct();
@@ -42,7 +45,7 @@ class PluginManager extends Manager
      * @param string|bool $pluginId The plugin id
      * @return Plugin
      */
-    public function register($plugin, $pluginId = false)
+    public function register($plugin, $pluginId = false, $addon = false)
     {
 
         if (!$pluginId) $pluginId = str_replace( ' ', '-', strtolower(basename($plugin->getDir())));
@@ -52,6 +55,8 @@ class PluginManager extends Manager
         }
         
         $this->plugins[$pluginId] = $plugin;
+
+        if (!$addon) $this->mainPluginKey = $pluginId;
 
         // Add the plugin to the Autoloader
         $autoload = $plugin->config->get('autoloader/autoload');
@@ -90,9 +95,21 @@ class PluginManager extends Manager
      * @param string $id The plugin id
      * @return Plugin
      */	
-	public function get($pluginId = false)
+	public function get($pluginId)
 	{
-        if (!$pluginId) return $this->all();
-		return isset($this->plugins[$pluginId]) ? $this->plugins[$pluginId] : false;
-	}
+        if (!isset($this->plugins[$pluginId])) {
+            throw new Exception('The plugin ' . $pluginId . ' is not registered.');
+        }
+		return $this->plugins[$pluginId];
+    }
+    
+    /**
+     * Get the main plugin
+     * 
+     * @return Plugin
+     */
+    public function getMain()
+    {
+        return $this->plugins[$this->mainPluginKey];
+    }
 }
