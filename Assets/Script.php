@@ -5,7 +5,7 @@ defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
 use MyPlugin\Sci\Sci;
-use MyPlugin\Sci\Asset;
+use MyPlugin\Sci\Assets\Asset;
 use MyPlugin\Sci\Manager\ScriptManager;
 
 /**

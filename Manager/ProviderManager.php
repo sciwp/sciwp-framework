@@ -25,8 +25,6 @@ class ProviderManager extends Manager
 	
 	/**
 	 * Class constructor
-     *
-     * @return \MyPlugin\Sci\Manager\ProviderManager
 	 */
 	protected function __construct()
     {
@@ -44,23 +42,25 @@ class ProviderManager extends Manager
     {
         foreach ((array)$providers as $provider) {
             
-            if(!is_object($provider)) {
+            if (!is_object($provider)) {
                 $provider = $this->sci::make($provider);
             }
 
             if (!is_subclass_of($provider, Provider::class)) {
-                throw new Exception('Only child classes or instances of the Provider class are accepted.');
+                throw new Exception('Only child classes or instances of the Provider class are accepted as providers.');
             }
 
             $this->providers[] = $provider;
             $provider->start();
         }
+
+        return $this;
     }
 
     /**
      * Calls the boot method for all the providers
      * 
-     * @return \MyPlugin\Sci\Manager\ProviderManager;
+     * @return \MyPlugin\Sci\Manager\ProviderManager
      */
     public function boot()
     {
@@ -69,6 +69,7 @@ class ProviderManager extends Manager
                 $provider->boot();
             }
         }
+
         return $this;
     }
 }

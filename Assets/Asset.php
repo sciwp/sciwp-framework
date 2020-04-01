@@ -1,5 +1,5 @@
 <?php
-namespace MyPlugin\Sci;
+namespace MyPlugin\Sci\Assets;
 
 defined('WPINC') OR exit('No direct script access allowed');
 

@@ -76,6 +76,29 @@ class Container
         return array_unique($traits);
     }
 
+
+    /**
+     * Bind an alias to a class
+     *
+     * @param string $alias The class alias
+     * @param string $to The class name, method or instance
+     * @return \MyPlugin\Sci\Container
+     */    
+	public function alias($alias, $to = null)
+	{
+        $alias = ltrim($alias, '\\');
+
+        if (is_null($alias)) {
+            throw new Exception('Cannot use a null alias.');
+        }
+
+        if (is_callable($to) || is_object($to) || class_exists($to)) {
+            $this->bindings[$alias] = $to;
+            return $this;
+        }
+        throw new Exception('Invalid binding for ' . $alias .'.');
+    }
+
     /**
      * Bind a class name or alias to a class or instance
      *

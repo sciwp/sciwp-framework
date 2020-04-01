@@ -1,7 +1,8 @@
 <?php
 namespace MyPlugin\Sci;
 
-use \MyPlugin\Sci\Manager\ProviderManager;
+use MyPlugin\Sci\Sci;
+use MyPlugin\Sci\Manager\ProviderManager;
 
 defined('ABSPATH') OR exit('No direct script access allowed');
 
@@ -26,7 +27,7 @@ class Provider
     /** @var array $singletons Class singletons that should be registered. */
     public $singletons;
 
-	/** @var \MyPlugin\Sci\Manager\ProviderManager $providerManager */
+	/** @var ProviderManager $providerManager */
 	private $providerManager;
 
 	/**
@@ -53,6 +54,7 @@ class Provider
 	/**
 	 * Add the provider to the provider manager
 	 *
+	 * @param string $name The provider id
 	 * @return \MyPlugin\Sci\Provider
 	 */
 	public function register($name = false)
@@ -68,7 +70,7 @@ class Provider
 	/**
 	 * Executed when the provider is registered
 	 */
-    public function start()
+    public function config()
 	{
     }
 

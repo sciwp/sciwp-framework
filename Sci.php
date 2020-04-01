@@ -219,6 +219,8 @@ class Sci
     {
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
+        if ($name === 'alias') return self::instance()->container->alias(...$arguments);
+        if ($name === 'created') return self::instance()->container->created(...$arguments);
     }
 
     /**
@@ -231,5 +233,7 @@ class Sci
     {
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
+        if ($name === 'alias') return self::instance()->container->alias(...$arguments);
+        if ($name === 'created') return self::instance()->container->created(...$arguments);
     }
 }
