@@ -15,7 +15,7 @@ use Sci\Support\Managers\ProviderManager;
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @copyright	2020 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
  * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
@@ -62,7 +62,6 @@ class PluginManager extends Manager
         $autoload = $plugin->config->get('autoloader/autoload');
         $autoloadData = [
             'namespace' => $plugin->getNamespace(),
-            'main_namespace' =>  $plugin->getMainNamespace(),
             'dir' => $plugin->getDir(),
             'main_dir' =>  $plugin->getMainDir(),
             'module_dir' =>  $plugin->getModulesDir(),            

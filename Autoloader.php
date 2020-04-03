@@ -4,17 +4,15 @@ namespace Sci;
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /**
- * Autoloader Class
+ * Autoloader
  *
- * @author		Eduardo Lazaro Rodriguez <me@edulazaro.com>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
-
 class Autoloader
 {
 	/** @var string $mode The sci files autoloading mode */
@@ -153,7 +151,7 @@ class Autoloader
 	{
         self::$plugins[$id] = [
             'namespace' => $config['namespace'],
-            'main_namespace' => $config['main_namespace'],
+            'main_namespace' => ucfirst(preg_replace("/[^A-Za-z0-9]/", '', basename($config['main_dir']))),
             'dir' => $config['dir'],
             'main_dir' => $config['main_dir'],
             'module_dir' =>  $config['module_dir'],            

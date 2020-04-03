@@ -13,7 +13,7 @@ use Sci\Template\Managers\TemplateManager;
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @copyright	2020 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
  * @link		https://www.sciwp.com
  * @since		Version 1.0.0 

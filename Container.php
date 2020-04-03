@@ -13,7 +13,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
  * @author		Kenodo LTD <info@kenodo.com>
  * @copyright	2018 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
  * @link		https://www.Sci.com 
  * @since		Version 1.0.0 

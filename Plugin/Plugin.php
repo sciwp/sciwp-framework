@@ -13,7 +13,7 @@ defined('ABSPATH') OR exit('No direct script access allowed');
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @copyright	2020 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
  * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
@@ -37,9 +37,6 @@ class Plugin
     
     /** @var string $namespace The Plugin base namespace */
     private $namespace;
-
-	/** @var string $mainNamespace The namespace of the Plugin main folder */
-    private $mainNamespace;
 
     /** @var string $url The Plugin url */
     private $url;
@@ -83,13 +80,10 @@ class Plugin
 
         $configData = file_exists(  $this->dir . '/config.php' ) ? include  $this->dir . '/config.php' : [];
         $this->config->add($configData);
-
-        $this->configCache = file_exists(  $this->dir . '/cache/config.cache.php' ) ? include   $this->dir . '/cache/config.cache.php' : [];
-
         $dirName = strtolower( basename(  $this->dir ) );
 
-        if ($this->config->check('rebuild', true)) {
-
+        if ($this->config->check('rebuild', true) || !file_exists(  $this->dir . '/cache/config.cache.php' )) {
+            $this->configCache = [];
             //These values are secondary values, used in case they are not provided in the config file
             $name = $this->getMetaField('Plugin Name' );
             $textDomain = $this->getMetaField( 'Text Domain' );
@@ -101,6 +95,8 @@ class Plugin
             // Update the config cache file
             file_put_contents ( $this->dir . '/cache/config.cache.php', "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache , true) . ';');
         };
+
+        $this->configCache = include $this->dir . '/cache/config.cache.php';
 
         // Set the plugin name
         if (isset( $this->configCache['name'] ) && strlen( $this->configCache['name'] )) {
@@ -115,11 +111,9 @@ class Plugin
 
         $this->configureDomainPath();
 
-        $this->configureBaseNamespace();
+        $this->namespace = $this->getNamespace();
 
         $this->configureMainDir();
-
-        $this->configureMainNamespace();
 
         $this->configureModulesDirectory();
 
@@ -153,39 +147,6 @@ class Plugin
            $this->domainPath = trim($this->configCache['domain_path'], '/');
         } else {
            $this->domainPath = trim('languages');          
-        }
-    }
-
-    /**
-     * Configure the base namespace
-     * 
-     * @return void
-     */
-    private function configureBaseNamespace()
-    {
-        if ($this->config->length('namespace')) {
-            $this->namespace = $this->config->get('namespace');
-        } else if (isset( $this->configCache['namespace'] ) && strlen( $this->configCache['namespace'] )) {
-            $this->namespace = $this->configCache['namespace'];
-        } else {
-            $this->namespace = $this->getNamespace();
-            $this->configCache['namespace'] = $this->namespace;
-            $file_contents = "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache, true) . ';';
-            file_put_contents ( plugin_dir_path( dirname(__FILE__) ) . 'cache/config.cache.php', $file_contents );
-        }
-    }
-
-    /**
-     * Configure then main namespace
-     * 
-     * @return void
-     */
-    private function configureMainNamespace()
-    {
-        if ($this->config->length('main_namespace')) {
-            $this->mainNamespace =  $this->config->get('main_namespace');
-        } else {
-            $this->mainNamespace =  preg_replace("/[^A-Za-z0-9]/", '', basename($this->mainDir));
         }
     }
 
@@ -302,12 +263,23 @@ class Plugin
      */
     public function getNamespace ()
     {
-        if (isset($this->namespace) && $this->namespace) return $this->namespace;
+        if ($this->namespace) return $this->namespace;
+
+        if ($this->config->length('namespace')) return $this->config->get('namespace');
+
+        if (isset( $this->configCache['namespace'] ) && strlen( $this->configCache['namespace'] )) {
+            return $this->configCache['namespace'];
+        } 
+
         $file_content = file_get_contents($this->file);
-        if (preg_match('#^\s*namespace\s+(.+?);$#sm',  $file_content, $m)) {
-            return $m[1];
-        }
-        return strtolower( basename(  $this->dir ) );
+        if (preg_match('#^\s*namespace\s+(.+?);$#sm',  $file_content, $m)) $namespace = $m[1];
+        else $namespace = strtolower( basename(  $this->dir ) );
+
+        $this->configCache['namespace'] = $namespace;
+        $fileContents = "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache, true) . ';';
+        file_put_contents ( $this->dir . '/cache/config.cache.php', $fileContents );
+
+        return $namespace;
     }
 
     /**

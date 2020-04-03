@@ -133,7 +133,6 @@ if ($isCorePlugin) {
 
     $rebuildNamespace = !isset($configCache['parsed_plugin_folder'])
                 || (isset($config['rebuild']) && $config['rebuild'] === true)
-                || (isset($config['rebuild_code']) && $config['rebuild_code'] === true)
                 || (isset($config['namespace']) && $config['namespace'] !== $baseNamespace)
                 || ucfirst($configCache['parsed_plugin_folder']) !== ucfirst($parsedPluginFolder);
 
@@ -166,19 +165,16 @@ if ($isCorePlugin) {
 
         if ($namespace !== $baseNamespace) {
 
-            // Update just SCIWP or both code and SCIWP Framework namespaces
-            $baseDir = !isset($config['rebuild_code']) || $config['rebuild_code'] !== true ? dirname(__FILE__) : dirname(__DIR__, 1);
-
             if ($baseNamespace == 'Sci') {
                 ${$parsedPluginFolder . 'ReplaceSci'}(
                     ${$parsedPluginFolder . 'ReplaceSci'},
-                    $baseDir,
+                    dirname(__FILE__),
                     'MyPlugin'
                 );
             } else {
                 ${$parsedPluginFolder . 'ReplacePatternFunction'}(
                     ${$parsedPluginFolder . 'ReplacePatternFunction'},
-                    $baseDir,
+                    dirname(__FILE__),
                     $baseNamespace,
                     $namespace
                 );

@@ -7,17 +7,15 @@ use Sci\Sci;
 use Sci\Traits\Singleton;
 
 /**
- * Manager Base class
+ * Manager Base
  *
- * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
- * @license		http://opensource.org/licenses/MIT	MIT License
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
+ * @license		https://opensource.org/licenses/LGPL-2.1  GNU Lesser GPL version 2.1
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
-
 class Manager
 {
     use Singleton;
