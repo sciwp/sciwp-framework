@@ -1,10 +1,10 @@
 <?php
-namespace MyPlugin\Sci;
+namespace Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
-use \MyPlugin\Sci\Sci;
-use \MyPlugin\Sci\Traits\Singleton;
+use Sci\Sci;
+use Sci\Traits\Singleton;
 
 /**
  * Manager Base class

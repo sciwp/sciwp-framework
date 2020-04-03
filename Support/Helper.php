@@ -1,10 +1,11 @@
 <?php
-namespace Sci\Traits;
+namespace Sci\Support;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use Sci\Traits\StaticClass;
 /**
- * Static class trait
+ * Helper
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @copyright	2020 Kenodo LTD
@@ -13,20 +14,7 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
-trait StaticClass
+class Helper
 {
-	/**
-	 *  Class constructor
-	 */
-    final protected function __construct(){}
-
-	/**
-	 * Clone
-	 */	
-    final private function __clone(){}
-
-	/**
-	 * Wakeup
-	 */			
-	final protected function __wakeup(){}
+	use StaticClass;	
 }

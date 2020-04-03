@@ -1,23 +1,19 @@
 <?php
-namespace MyPlugin\Sci\Traits;
+namespace Sci\Traits;
 
-use \MyPlugin\Sci\Sci;
+use Sci\Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 /**
- * Trait Singleton
+ * Singleton trait
  *
- * Provides the required methods to define singleton classes and store the class instances and
- * injects the class dependences, creating new instances if they are not set in the arguments 
- *
- * @author      Eduardo Lazaro Rodriguez <me@mcme.com>
- * @author      Kenodo LTD <info@kenodo.com>
- * @copyright   2018 Kenodo LTD
- * @license     http://opensource.org/licenses/MIT  MIT License
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
+ * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link        https://www.Sci.com 
- * @since       Version 1.0.0 
+ * @link		https://www.sciwp.com
+ * @since		Version 1.0.0 
  */
 trait Singleton
 {

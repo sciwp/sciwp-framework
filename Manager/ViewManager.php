@@ -1,22 +1,21 @@
 <?php
-namespace MyPlugin\Sci\Manager;
+namespace Sci\Manager;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
-use MyPlugin\Sci\Plugin;
-use MyPlugin\Sci\Manager;
-use MyPlugin\Sci\View;
+use Sci\View;
+use Sci\Manager;
+use Sci\Plugin\Plugin;
 
 /**
- * ViewManager
+ * View Manager
  *
- * @author		Eduardo Lazaro Rodriguez <me@mcme.com>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
 class ViewManager extends Manager
@@ -26,8 +25,6 @@ class ViewManager extends Manager
 
 	/**
 	 * Class constructor
-     *
-     * @return \MyPlugin\Sci\Manager\ViewManager
 	 */
 	protected function __construct()
     {
@@ -39,7 +36,7 @@ class ViewManager extends Manager
 	 *
      * @param string $views The view relative route
      * @param string $module The plugin module
-	 * @return \MyPlugin\Sci\Manager\StyleManager
+	 * @return ViewManager
 	 */
 	public function view($view, $module = false)
 	{
@@ -61,7 +58,7 @@ class ViewManager extends Manager
     /**
      * Add filters to WordPress so the styles are processed
      *
-     * @return \MyPlugin\Sci\Manager\StyleManager
+     * @return ViewManager
      */
 	public function addFilters()
 	{

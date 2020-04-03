@@ -1,19 +1,18 @@
 <?php
-namespace MyPlugin\Sci\Helpers;
-
-use MyPlugin\Sci\Helper;
+namespace Sci\Helpers;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
+use Sci\Support\Helper;
+
 /**
- * Var Helper class
+ * Var helper
  *
- * @author		Eduardo Lazaro Rodriguez <eduzroco@gmail.com>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
 class V extends Helper

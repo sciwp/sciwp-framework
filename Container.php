@@ -1,8 +1,9 @@
 <?php
-namespace MyPlugin\Sci;
+namespace Sci;
 
-use \MyPlugin\Sci\Sci;
-use \MyPlugin\Sci\Traits\Singleton;
+use Exception;
+use Sci\Sci;
+use Sci\Traits\Singleton;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
@@ -17,8 +18,6 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @link		https://www.Sci.com 
  * @since		Version 1.0.0 
  */
-
-use \Exception;
 
 class Container
 {
@@ -82,7 +81,7 @@ class Container
      *
      * @param string $alias The class alias
      * @param string $to The class name, method or instance
-     * @return \MyPlugin\Sci\Container
+     * @return Container
      */    
 	public function alias($alias, $to = null)
 	{
@@ -104,7 +103,7 @@ class Container
      *
      * @param string $bind The class name or alias
      * @param string $to The class name, method or instance
-     * @return \MyPlugin\Sci\Container
+     * @return Container
      */    
 	public function bind($bind, $to = null)
 	{
@@ -132,7 +131,7 @@ class Container
      *
      * @param string $bind The class name or alias
      * @param string $to The class name, method or instance
-     * @return \MyPlugin\Sci\Container
+     * @return Container
      */    
 	public function singleton($bind, $to = null)
 	{

@@ -1,5 +1,5 @@
 <?php
-namespace MyPlugin\Sci;
+namespace Sci;
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -17,6 +17,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class Autoloader
 {
+	/** @var string $mode The sci files autoloading mode */
+	private static $mode;
+
 	/** @var string $folder Stores de root folder */
 	private static $folder;	
 
@@ -58,11 +61,13 @@ class Autoloader
 	
 	/**
 	 * Initialize the autoloader
-	 *
+	 * 
+     * @param string $mode The sci files autoloading mode
 	 * @return	object
 	 */
-	public static function start()
+	public static function start($mode = 'embedded')
 	{
+        self::$mode = $mode;
 		self::$folder = substr(plugin_dir_path( __FILE__ ), 0, -1);
 		self::$namespace = trim(__NAMESPACE__,'\\');
 		spl_autoload_register( array(self::$namespace . '\Autoloader', 'autoload'));
@@ -196,7 +201,7 @@ class Autoloader
     }
 
 	/**
-	 *  Main autoload function
+	 * Main autoload function
 	 *
 	 * @param string $class The class name
 	 * @return	bool
@@ -210,7 +215,33 @@ class Autoloader
 		if (count ($class_arr) < 2) return false;
 
 		// Sci files
-        if ( $class_arr[0] . '\\' . $class_arr[1] == self::$namespace ) {
+        //wp_die($class_arr[0] . '\\' . $class_arr[1]);
+        
+        if (self::$mode == 'core' && $class_arr[0] == self::$namespace) {
+            // Autoload Get trait
+            if (!isset($class_arr[1])) {
+                require_once self::$folder . '/Traits/Sci.php';
+                return true;
+            }
+            // Autoload regular Sci files
+            else {
+                $relative_class = trim(substr($class, strlen($class_arr[0])), '\\'); // Remove base namespace from the class name
+                array_shift ($class_arr); // Remove base namespace from the array
+       
+                $class_file = self::$folder;
+                $count_class_arr = count($class_arr);
+
+                foreach ($class_arr as $key => $element) {
+                    $class_file .= '/' . $element;
+                }
+                
+                if (self::includeFile($class_file . '.php')) return true;
+                else if (self::includeFile($class_file . '.class.php')) return true;
+                return false;
+            } 
+        }
+
+        if (self::$mode == 'embedded' && $class_arr[0] . '\\' . $class_arr[1] == self::$namespace) {
 
             // Autoload Get trait
             if (!isset($class_arr[2])) {

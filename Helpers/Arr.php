@@ -1,20 +1,19 @@
 <?php
-namespace MyPlugin\Sci\Helpers;
+namespace Sci\Helpers;
 
-use MyPlugin\Sci\Helper;
-use MyPlugin\Sci\Collection;
+use Sci\Support\Helper;
+use Sci\Support\Collection;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 /**
- * Array Helper class
+ * Array helper
  *
- * @author		Eduardo Lazaro Rodriguez <eduzroco@gmail.com>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
 class Arr extends Helper

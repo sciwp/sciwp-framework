@@ -1,15 +1,22 @@
 <?php
 
-namespace MyPlugin\Sci;
+namespace Sci;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 use Exception;
-use MyPlugin\Sci\Plugin;
-use MyPlugin\Sci\Manager\PluginManager;
+use Sci\Plugin\Plugin;
+use Sci\Plugin\Managers\PluginManager;
 
 /**
- * Class View
+ * View class
+ *
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
+ * @license		http://opensource.org/licenses/MIT	MIT License
+ * @version     1.0.0
+ * @link		https://www.sciwp.com
+ * @since		Version 1.0.0 
  */
 class View
 {

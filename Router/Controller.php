@@ -1,10 +1,10 @@
 <?php
-namespace Sci\Traits;
+namespace  Sci\Router;
 
 defined('WPINC') OR exit('No direct script access allowed');
 
 /**
- * Static class trait
+ * Controller
  *
  * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
  * @copyright	2020 Kenodo LTD
@@ -13,20 +13,6 @@ defined('WPINC') OR exit('No direct script access allowed');
  * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
-trait StaticClass
+abstract class Controller
 {
-	/**
-	 *  Class constructor
-	 */
-    final protected function __construct(){}
-
-	/**
-	 * Clone
-	 */	
-    final private function __clone(){}
-
-	/**
-	 * Wakeup
-	 */			
-	final protected function __wakeup(){}
 }

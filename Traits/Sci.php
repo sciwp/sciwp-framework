@@ -1,24 +1,23 @@
 <?php
-namespace MyPlugin\Sci\Traits;
+namespace Sci\Traits;
 
-use \MyPlugin\Sci\Sci as SciMain;
+use Sci\Sci as Core;
 
 defined('WPINC') OR exit('No direct script access allowed'); 
 
 /**
- * Trait Get
+ * Sci trait
  *
- * @author		Eduardo Lazaro Rodriguez <me@mcme.me>
- * @author		Kenodo LTD <info@kenodo.com>
- * @copyright	2018 Kenodo LTD
+ * @author		Eduardo Lazaro Rodriguez <edu@edulazaro.com>
+ * @copyright	2020 Kenodo LTD
  * @license		http://opensource.org/licenses/MIT	MIT License
  * @version     1.0.0
- * @link		https://www.Sci.com 
+ * @link		https://www.sciwp.com
  * @since		Version 1.0.0 
  */
 trait Sci
 {
-    /** @var SciMain $Sci Stores the Sci reference */
+    /** @var Sci $Sci Stores the Sci reference */
     public $sci;
 
     /**
@@ -27,7 +26,7 @@ trait Sci
     public function Sci()
     {
         if ($this->sci === null) {
-            $this->sci = SciMain::instance();
+            $this->sci = Core::instance();
         }
         return $this->sci;
     }
