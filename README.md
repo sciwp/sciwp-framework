@@ -1,4 +1,4 @@
-# SCIWP
+# MVC WP
 
 A MVC Framework for WordPress.
 
