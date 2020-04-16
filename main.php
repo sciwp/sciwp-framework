@@ -30,8 +30,27 @@
  */
 
 namespace Sci;
- 
+
 defined('WPINC') OR exit('No direct script access allowed');
+
+require_once plugin_dir_path(__FILE__).'updater.php';
+
+if (is_admin()) {
+
+    new \WP_GitHub_Updater([
+        'slug' => plugin_basename(__FILE__),
+		'proper_folder_name' => 'sciwp',
+		'api_url' => 'https://api.github.com/repos/sciwp/sciwp-framework',
+		'raw_url' => 'https://raw.github.com/sciwp/sciwp-framework/master',
+		'github_url' => 'https://github.com/sciwp/sciwp-framework',
+		'zip_url' => 'https://github.com/sciwp/sciwp-framework/archive/master.zip',
+		'sslverify' => true,
+		'requires' => '5.0',
+		'tested' => '5.0',
+		'readme' => 'README.md',
+		'access_token' => '',
+	]);
+}
 
 require_once plugin_dir_path(__FILE__).'framework/Sci.php';
 require_once plugin_dir_path(__FILE__).'framework/Autoloader.php';
