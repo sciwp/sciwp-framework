@@ -91,7 +91,10 @@ class Plugin
             $this->configCache['name'] = $name ? $name :  $dirName;
             $this->configCache['text_domain'] = $textDomain  ? $textDomain :  $dirName;
             $this->configCache['domain_path'] = $domainPath  ? $domainPath : 'languages';
-            
+
+		    // Create directory if it does not exist
+		    if (!file_exists($this->dir . '/cache')) mkdir($this->dir . '/cache', 0777, true);
+
             // Update the config cache file
             file_put_contents ( $this->dir . '/cache/config.cache.php', "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache , true) . ';');
         };
@@ -258,6 +261,10 @@ class Plugin
 
         $this->configCache['namespace'] = $namespace;
         $fileContents = "<?php if ( ! defined( 'ABSPATH' ) ) exit; \n\n".'return ' . var_export( $this->configCache, true) . ';';
+
+		// Create directory if it does not exist
+		if (!file_exists($this->dir . '/cache')) mkdir($this->dir . '/cache', 0777, true);
+
         file_put_contents ( $this->dir . '/cache/config.cache.php', $fileContents );
 
         return $namespace;

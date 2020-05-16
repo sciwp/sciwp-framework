@@ -58,7 +58,7 @@ class StyleService
 
                 $src = plugin_dir_url($this->plugin->getDir()) . '/' . $style['src'];
                 $version = $style['version'] ?? $version;
-                $dependencies = $style['dependencies'] ?? $dependencies;
+                $dependencies = $style['dependencies'] ?? [];
                 $media = $style['media'] ?? $media;
                 $zone = $style['zone'] ?? false;
                 $style = Sci::make(Style::class, [$src, $version, $dependencies, $media]);

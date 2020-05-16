@@ -57,7 +57,7 @@ class ScriptService
 
                 $src = plugin_dir_url($this->plugin->getDir()) . '/' . $script['src'];
                 $version = $script['version'] ?? $version;
-                $dependencies = isset($script['dependencies']) ?? $dependencies;
+                $dependencies = isset($script['dependencies']) ?? [];
                 $footer = $script['footer'] ?? $footer;
                 $zone = $script['zone'] ?? false;
                 $script = Sci::make(Script::class, [$src, $version, $dependencies, $footer]);
