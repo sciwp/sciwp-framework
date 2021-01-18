@@ -42,7 +42,7 @@ class Plugin
     private $url;
     
     /** @var Array $name  The Plugin config cache array */
-    private $configCache;
+    private $configCache = [];
     
     /** @var string $textDomain The Plugin text domain  */
     private $textDomain;
@@ -56,7 +56,7 @@ class Plugin
     /** @var PluginManager $pluginManager The plugin manager */
     protected $pluginManager;
    
-    /** @var Array $autoloaderCache The Plugin text domain dir path  */
+    /** @var Array $autoloaderCache If the autoloader cache is enabled  */
     private $autoloaderCache;
 
     /** @var Collection $config Collection to store config data */
