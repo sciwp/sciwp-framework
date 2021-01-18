@@ -2,7 +2,7 @@
 /*
  * Plugin Name: SCI WP Framework
  * Description: A MVC Framework for WordPress.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Eduardo Lazaro
  * License:	GNU Lesser GPL version 2.1
  * Author URI: https://www.edulazaro.com/
