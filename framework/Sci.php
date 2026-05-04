@@ -162,8 +162,9 @@ class Sci
      * @param string $name The function name
      * @param array $arguments The function a arguments
      */
-    public function __call($name, $arguments = null)
+    public function __call($name, $arguments = [])
     {
+        $arguments = (array) $arguments;
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
         if ($name === 'singleton') return self::instance()->container->singleton(...$arguments);
@@ -177,8 +178,9 @@ class Sci
      * @param string $name The function name
      * @param array $arguments The function a arguments
      */
-    public static function __callStatic($name, $arguments = null)
+    public static function __callStatic($name, $arguments = [])
     {
+        $arguments = (array) $arguments;
         if ($name === 'make') return self::instance()->container->make(...$arguments);
         if ($name === 'bind') return self::instance()->container->bind(...$arguments);
         if ($name === 'singleton') return self::instance()->container->singleton(...$arguments);

@@ -62,6 +62,9 @@ class Query
     /** @var string $primary_key */
     protected $primary_key;
 
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /**
      * Class constructor
      * 
@@ -90,11 +93,11 @@ class Query
     /**
      * Add a binding to the query.
      *
-     * @param  mixed   $value
      * @param  string  $type
+     * @param  mixed   $binding
      * @return Query
      */
-    public function addBinding($type = 'where', $binding)
+    public function addBinding($type, $binding)
     {
         if (! array_key_exists($type, $this->bindings)) {
             throw new Exception("Invalid binding type: {$type}.");

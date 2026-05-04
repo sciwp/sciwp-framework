@@ -32,6 +32,74 @@ class Container
     protected $singletons = [];
 
     /**
+     * Resolve a parameter's typed class name in a way compatible with PHP 7.4-8.4.
+     *
+     * ReflectionParameter::getClass() was deprecated in PHP 8.0; this uses
+     * getType()/ReflectionNamedType instead and falls back when unavailable.
+     *
+     * @param \ReflectionParameter $param
+     * @return string|null Fully qualified class/interface name, or null
+     */
+    protected static function getParamClassName(\ReflectionParameter $param)
+    {
+        $type = $param->getType();
+
+        if (!$type) return null;
+        if (!($type instanceof \ReflectionNamedType)) return null;
+        if ($type->isBuiltin()) return null;
+
+        $name = $type->getName();
+        if ($name === 'self' || $name === 'static') {
+            $declaring = $param->getDeclaringClass();
+            if ($declaring) return $declaring->getName();
+        }
+        if ($name === 'parent') {
+            $declaring = $param->getDeclaringClass();
+            if ($declaring && $declaring->getParentClass()) {
+                return $declaring->getParentClass()->getName();
+            }
+        }
+        return $name;
+    }
+
+    /**
+     * Assigns the Sci instance to an object's $sci property.
+     *
+     * Skips assignment when the class does not declare $sci and does not
+     * opt in to dynamic properties, avoiding the PHP 8.2+ dynamic property
+     * deprecation while preserving auto-injection for classes that expect it
+     * (declared `$sci`, the Sci trait, or `#[\AllowDynamicProperties]`).
+     *
+     * @param object $instance
+     * @return void
+     */
+    protected static function injectSci($instance)
+    {
+        if (!is_object($instance)) return;
+
+        if (property_exists($instance, 'sci')) {
+            $instance->sci = Sci::instance();
+            return;
+        }
+
+        if (PHP_VERSION_ID >= 80200) {
+            $class = get_class($instance);
+            $allowsDynamic = false;
+            $ref = new \ReflectionClass($class);
+            while ($ref) {
+                if (method_exists($ref, 'getAttributes')) {
+                    $attrs = $ref->getAttributes('AllowDynamicProperties');
+                    if (!empty($attrs)) { $allowsDynamic = true; break; }
+                }
+                $ref = $ref->getParentClass();
+            }
+            if (!$allowsDynamic) return;
+        }
+
+        $instance->sci = Sci::instance();
+    }
+
+    /**
      * Checks if a class uses a Trait
      * 
      * @param string $class_name The class name
@@ -84,11 +152,10 @@ class Container
      */    
 	public function alias($alias, $to = null)
 	{
-        $alias = ltrim($alias, '\\');
-
         if (is_null($alias)) {
             throw new Exception('Cannot use a null alias.');
         }
+        $alias = ltrim($alias, '\\');
 
         if (is_callable($to) || is_object($to) || class_exists($to)) {
             $this->bindings[$alias] = $to;
@@ -106,11 +173,12 @@ class Container
      */    
 	public function bind($bind, $to = null)
 	{
-        $bind = ltrim($bind, '\\');
-
         if (is_null($bind)) {
             throw new Exception('Cannot use a null binding.');
-        } else if (!class_exists($bind) && !interface_exists($bind)) {
+        }
+        $bind = ltrim($bind, '\\');
+
+        if (!class_exists($bind) && !interface_exists($bind)) {
             throw new Exception('The binded class '.$bind.' does not exist.');
         }
 
@@ -134,6 +202,9 @@ class Container
      */    
 	public function singleton($bind, $to = null)
 	{
+        if (is_null($bind)) {
+            throw new Exception('Cannot use a null singleton binding.');
+        }
         $bind = ltrim($bind, '\\');
         $this->singletons[$bind] = false;
         
@@ -196,6 +267,7 @@ class Container
      */    
 	public function created($class, $action)
 	{
+        if (is_null($class)) return;
         $class = ltrim($class, '\\');
 
         if (!isset($this->actions[$class])) {
@@ -271,14 +343,16 @@ class Container
             if (isset($args[$param->getName()])) $isObject = isset($args[$param->getName()]);
             else if (isset($args[$key])) $isObject = isset($args[$key]);
 
-            if ($param->getClass() && !$isObject) {
+            $paramClass = self::getParamClassName($param);
+
+            if ($paramClass && !$isObject) {
                  if (isset($args[$param->getName()]) && is_array($args[$param->getName()])) {
-                    $callParams[] = $this->make($param->getClass()->name, $args[$param->getName()]);
+                    $callParams[] = $this->make($paramClass, $args[$param->getName()]);
                     unset($args[$param->getName()]);
                  } else if (isset($args[$key]) && is_array($args[$key])) {
-                    $callParams[] = $this->make($param->getClass()->name, $args[$key]);
+                    $callParams[] = $this->make($paramClass, $args[$key]);
                 } else {
-                    $callParams[] = $this->make($param->getClass()->name);
+                    $callParams[] = $this->make($paramClass);
                 }
              } else {
 				if (isset($args[$param->getName()])  ) {
@@ -347,7 +421,7 @@ class Container
         }
 
         if (is_object($class_name)) {
-            $class_name->sci = Sci::instance();
+            self::injectSci($class_name);
             return $class_name;
         }
 
@@ -378,7 +452,7 @@ class Container
             } else {
                 $instance = $reflector->newInstance();
             }
-            $instance->sci = Sci::instance();
+            self::injectSci($instance);
 
 
 

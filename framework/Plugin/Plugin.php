@@ -38,6 +38,9 @@ class Plugin
     /** @var string $namespace The Plugin base namespace */
     private $namespace;
 
+    /** @var string $mainNamespace The Plugin main namespace */
+    private $mainNamespace;
+
     /** @var string $url The Plugin url */
     private $url;
     

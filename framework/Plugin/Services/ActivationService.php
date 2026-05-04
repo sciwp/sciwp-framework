@@ -17,6 +17,9 @@ use Sci\Plugin\Plugin;
  */
 class ActivationService
 {
+	/** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+	public $sci;
+
 	/** @var string $plugin The plugin this service belongs to. */
 	private $plugin;
 

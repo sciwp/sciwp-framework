@@ -35,7 +35,7 @@ class Script extends Asset
      * @param string[]  $dependencies The registered script dependencies
      * @param string $footer Script location
      */
-    public function __construct($src,  $version = false, $dependencies = [], $footer = true, ScriptManager $scriptManager)
+    public function __construct($src,  $version = false, $dependencies = [], $footer = true, ?ScriptManager $scriptManager = null)
     {
         parent::__construct($src, $version, $dependencies);
         $this->scriptManager = $scriptManager;

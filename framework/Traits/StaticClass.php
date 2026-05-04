@@ -21,12 +21,12 @@ trait StaticClass
     final protected function __construct(){}
 
 	/**
-	 * Clone
-	 */	
-    final private function __clone(){}
+	 * Clone (PHP 8.0+ disallows `final private`; the access alone prevents overrides)
+	 */
+    private function __clone(){}
 
 	/**
-	 * Wakeup
-	 */			
-	final protected function __wakeup(){}
+	 * Wakeup (PHP 8.0+ requires magic methods to be public)
+	 */
+	final public function __wakeup(){}
 }

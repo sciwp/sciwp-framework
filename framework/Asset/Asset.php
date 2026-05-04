@@ -28,6 +28,9 @@ class Asset
 	/** @var string[] $dependencies The asset dependencies */
     protected $dependencies;
 
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /**
      * Create a new asset
      *

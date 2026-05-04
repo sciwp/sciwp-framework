@@ -35,6 +35,9 @@ class Template
 	/** @var string $postTypes The post type to add the template to */
 	protected $postTypes;
 
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /**
      * Create a new template
      *
@@ -43,7 +46,7 @@ class Template
      * @param string|array $postTypes The post type or post types to add to the template
      * @param string $themePath The path relative to the theme where the plugin should also look for
      */
-    public function __construct($template, $name = false, $postTypes = false, $themePath = false, TemplateManager $templateManager)
+    public function __construct($template, $name = false, $postTypes = false, $themePath = false, ?TemplateManager $templateManager = null)
     {
         $this->templateManager = $templateManager;
 

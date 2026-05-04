@@ -23,6 +23,9 @@ class View
     /** @var array $params Parameter array */
     protected $params = array();
 
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /** @var string $file */
 	protected $file;
 
@@ -32,15 +35,18 @@ class View
 	/** @var string $module */
 	protected $module;
 
+	/** @var PluginManager $pluginManager */
+	protected $pluginManager;
+
     /**
      * Constructor
      *
      * @param string $file $The view file without extensiona nd relative to the views folder
      * @param string|Plugin $plugin The plugin instance or plugin id
      * @param string $module The module name
-     * @param PluginManager $pluginManager Plugin manager instance
+     * @param PluginManager|null $pluginManager Plugin manager instance (auto-injected)
      */
-    public function __construct($file, $plugin = null, $module = null, PluginManager $pluginManager)
+    public function __construct($file, $plugin = null, $module = null, ?PluginManager $pluginManager = null)
     {
 		$this->pluginManager = $pluginManager;
 		$this->file = $file;

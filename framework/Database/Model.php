@@ -44,6 +44,9 @@ abstract class Model
     /** @var array $attributes of model attributes */
     protected $attributes = [];
 
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /**
      * Return configured table prefix
      *
@@ -311,7 +314,7 @@ abstract class Model
         $query->skip(0)->limit(1);
 
         $results = $query->get();
-        if (count($results)) {
+        if (is_array($results) && count($results)) {
             return static::create((array) $results[0]);
         }
         return false;

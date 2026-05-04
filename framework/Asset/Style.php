@@ -35,7 +35,7 @@ class Style extends Asset
      * @param string[]  $dependencies The registered css file dependencies
      * @param string $media The asset version
      */
-    public function __construct($src, $version = false, $dependencies = [], $media = 'all', StyleManager $styleManager)
+    public function __construct($src, $version = false, $dependencies = [], $media = 'all', ?StyleManager $styleManager = null)
     {
         parent::__construct($src, $version, $dependencies);
         $this->styleManager = $styleManager;

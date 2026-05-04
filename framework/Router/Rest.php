@@ -49,6 +49,9 @@ class Rest
 	/** @var array $args Route args */
 	private $args = [];
 
+	/** @var RestManager $restManager Rest manager instance */
+	private $restManager;
+
 	/**
 	 * Class constructor
      *
@@ -370,14 +373,15 @@ class Rest
 			$callParams = array();
 
             foreach ($f->getParameters() as $key => $param) {
-				if ($param->getClass()) {
+				$paramClass = self::resolveParamClass($param);
+				if ($paramClass) {
 					if (isset($requestParams[$param->getName()]) && is_array($requestParams[$param->getName()])) {
-				
-						$callParams[] = Sci::make($param->getClass()->name, $requestParams[$param->getName()]);
+
+						$callParams[] = Sci::make($paramClass, $requestParams[$param->getName()]);
 					} else {
 
 						// it's a funcion or a static method
-						$callParams[] = Sci::make($param->getClass()->name);
+						$callParams[] = Sci::make($paramClass);
 					}
 				} else {
 					// If it is a simple parameter
@@ -430,9 +434,35 @@ class Rest
 	 * Get the parameters
 	 *
 	 * @return array
-	 */		
+	 */
 	public function getParams()
 	{
 		return $this->params;
+	}
+
+	/**
+	 * PHP 7.4-8.4 compatible replacement for ReflectionParameter::getClass().
+	 *
+	 * @param \ReflectionParameter $param
+	 * @return string|null Fully qualified class name, or null if untyped/builtin
+	 */
+	private static function resolveParamClass(\ReflectionParameter $param)
+	{
+		$type = $param->getType();
+		if (!$type || !($type instanceof \ReflectionNamedType) || $type->isBuiltin()) {
+			return null;
+		}
+		$name = $type->getName();
+		if ($name === 'self' || $name === 'static') {
+			$declaring = $param->getDeclaringClass();
+			if ($declaring) return $declaring->getName();
+		}
+		if ($name === 'parent') {
+			$declaring = $param->getDeclaringClass();
+			if ($declaring && $declaring->getParentClass()) {
+				return $declaring->getParentClass()->getName();
+			}
+		}
+		return $name;
 	}
 }

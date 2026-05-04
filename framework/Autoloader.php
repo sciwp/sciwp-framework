@@ -51,11 +51,11 @@ class Autoloader
 	private function __clone() {}
 
 	/**
-	 * Wakeup
+	 * Wakeup (PHP 8.0+ requires magic methods to be public)
 	 *
 	 * @return	void
-	 */			
-	private function __wakeup() {}	
+	 */
+	public function __wakeup() {}
 	
 	/**
 	 * Initialize the autoloader
@@ -131,8 +131,13 @@ class Autoloader
 			return($folder.'/'.$class);
 		}
 		else {
-			$scan = preg_grep('/^([^.])/', scandir($folder));
-			$dirs = array_filter(glob($folder.'/'.'*', GLOB_ONLYDIR));
+			// scandir() and glob() can return false on failure; in PHP 8 passing
+			// false to preg_grep()/array_filter() would raise a TypeError.
+			if (!is_dir($folder)) return false;
+			$entries = @scandir($folder);
+			$scan = is_array($entries) ? preg_grep('/^([^.])/', $entries) : [];
+			$globbed = glob($folder.'/'.'*', GLOB_ONLYDIR);
+			$dirs = is_array($globbed) ? array_filter($globbed) : [];
 			foreach($dirs as $dir) {
 				$result = self::searchReflexiveClassFile($dir, $class);
 				if($result) return $result;
@@ -150,12 +155,13 @@ class Autoloader
 	 */
     public static function addPlugin($id, $config = [])
 	{
+        $mainDir = isset($config['main_dir']) ? $config['main_dir'] : '';
         self::$plugins[$id] = [
-            'namespace' => $config['namespace'],
-            'main_namespace' => ucfirst(preg_replace("/[^A-Za-z0-9]/", '', basename($config['main_dir']))),
-            'dir' => $config['dir'],
-            'main_dir' => $config['main_dir'],
-            'module_dir' =>  $config['module_dir'],            
+            'namespace' => isset($config['namespace']) ? $config['namespace'] : '',
+            'main_namespace' => ucfirst(preg_replace("/[^A-Za-z0-9]/", '', basename($mainDir))),
+            'dir' => isset($config['dir']) ? $config['dir'] : '',
+            'main_dir' => $mainDir,
+            'module_dir' => isset($config['module_dir']) ? $config['module_dir'] : '',
             'cache_enabled' => isset($config['cache_enabled']) ? $config['cache_enabled'] : false,
             'reflexive' => isset($config['reflexive']) ? $config['reflexive'] : false,
             'autoload' => isset($config['autoload']) ? $config['autoload'] : [],
@@ -207,6 +213,7 @@ class Autoloader
 	 */
 	public static  function autoload($class)
 	{
+        if (!is_string($class) || $class === '') return false;
         $class = trim($class);
 		$class_arr = explode('\\', $class);
 
@@ -270,7 +277,7 @@ class Autoloader
 
 			$plugin = false;
 
-			foreach(self::$plugins as $key => &$p) {
+			foreach(self::$plugins as $key => $p) {
 
 				if ($p['namespace'] == $class_arr[0]) {
 					$plugin = $p;

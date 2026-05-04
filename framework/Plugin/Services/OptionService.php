@@ -127,7 +127,7 @@ class OptionService
 	 * @param array $data
 	 * @return mixed
 	 */		
-	public function storeSet( $name = null, $data )
+	public function storeSet( $name = null, $data = null )
 	{
 		if ( is_numeric($name) || (is_string($name) && strlen($name)) ) {
 			return update_option( $this->key . '_' . $name, $data );

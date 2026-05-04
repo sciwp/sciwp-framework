@@ -15,9 +15,12 @@ defined('WPINC') OR exit('No direct script access allowed');
  */
 class Component
 {
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
+
     /**
 	 * Creates an object of the class
-     * 
+     *
      * @param mixed[] $params The method parameters
 	 */
 	public static function create(...$params)

@@ -15,4 +15,6 @@ defined('WPINC') OR exit('No direct script access allowed');
  */
 abstract class Controller
 {
+    /** @var \Sci\Sci $sci Sci instance auto-injected by the container */
+    public $sci;
 }

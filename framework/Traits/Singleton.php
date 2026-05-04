@@ -29,17 +29,20 @@ trait Singleton
 
     /**
      * Clone
-     * 
-     * @return void
-     */ 
-    final private function __clone() {}
-
-    /**
-     * Wakeup
+     *
+     * Note: PHP 8.0+ disallows `final private` on methods other than the
+     * constructor (the access keeps it from being overridden either way).
      *
      * @return void
-     */         
-     protected function __wakeup() {}
+     */
+    private function __clone() {}
+
+    /**
+     * Wakeup (PHP 8.0+ requires magic methods to be public)
+     *
+     * @return void
+     */
+     public function __wakeup() {}
 
     /**
      * Create or return an instance
@@ -58,14 +61,16 @@ trait Singleton
             $reflector  = new \ReflectionClass($called_class);
             $constructor = $reflector->getConstructor();
             
-            if($constructor->getParameters()) {
+            $inst_args = [];
+            if($constructor && $constructor->getParameters()) {
                 // The class constructor has declared arguments
                 foreach ($constructor->getParameters() as $key => $parameter) {
-                    if ($parameter->getClass()) {
+                    $paramClass = self::reflectionParamClass($parameter);
+                    if ($paramClass) {
                         if (isset($args[$key]) && is_array($args[$key])) {
-                            $inst_args[] = Sci::make($parameter->getClass()->name, $args[$key]);
+                            $inst_args[] = Sci::make($paramClass, $args[$key]);
                         } else {
-                            $inst_args[] = Sci::make($parameter->getClass()->name);
+                            $inst_args[] = Sci::make($paramClass);
                         }
                     } else {
                         $inst_args[] = isset($args[$key]) ? $args[$key] : null;
@@ -77,8 +82,38 @@ trait Singleton
                 // The class constructor does not have declared arguments
                 self::$_instances[$called_class] = new $called_class ( ...$args );
             }
-            self::$_instances[$called_class]->Sci = Sci::instance();
+
+            $instance = self::$_instances[$called_class];
+            if (property_exists($instance, 'sci')) {
+                $instance->sci = Sci::instance();
+            }
         }
         return self::$_instances[$called_class];
+    }
+
+    /**
+     * PHP 7.4-8.4 compatible replacement for ReflectionParameter::getClass().
+     *
+     * @param \ReflectionParameter $param
+     * @return string|null Fully qualified class name, or null if untyped/builtin
+     */
+    private static function reflectionParamClass(\ReflectionParameter $param)
+    {
+        $type = $param->getType();
+        if (!$type || !($type instanceof \ReflectionNamedType) || $type->isBuiltin()) {
+            return null;
+        }
+        $name = $type->getName();
+        if ($name === 'self' || $name === 'static') {
+            $declaring = $param->getDeclaringClass();
+            if ($declaring) return $declaring->getName();
+        }
+        if ($name === 'parent') {
+            $declaring = $param->getDeclaringClass();
+            if ($declaring && $declaring->getParentClass()) {
+                return $declaring->getParentClass()->getName();
+            }
+        }
+        return $name;
     }
 }
